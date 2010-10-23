@@ -10,7 +10,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 
-import us.artaround.android.models.ArtAroundException;
+import us.artaround.models.ArtAroundException;
 
 public abstract class BaseService {
 	public static final String DATE_FORMAT = "yy/MM/dd HH:mm:ss Z";

@@ -2,8 +2,8 @@ package us.artaround.android.services;
 
 import java.util.ArrayList;
 
-import us.artaround.android.models.Art;
-import us.artaround.android.models.ArtAroundException;
+import us.artaround.models.Art;
+import us.artaround.models.ArtAroundException;
 
 public class ArtService extends BaseService {
 

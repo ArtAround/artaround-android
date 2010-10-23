@@ -1,4 +1,4 @@
-package us.artaround.android.models;
+package us.artaround.models;
 
 public class ArtAroundException extends Exception {
 	private static final long serialVersionUID = 6157902756731129293L;

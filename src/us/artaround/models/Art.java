@@ -1,4 +1,4 @@
-package us.artaround.android.models;
+package us.artaround.models;
 
 
 public class Art {

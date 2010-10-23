@@ -6,8 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import us.artaround.android.models.Art;
-import us.artaround.android.models.ArtAroundException;
+import us.artaround.models.Art;
+import us.artaround.models.ArtAroundException;
 
 public class ArtParser extends Parser {
 	public static final String EXC_MSG = "JSON parsing exception";

@@ -3,7 +3,7 @@ package us.artaround.android.services;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import us.artaround.android.models.Artist;
+import us.artaround.models.Artist;
 
 public class ArtistParser extends Parser {
 
