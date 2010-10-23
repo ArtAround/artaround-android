@@ -1,4 +1,4 @@
-package us.artaround.android.services;
+package us.artaround.services;
 
 import java.util.ArrayList;
 
@@ -30,6 +30,4 @@ public class ArtService extends BaseService {
 		StringBuilder query = new StringBuilder(ArtParser.PARAM_ID).append(id);
 		return ArtParser.parse(getMethod(formUrl(METHOD_GET_ART, query.toString())));
 	}
-
-	
 }

@@ -1,4 +1,4 @@
-package us.artaround.android.services;
+package us.artaround.services;
 
 import java.util.ArrayList;
 
@@ -13,7 +13,6 @@ public class ArtParser extends Parser {
 	public static final String EXC_MSG = "JSON parsing exception";
 
 	public static final String PARAM_OBJECT = "art";
-
 	public static final String PARAM_ID = "_id";
 	public static final String PARAM_SLUG = "slug";
 	public static final String PARAM_CATEGORY = "category";
@@ -31,7 +30,6 @@ public class ArtParser extends Parser {
 	public static final String PARAM_NEIGHBORHOOD = "neighborhood";
 	public static final String PARAM_ARTIST = "artist";
 	public static final String PARAM_PHOTOS = "flickr_ids";
-
 
 
 	public static Art parse(JSONObject json) throws JSONException {

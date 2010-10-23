@@ -1,4 +1,4 @@
-package us.artaround.android.services;
+package us.artaround.services;
 
 import org.json.JSONException;
 import org.json.JSONObject;
