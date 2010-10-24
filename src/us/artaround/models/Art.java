@@ -1,27 +1,26 @@
 package us.artaround.models;
 
+import java.util.Date;
+
 
 public class Art {
-	public String id;
 	public String slug;
 	public String category;
 	public String title;
 
-	public long createdAt;
-	public long updatedAt;
+	public Date createdAt;
+	public Date updatedAt;
 
-	public float pitch;
-	public int zoom;
 	public int ward;
 
-	public boolean approved;
+	public float latitude;
+	public float longitude;
 
-	public long latitude;
-	public long longitude;
 	public String locationDesc;
 	public String neighborhood;
 
-	public Artist artist;
+	// public Artist artist;
+	public String artist;
 
 	public String[] photoIds;
 }

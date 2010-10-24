@@ -13,15 +13,12 @@ import org.apache.http.util.EntityUtils;
 import us.artaround.models.ArtAroundException;
 
 public abstract class BaseService {
-	public static final String DATE_FORMAT = "yy/MM/dd HH:mm:ss Z";
 	public static final String FORMAT = "json";
-	public static final String BASE_URL = "";
-	public static final String USER_AGENT = "";
+	public static final String BASE_URL = "http://theartaround.us/api/v1/";
+	public static final String USER_AGENT = "us.artaround-android.services.BaseService";
 
 	public static String extraHeaderKey = null;
 	public static String extraHeaderValue = null;
-
-	protected static final HttpClient client = new DefaultHttpClient();
 
 	protected static String formUrl(String method, String query) {
 		StringBuilder builder = new StringBuilder(BASE_URL).append(method).append(".").append(FORMAT);
@@ -40,6 +37,7 @@ public abstract class BaseService {
 		}
 
 		try {
+			HttpClient client = new DefaultHttpClient();
 			HttpResponse response = client.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 

@@ -27,7 +27,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 3;
-	public static final int PAGE_SIZE = 20;
+	public static final int PER_PAGE = 20;
 
 	private MapView mapView;
 
@@ -42,6 +42,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_map);
 		
+		runMoreTasks = new AtomicBoolean(false);
+		taskCount = new AtomicInteger(0);
 		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -93,15 +95,15 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 		}
 
 		runMoreTasks.set(true);
-		taskCount.set(MAX_CONCURRENT_TASKS - 1);
-		for (int i = 0; i < MAX_CONCURRENT_TASKS; i++) {
-			startTask(i);
+		taskCount.set(MAX_CONCURRENT_TASKS);
+		for (int page = 1; page <= MAX_CONCURRENT_TASKS; page++) {
+			startTask(page);
 		}
 	}
 
 	private void loadMoreArtFromServer(ArrayList<Art> art, LoadArtTask task) {
 		runningTasks.remove(task);
-		if (art != null && art.size() == PAGE_SIZE && runMoreTasks.get()) {
+		if (art != null && art.size() == PER_PAGE && runMoreTasks.get()) {
 			if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
 				startTask(taskCount.incrementAndGet());
 			}
@@ -110,12 +112,18 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 		}
 	}
 
-	private void startTask(int index) {
-		new LoadArtTask(this).execute(PAGE_SIZE, index);
-	}
-
 	private boolean isLoadingArt() {
 		return !runningTasks.isEmpty();
+	}
+
+	@Override
+	public void onLoadArt(ArrayList<Art> art, LoadArtTask task) {
+		loadMoreArtFromServer(art, task);
+		processLoadedArt(art);
+	}
+
+	private void startTask(int page) {
+		new LoadArtTask(this).execute(PER_PAGE, page);
 	}
 
 	private boolean isOutdated(Date lastUpdate) {
@@ -133,12 +141,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 			return null;
 		}
 		return new Date(time);
-	}
-
-	@Override
-	public void onLoadArt(ArrayList<Art> art, LoadArtTask task) {
-		loadMoreArtFromServer(art, task);
-		processLoadedArt(art);
 	}
 
 	private void processLoadedArt(ArrayList<Art> art) {

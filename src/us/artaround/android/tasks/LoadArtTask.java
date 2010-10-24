@@ -23,7 +23,7 @@ public class LoadArtTask extends AsyncTask<Object, Void, ArrayList<Art>> {
 	@Override
 	protected ArrayList<Art> doInBackground(Object... params) {
 		if (params == null || params.length < 2) {
-			Log.w(Utils.TAG, "LoadArtTask needs limit and page parameters!");
+			Log.w(Utils.TAG, "LoadArtTask needs 'page' and 'per_page' parameters!");
 			return null;
 		}
 		try {
