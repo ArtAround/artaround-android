@@ -6,7 +6,6 @@ import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 
 public class ArtService extends BaseService {
-
 	private static final String METHOD_GET_ART = "art";
 
 	private static final String PARAM_LIMIT = "limit";
@@ -15,11 +14,9 @@ public class ArtService extends BaseService {
 
 	private static final String DEFAULT_ORDER = ArtParser.PARAM_CREATED_AT;
 
-	public static ArrayList<Art> getArt(long latitude, long longitude, int limit, int page)
+	public static ArrayList<Art> getArt(int limit, int page)
 			throws ArtAroundException {
-		StringBuilder query = new StringBuilder(ArtParser.PARAM_LATITUDE).append(latitude)
-				.append("&").append(ArtParser.PARAM_LONGITUDE).append(longitude)
-				.append("&").append(PARAM_LIMIT).append(limit)
+		StringBuilder query = new StringBuilder().append(PARAM_LIMIT).append(limit)
 				.append("&").append(PARAM_PAGE).append(page)
 				.append("&").append(PARAM_ORDER).append(DEFAULT_ORDER);
 		
