@@ -6,7 +6,7 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 
-	<com.google.android.maps.MapView
+	<us.artaround.android.ui.ArtMapView
 		android:id="@+id/map_view"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"

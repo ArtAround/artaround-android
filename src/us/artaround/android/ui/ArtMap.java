@@ -17,19 +17,22 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
-import com.google.android.maps.MapView;
 
-public class ArtMap extends MapActivity implements LoadArtCallback {
+public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener {
 
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 3;
 	public static final int PER_PAGE = 20;
+	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
-	private MapView mapView;
+	private ArtMapView mapView;
+	private MapController mapController;
+	
 
 	private SharedPreferences prefs;
 	private GeoPoint currentLocation = new GeoPoint(38895110, -77036370);
@@ -67,12 +70,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 	}
 
 	private void setupMap() {
-		mapView = (MapView) findViewById(R.id.map_view);
+		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
+		mapView.setZoomLevel(DEFAULT_ZOOM_LEVEL);
+		mapView.setZoomListener(this);
 		
-		MapController mc = mapView.getController();
-		mc.setCenter(currentLocation);
-        mc.setZoom(11);
+		mapController = mapView.getController();
+		mapController.setCenter(currentLocation);
 	}
 
 	private void loadArt() {
@@ -176,6 +180,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback {
 		}
 		return null;
 	}
-	
 
+	@Override
+	public void onZoom(int oldZoom, int newZoom) {
+		Log.d(Utils.TAG,"Zoom from "+oldZoom+" to "+newZoom);
+	}
+
+	
 }
