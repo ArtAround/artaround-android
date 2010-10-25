@@ -22,9 +22,9 @@ import android.util.Log;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
+import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener {
-
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 3;
 	public static final int PER_PAGE = 20;
@@ -32,10 +32,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 
 	private ArtMapView mapView;
 	private MapController mapController;
-	
+	ArtItemOverlay artOverlay;
 
 	private SharedPreferences prefs;
-	private GeoPoint currentLocation = new GeoPoint(38895110, -77036370);
+	private GeoPoint currentLocation = new GeoPoint(38899811, -77020373);
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicBoolean runMoreTasks;
@@ -74,6 +74,9 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 		mapView.setBuiltInZoomControls(true);
 		mapView.setZoomLevel(DEFAULT_ZOOM_LEVEL);
 		mapView.setZoomListener(this);
+		
+		artOverlay = new ArtItemOverlay(getResources().getDrawable(R.drawable.pin), this);
+		mapView.getOverlays().add(artOverlay);
 		
 		mapController = mapView.getController();
 		mapController.setCenter(currentLocation);
@@ -139,7 +142,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 	}
 
 	private Date getLastUpdate() {
-		
 		long time = prefs.getLong(Utils.KEY_LAST_UPDATE, 0);
 		if (time == 0) {
 			return null;
@@ -157,11 +159,18 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 	private void displayArt(ArrayList<Art> art) {
 		if (art != null && !art.isEmpty()) {
 
+			for (int i = 0; i < art.size(); i++) {
+				Art a = art.get(i);
+				OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
+				artOverlay.addOverlay(pin);
+			}
+			// re-draw map view
+			mapView.invalidate();
 		}
 	}
 
 	private ArrayList<Art> filterArt(ArrayList<Art> art) {
-		String categoriesStr = prefs.getString(Utils.KEY_CATEGORIES, null);
+		/* String categoriesStr = prefs.getString(Utils.KEY_CATEGORIES, null);
 
 		if (!TextUtils.isEmpty(categoriesStr)) {
 			ArrayList<Art> result = new ArrayList<Art>();
@@ -178,7 +187,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 			}
 			return result;
 		}
-		return null;
+		return null; */
+		return art;
 	}
 
 	@Override
