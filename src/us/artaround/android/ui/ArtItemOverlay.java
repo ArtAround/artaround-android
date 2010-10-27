@@ -44,6 +44,13 @@ public class ArtItemOverlay extends ItemizedOverlay<OverlayItem> {
 
 	public void addOverlay(OverlayItem overlay) {
 		overlays.add(overlay);
+	}
+	
+	public void removeOverlay(OverlayItem overay){
+		overlays.remove(overay);
+	}
+	
+	public void doPopulate(){
 		populate();
 	}
 }

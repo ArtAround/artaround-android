@@ -3,6 +3,7 @@ package us.artaround.android.ui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,10 +14,10 @@ import us.artaround.android.commons.Utils;
 import us.artaround.android.tasks.LoadArtTask;
 import us.artaround.android.tasks.LoadArtTask.LoadArtCallback;
 import us.artaround.models.Art;
+import us.artaround.models.ArtDispersionComparator;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
@@ -26,13 +27,15 @@ import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
-	public static final int MAX_CONCURRENT_TASKS = 3;
-	public static final int PER_PAGE = 20;
+	public static final int MAX_CONCURRENT_TASKS = 1;
+	public static final int PER_PAGE = 1000;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private ArtMapView mapView;
 	private MapController mapController;
-	ArtItemOverlay artOverlay;
+	
+	private ArtItemOverlay artOverlay;
+	private ArrayList<Art> allArt;
 
 	private SharedPreferences prefs;
 	private GeoPoint currentLocation = new GeoPoint(38899811, -77020373);
@@ -47,6 +50,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 		
 		runMoreTasks = new AtomicBoolean(false);
 		taskCount = new AtomicInteger(0);
+		allArt = new ArrayList<Art>();
 		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -84,6 +88,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 
 	private void loadArt() {
 		Date lastUpdate = getLastUpdate();
+		this.allArt.clear();
 		if(isOutdated(lastUpdate)) {
 			loadArtFromServer();
 		} else {
@@ -151,25 +156,83 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 
 	private void processLoadedArt(ArrayList<Art> art) {
 		if (art != null && !art.isEmpty()) {
-			displayArt(filterArt(art));
+			allArt.addAll(art);
+			calculateMaximumDispersion();
+			displayArt(filterArt(allArt));
 			// save to database
 		}
 	}
+	
+	private void reDisplayArt(){
+		displayArt(filterArt(allArt));
+	}
 
-	private void displayArt(ArrayList<Art> art) {
+	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
+	private void displayArt(ArrayList<Art> art){
+		//remove art
+		Log.d(Utils.TAG,"Removing "+artToRemove.size()+" pins.");
+		for(Art a : artToRemove){
+			artOverlay.removeOverlay(items.get(a));
+		}
+		//add new art
+		Log.d(Utils.TAG,"Adding "+artToAdd.size()+" pins.");
+		for(Art a : artToAdd){
+			artOverlay.addOverlay(newOverlay(a));
+		}
+		//redraw
+		artOverlay.doPopulate();
+		mapView.invalidate();
+	}
+	
+	private OverlayItem newOverlay(Art a){
+		if(items.containsKey(a)){
+			return items.get(a);
+		}else{
+			OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
+			items.put(a, pin);
+			return pin;
+		}
+	}
+	
+	private void calculateMaximumDispersion(){
+		final int allS = allArt.size();
+		for(int i=0;i<allS;++i){
+			Art a = allArt.get(i);
+			for(int j=i+1;j<allS;++j){
+				Art b = allArt.get(j);
+				float dist = distance(a,b);
+				a.mediumDistance += dist;
+				b.mediumDistance += dist;
+			}
+		}
+		for(int i=0;i<allS;++i){
+			Art a = allArt.get(i);
+			a.mediumDistance /= allS;
+		}
+		Collections.sort(allArt,new ArtDispersionComparator());
+		Collections.reverse(allArt);
+	}
+
+	private float distance(Art a, Art b) {
+		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude,2)+Math.pow(a.longitude - b.longitude, 2));
+	}
+	
+	/*private void displayArt(ArrayList<Art> art) {
+		
 		if (art != null && !art.isEmpty()) {
-
 			for (int i = 0; i < art.size(); i++) {
-				Art a = art.get(i);
 				OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
 				artOverlay.addOverlay(pin);
 			}
 			// re-draw map view
 			mapView.invalidate();
 		}
-	}
+	}*/
 
 	private ArrayList<Art> filterArt(ArrayList<Art> art) {
+		return filterByZoom( 
+			   filterByCategories(
+			   art));
 		/* String categoriesStr = prefs.getString(Utils.KEY_CATEGORIES, null);
 
 		if (!TextUtils.isEmpty(categoriesStr)) {
@@ -188,13 +251,55 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 			return result;
 		}
 		return null; */
+	}
+
+	private static final int[] MAX_PINS_PER_LEVEL = {3,5,10,15,20,30,40,60}; 
+	private static final int MIN_LEVEL = 7;
+	private static final int MAX_LEVEL = 15;
+	private final ArrayList<Art> artFiltered = new ArrayList<Art>();
+	private final ArrayList<Art> artToAdd = new ArrayList<Art>();
+	private final ArrayList<Art> artToRemove = new ArrayList<Art>();
+	
+	private ArrayList<Art> filterByZoom(ArrayList<Art> art) {
+		int newNrPins = 0;
+		if(newZoom<=MIN_LEVEL){
+			newNrPins = 1;
+		}else if(newZoom>MAX_LEVEL){
+			newNrPins = art.size();
+		}else{
+			newNrPins = MAX_PINS_PER_LEVEL[newZoom-MIN_LEVEL-1];
+		}
+		
+		int oldNrPins = artFiltered.size();
+		
+		artToAdd.clear();
+		artToRemove.clear();
+		
+		if(newNrPins > oldNrPins){ //must add pins
+			for(int i=oldNrPins;i<newNrPins;++i){
+				artToAdd.add(art.get(i));
+			}
+			artFiltered.addAll(artToAdd);
+		}else{ //must remove pins
+			for(int i=oldNrPins-1;i>=newNrPins;--i){
+				artToRemove.add(artFiltered.get(i));
+				artFiltered.remove(i);
+			}
+		}
+		return artFiltered;		
+	}
+
+	private ArrayList<Art> filterByCategories(ArrayList<Art> art) {
 		return art;
 	}
 
+	private int oldZoom;
+	private int newZoom;
 	@Override
 	public void onZoom(int oldZoom, int newZoom) {
-		Log.d(Utils.TAG,"Zoom from "+oldZoom+" to "+newZoom);
-	}
-
-	
+		Log.d(Utils.TAG, "Zoom changed from "+oldZoom+" to "+newZoom);
+		this.oldZoom = oldZoom;
+		this.newZoom = newZoom;
+		reDisplayArt();
+	}	
 }

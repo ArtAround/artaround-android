@@ -15,6 +15,7 @@ public class Art {
 
 	public float latitude;
 	public float longitude;
+	public float mediumDistance;
 
 	public String locationDesc;
 	public String neighborhood;
@@ -39,6 +40,18 @@ public class Art {
 		builder.append(",artist: ").append(artist);
 		builder.append("}");
 		return builder.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if(o == null || o instanceof Art) return false;
+		Art a = (Art) o;
+		return this.latitude == a.latitude && this.longitude == a.longitude;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) (latitude*101 + latitude);
 	}
 
 }
