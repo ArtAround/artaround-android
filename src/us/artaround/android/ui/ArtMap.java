@@ -22,6 +22,7 @@ import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -36,6 +37,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 
+import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.OverlayItem;
 
@@ -54,6 +56,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public static final int DIALOG_SUGGEST_LOCATION_SETTINGS = 1;
 	public static final int DIALOG_UPDATE_FAILURE = 2;
 	public static final int DIALOG_DATABASE_ACCESS_ERROR = 3;
+	
+	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
 	private ArtMapView mapView;
 
@@ -69,7 +73,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
 
 	private SharedPreferences prefs;
-	private Location currentLocation;
+	private GeoPoint currentLocation = DEFAULT_LOCATION;
 	private LocationManager manager;
 
 	private Set<LoadArtTask> runningTasks;
@@ -99,7 +103,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 		setupUi();
-		updateLocation();
 	}
 
 	@Override
@@ -169,10 +172,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	@Override
 	public void onLocationChanged(Location location) {
-		currentLocation = location;
+		currentLocation = Utils.geo(location.getLatitude(), location.getLongitude());
 		manager.removeUpdates(this);
 		// center map on current location
-		mapView.getController().setCenter(Utils.geo(currentLocation.getLatitude(), currentLocation.getLongitude()));
+		mapView.getController().setCenter(currentLocation);
 	}
 
 	@Override
@@ -197,22 +200,46 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
+	@Override
+	public void onLoadArtError(Throwable e) {
+		Log.d(Utils.TAG, "Failed to load art!", e);
+		OnClickListener onOk = new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				ArtMap.this.gotoWifiSettings();
+			}
+		};
+		OnClickListener onCancel = new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				//TODO
+			}
+		};
+		new AlertDialog.Builder(this)
+.setMessage(R.string.connection_fail_message)
+				.setPositiveButton(R.string.connection_fail_ok, onOk)
+				.setNegativeButton(R.string.connection_fail_cancel, onCancel)
+				.show();
+	}
+
+	protected void gotoWifiSettings() {
+		//go to wireless settings
+		startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+	}
+
 	private void setupUi() {
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
 
 		mapView.setZoomLevel(DEFAULT_ZOOM_LEVEL);
 		mapView.setZoomListener(this);
+		mapView.getController().setCenter(currentLocation);
 
 		artOverlay = new ArtItemOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
 		mapView.getOverlays().add(artOverlay);
 
-		//mapController = mapView.getController();
-		//mapController.setCenter(currentLocation);
-
 		View btnSearch = findViewById(R.id.btn_search);
 		btnSearch.setOnClickListener(new View.OnClickListener() {
-
 			@Override
 			public void onClick(View v) {
 				onSearchRequested();
@@ -224,7 +251,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void loadArt() {
 		Date lastUpdate = getLastUpdate();
-		//this.allArt.clear();
+		this.allArt.clear();
 		Log.d(Utils.TAG, "Last art update was " + lastUpdate);
 
 		if (isOutdated(lastUpdate)) {
@@ -404,7 +431,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		suggestLocationSettings();
 
 		// step 2: try the last known location
-		currentLocation = fromStoredLocation();
+		Location l = fromStoredLocation();
+		currentLocation = Utils.geo(l.getLatitude(), l.getLongitude());
 
 		if (currentLocation != null) {
 			return;

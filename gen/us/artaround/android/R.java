@@ -32,6 +32,9 @@ public final class R {
     }
     public static final class string {
         public static final int app_label=0x7f050001;
+        public static final int connection_fail_cancel=0x7f05000b;
+        public static final int connection_fail_message=0x7f050009;
+        public static final int connection_fail_ok=0x7f05000a;
         public static final int database_access_error_msg=0x7f050007;
         public static final int database_access_error_title=0x7f050006;
         public static final int location_suggest_settings_msg=0x7f050005;
