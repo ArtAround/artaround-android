@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<style
+		name="ActionBarSeparator">
+		<item 
+			name="android:layout_width">1dp</item>
+		<item
+			name="android:layout_height">fill_parent</item>
+		<item
+			name="android:background">#66FFFFFF</item>
+	</style>
+	
+	<style
+		name="ActionBarButton">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:padding">4dp</item>
+		<item
+			name="android:background">@null</item>
+	</style>
+</resources>

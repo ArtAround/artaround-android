@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ArtAround</string>
+    <string name="app_label">ArtAround</string>
+    
+    <string name="ok">OK</string>
+    <string name="skip">Skip</string>
     
     <!-- Location -->
-    <string name="updating_location">Updating location from %1$s...</string>
+    <string name="location_suggest_settings_title">Improve my location</string>
+    <string name="location_suggest_settings_msg">Not all location sources are currently enabled. For the fastest and most accurate location detection please turn on GPS and wireless network.</string>
     
+    <string name="database_access_error_title">Database access problem</string>
+    <string name="database_access_error_msg"> Please make sure your sdcard is mounted with appropriate permissions for writing. Restart the application to have your data stored locally.</string>
+    
+    <string name="search_hint">Search by zip code</string>
 </resources>

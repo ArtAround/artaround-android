@@ -1,25 +1,25 @@
 package us.artaround.services;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
-import android.text.TextUtils;
-import android.util.Log;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArtParser extends Parser {
 	public static final String EXC_MSG = "JSON parsing exception";
 
-	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
-
-	public static final String PARAM_OBJECT = "arts";
+	public static final String PARAM_ARTS = "arts";
+	public static final String PARAM_TOTAL_COUNT = "total_count";
+	public static final String PARAM_PER_PAGE = "per_page";
+	public static final String PARAM_PAGE = "page";
+	public static final String PARAM_COUNT = "count";
 
 	public static final String PARAM_SLUG = "slug";
 	public static final String PARAM_TITLE = "title";
@@ -33,22 +33,30 @@ public class ArtParser extends Parser {
 	public static final String PARAM_ARTIST = "artist";
 	public static final String PARAM_PHOTOS = "flickr_ids";
 
+	public static int parseTotalCount(JSONObject json) throws JSONException {
+		return json.getInt(PARAM_TOTAL_COUNT);
+	}
+
+	public static int[] parsePage(JSONObject json) throws JSONException {
+		int results[] = new int[3];
+		results[0] = json.getInt(PARAM_COUNT);
+		results[1] = json.getInt(PARAM_PAGE);
+		results[2] = json.getInt(PARAM_PER_PAGE);
+		return results;
+	}
+
 	public static Art parse(JSONObject json) throws JSONException, ParseException {
-		SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
+		SimpleDateFormat df = new SimpleDateFormat(Utils.DATE_FORMAT);
 		
 		Art art = new Art();
 		art.slug = prop(json, PARAM_SLUG);
 		art.category = prop(json, PARAM_CATEGORY);
 		art.title = prop(json, PARAM_TITLE);
+
 		art.createdAt = df.parse((prop(json, PARAM_CREATED_AT)));
 		art.updatedAt = df.parse(prop(json, PARAM_UPDATED_AT));
 
-		String ward = prop(json, PARAM_WARD);
-		if (TextUtils.isEmpty(ward)) {
-			art.ward = 0;
-		} else {
-			art.ward = Integer.parseInt(ward);
-		}
+		art.ward = json.optInt(PARAM_WARD, 0);
 
 		JSONArray arr = propA(json, PARAM_LOCATION);
 		art.latitude = (float) arr.optDouble(0);
@@ -71,7 +79,7 @@ public class ArtParser extends Parser {
 
 	public static Art parse(String json) throws ArtAroundException {
 		try {
-			Log.i(Utils.TAG, "ArtParser received JSON: \n" + json);
+			// Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
 			return parse(new JSONObject(json));
 		} catch (JSONException e) {
 			throw new ArtAroundException(EXC_MSG, e);
@@ -80,15 +88,29 @@ public class ArtParser extends Parser {
 		}
 	}
 
-	public static ArrayList<Art> parseA(String json) throws ArtAroundException {
-		Log.i(Utils.TAG, "ArtParser received JSON: \n" + json);
+	public static ParseResult parseArt(String json) throws ArtAroundException {
+		// Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
+		ParseResult result = new ParseResult();
 
-		ArrayList<Art> results = new ArrayList<Art>();
 		try {
-			JSONArray arr = new JSONObject(json).getJSONArray(PARAM_OBJECT);
+			JSONObject obj = new JSONObject(json);
+
+			int totalCount = parseTotalCount(obj);
+
+			int[] pageInfo = parsePage(obj.getJSONObject(PARAM_PAGE));
+
+			JSONArray arr = obj.getJSONArray(PARAM_ARTS);
+			List<Art> art = new ArrayList<Art>();
 			for (int i = 0; i < arr.length(); i++) {
-				results.add(parse(arr.getJSONObject(i)));
+				art.add(parse(arr.getJSONObject(i)));
 			}
+
+			result.art = art;
+			result.totalCount = totalCount;
+			result.count = pageInfo[0];
+			result.page = pageInfo[1];
+			result.perPage = pageInfo[2];
+
 		} catch (JSONException e) {
 			throw new ArtAroundException(EXC_MSG, e);
 		} catch (RuntimeException e) {
@@ -96,6 +118,6 @@ public class ArtParser extends Parser {
 		} catch (ParseException e) {
 			throw new ArtAroundException(EXC_MSG, e);
 		}
-		return results;
+		return result;
 	}
 }
