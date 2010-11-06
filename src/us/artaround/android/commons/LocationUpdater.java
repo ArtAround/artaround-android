@@ -39,8 +39,7 @@ public abstract class LocationUpdater {
 	 * @return the last known location, or null
 	 */
 	public static Location getStoredLocation(Context context) {
-		LocationManager manager = (LocationManager) context
-				.getSystemService(Context.LOCATION_SERVICE);
+		LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
 		Location myLocation = null;
 		List<String> enabledProviders = manager.getProviders(true);
@@ -64,8 +63,7 @@ public abstract class LocationUpdater {
 	 * @param provider
 	 */
 	public static void requestSingleUpdate(final Context context, final String provider) {
-		final LocationManager manager = (LocationManager) context
-				.getSystemService(Context.LOCATION_SERVICE);
+		final LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
 		if (!manager.isProviderEnabled(provider)) {
 			context.sendBroadcast(getFailureIntent(provider, CODE_PROVIDER_DISABLED));
@@ -114,8 +112,7 @@ public abstract class LocationUpdater {
 				timers.remove(context);
 
 				context.sendBroadcast(getFailureIntent(provider, CODE_TIMEOUT));
-				Log.d(TAG, "LocationUpdater: timeout for " + provider + " after " + TIMEOUT_TIME
-						+ " millis");
+				Log.d(TAG, "LocationUpdater: timeout for " + provider + " after " + TIMEOUT_TIME + " millis");
 			}
 		};
 

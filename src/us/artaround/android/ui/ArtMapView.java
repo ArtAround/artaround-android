@@ -15,7 +15,7 @@ public class ArtMapView extends MapView implements OnZoomListener {
 	public ArtMapView(Context context, String apiKey) {
 		super(context, apiKey);
 	}
-	
+
 	public ArtMapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
@@ -41,16 +41,16 @@ public class ArtMapView extends MapView implements OnZoomListener {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		boolean result = super.onTouchEvent(event);
-		if(event.getAction() == MotionEvent.ACTION_UP){
+		if (event.getAction() == MotionEvent.ACTION_UP) {
 			checkForZoomEvent();
 		}
 		return result;
 	}
 
 	private void checkForZoomEvent() {
-		if(this.zoomListener!=null){
+		if (this.zoomListener != null) {
 			int newZoom = this.getZoomLevel();
-			if(newZoom!=zoom){
+			if (newZoom != zoom) {
 				this.zoomListener.onZoom(zoom, newZoom);
 			}
 			zoom = newZoom;
@@ -63,8 +63,8 @@ public class ArtMapView extends MapView implements OnZoomListener {
 	@Override
 	public void onZoom(boolean zoomIn) {
 		int oldZoom = this.zoom;
-		this.setZoomLevel(oldZoom + (zoomIn?1:-1));
-		if(this.zoomListener!=null){
+		this.setZoomLevel(oldZoom + (zoomIn ? 1 : -1));
+		if (this.zoomListener != null) {
 			this.zoomListener.onZoom(oldZoom, this.zoom);
 		}
 	}

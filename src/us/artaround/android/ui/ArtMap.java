@@ -5,67 +5,107 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.android.R;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.tasks.LoadArtTask;
 import us.artaround.android.tasks.LoadArtTask.LoadArtCallback;
+import us.artaround.android.ui.ArtItemOverlay.OverlayTapListener;
 import us.artaround.models.Art;
 import us.artaround.models.ArtDispersionComparator;
+import us.artaround.services.ParseResult;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 
-import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapController;
 import com.google.android.maps.OverlayItem;
 
-public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener {
+public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener, ZoomListener {
+
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
 	public static final int PER_PAGE = 1000;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
+	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 15, 20, 30, 40, 60 };
+	private static final int MIN_LEVEL = 7;
+	private static final int MAX_LEVEL = 15;
+
+	public static final int DIALOG_ART_INFO = 0;
+	public static final int DIALOG_SUGGEST_LOCATION_SETTINGS = 1;
+	public static final int DIALOG_UPDATE_FAILURE = 2;
+	public static final int DIALOG_DATABASE_ACCESS_ERROR = 3;
+
 	private ArtMapView mapView;
-	private MapController mapController;
-	
+
+	private final ArrayList<Art> artFiltered = new ArrayList<Art>();
+	private final ArrayList<Art> artToAdd = new ArrayList<Art>();
+	private final ArrayList<Art> artToRemove = new ArrayList<Art>();
+	private List<Art> allArt;
+
+	//private int oldZoom;
+	private int newZoom;
+
 	private ArtItemOverlay artOverlay;
-	private ArrayList<Art> allArt;
+	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
 
 	private SharedPreferences prefs;
-	private GeoPoint currentLocation = new GeoPoint(38899811, -77020373);
+	private Location currentLocation;
+	private LocationManager manager;
+
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
-	private AtomicBoolean runMoreTasks;
+	private AtomicInteger howManyMoreTasks;
+	private List<Art> arts;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_map);
-		
-		runMoreTasks = new AtomicBoolean(false);
+
+		Intent intent = getIntent();
+
+		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+			String query = intent.getStringExtra(SearchManager.QUERY);
+			doMySearch(query);
+		}
+
+		arts = new ArrayList<Art>();
+		howManyMoreTasks = new AtomicInteger(0);
 		taskCount = new AtomicInteger(0);
 		allArt = new ArrayList<Art>();
 		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-		setupMap();
-		loadArt();
+		setupUi();
+		updateLocation();
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
+	protected void onDestroy() {
+		super.onDestroy();
+		manager.removeUpdates(this);
 	}
 
 	@Override
@@ -73,65 +113,163 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 		return false;
 	}
 
-	private void setupMap() {
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		switch (id) {
+		case DIALOG_ART_INFO:
+			break;
+		case DIALOG_SUGGEST_LOCATION_SETTINGS:
+			builder.setTitle(getString(R.string.location_suggest_settings_title));
+			builder.setMessage(getString(R.string.location_suggest_settings_msg));
+			builder.setCancelable(true);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+					doUpdatePrefs();
+					startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+				}
+			});
+			builder.setNegativeButton(getString(R.string.skip), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+					doUpdatePrefs();
+				}
+			});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					doUpdatePrefs();
+				}
+			});
+			break;
+		case DIALOG_DATABASE_ACCESS_ERROR:
+			builder.setIcon(android.R.drawable.ic_dialog_alert);
+			builder.setTitle(R.string.database_access_error_title);
+			builder.setMessage(R.string.database_access_error_msg);
+			builder.setCancelable(true);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			break;
+		}
+		return builder.create();
+	}
+
+	@Override
+	public void onTap(OverlayItem item) {
+		Log.d(Utils.TAG, "Tapped!");
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		currentLocation = location;
+		manager.removeUpdates(this);
+		// center map on current location
+		mapView.getController().setCenter(Utils.geo(currentLocation.getLatitude(), currentLocation.getLongitude()));
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+	@Override
+	public void onProviderEnabled(String provider) {}
+
+	@Override
+	public void onProviderDisabled(String provider) {}
+
+	@Override
+	public void onLoadArt(ParseResult result, LoadArtTask task) {
+		Log.d(Utils.TAG, "Result of task is" + result);
+		processLoadedArt(result.art);
+
+		if (result.totalCount == arts.size()) {
+			// finished to load all arts; update database cache			
+		} else {
+			Log.d(Utils.TAG, "Loading more art from server...");
+			loadMoreArtFromServer(result, task);
+		}
+	}
+
+	private void setupUi() {
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
+
 		mapView.setZoomLevel(DEFAULT_ZOOM_LEVEL);
 		mapView.setZoomListener(this);
-		
-		artOverlay = new ArtItemOverlay(getResources().getDrawable(R.drawable.pin), this);
+
+		artOverlay = new ArtItemOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
 		mapView.getOverlays().add(artOverlay);
-		
-		mapController = mapView.getController();
-		mapController.setCenter(currentLocation);
+
+		//mapController = mapView.getController();
+		//mapController.setCenter(currentLocation);
+
+		View btnSearch = findViewById(R.id.btn_search);
+		btnSearch.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				onSearchRequested();
+			}
+		});
+
+		loadArt();
 	}
 
 	private void loadArt() {
 		Date lastUpdate = getLastUpdate();
-		this.allArt.clear();
-		if(isOutdated(lastUpdate)) {
+		//this.allArt.clear();
+		Log.d(Utils.TAG, "Last art update was " + lastUpdate);
+
+		if (isOutdated(lastUpdate)) {
 			loadArtFromServer();
 		} else {
 			loadArtFromDatabase();
 		}
 	}
-	
+
 	private void loadArtFromDatabase() {
-		// TODO Auto-generated method stub
 
-	}
-
-	private void loadArtFromServer() {
-		if (isLoadingArt()) {
-			return;
-		}
-
-		runMoreTasks.set(true);
-		taskCount.set(MAX_CONCURRENT_TASKS);
-		for (int page = 1; page <= MAX_CONCURRENT_TASKS; page++) {
-			startTask(page);
-		}
-	}
-
-	private void loadMoreArtFromServer(ArrayList<Art> art, LoadArtTask task) {
-		runningTasks.remove(task);
-		if (art != null && art.size() == PER_PAGE && runMoreTasks.get()) {
-			if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
-				startTask(taskCount.incrementAndGet());
-			}
-		} else {
-			runMoreTasks.set(false);
-		}
 	}
 
 	private boolean isLoadingArt() {
 		return !runningTasks.isEmpty();
 	}
 
-	@Override
-	public void onLoadArt(ArrayList<Art> art, LoadArtTask task) {
-		loadMoreArtFromServer(art, task);
-		processLoadedArt(art);
+	private void loadArtFromServer() {
+		Log.d(Utils.TAG, "Loading art from server...");
+		if (isLoadingArt()) {
+			return;
+		}
+
+		howManyMoreTasks.set(1);
+		taskCount.set(MAX_CONCURRENT_TASKS);
+		for (int page = 1; page <= MAX_CONCURRENT_TASKS; page++) {
+			startTask(page);
+		}
+	}
+
+	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
+		runningTasks.remove(task);
+		howManyMoreTasks.decrementAndGet();
+
+		if (result.page == 1) {
+			howManyMoreTasks.set((int) (Math.floor(result.totalCount - result.count) / result.perPage));
+		}
+
+		Log.d(Utils.TAG, "There are " + howManyMoreTasks.get() + " more tasks to start.");
+
+		if (result.count == result.perPage && howManyMoreTasks.get() > 0) {
+			if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
+				startTask(taskCount.incrementAndGet());
+			}
+		}
 	}
 
 	private void startTask(int page) {
@@ -139,7 +277,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 	}
 
 	private boolean isOutdated(Date lastUpdate) {
-		if(lastUpdate == null) {
+		if (lastUpdate == null) {
 			return true;
 		}
 		return (new Date().getTime() - lastUpdate.getTime()) > prefs.getLong(Utils.KEY_UPDATE_INTERVAL,
@@ -154,7 +292,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 		return new Date(time);
 	}
 
-	private void processLoadedArt(ArrayList<Art> art) {
+	private void processLoadedArt(List<Art> art) {
 		if (art != null && !art.isEmpty()) {
 			allArt.addAll(art);
 			calculateMaximumDispersion();
@@ -162,144 +300,174 @@ public class ArtMap extends MapActivity implements LoadArtCallback, ZoomListener
 			// save to database
 		}
 	}
-	
-	private void reDisplayArt(){
+
+	private void reDisplayArt() {
 		displayArt(filterArt(allArt));
 	}
 
-	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
-	private void displayArt(ArrayList<Art> art){
+	private void displayArt(List<Art> art) {
 		//remove art
-		Log.d(Utils.TAG,"Removing "+artToRemove.size()+" pins.");
-		for(Art a : artToRemove){
+		Log.d(Utils.TAG, "Removing " + artToRemove.size() + " pins.");
+		for (Art a : artToRemove) {
 			artOverlay.removeOverlay(items.get(a));
 		}
 		//add new art
-		Log.d(Utils.TAG,"Adding "+artToAdd.size()+" pins.");
-		for(Art a : artToAdd){
+		Log.d(Utils.TAG, "Adding " + artToAdd.size() + " pins.");
+		for (Art a : artToAdd) {
 			artOverlay.addOverlay(newOverlay(a));
 		}
 		//redraw
 		artOverlay.doPopulate();
 		mapView.invalidate();
 	}
-	
-	private OverlayItem newOverlay(Art a){
-		if(items.containsKey(a)){
+
+	private OverlayItem newOverlay(Art a) {
+		if (items.containsKey(a)) {
 			return items.get(a);
-		}else{
+		} else {
 			OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
 			items.put(a, pin);
 			return pin;
 		}
 	}
-	
-	private void calculateMaximumDispersion(){
+
+	private void calculateMaximumDispersion() {
 		final int allS = allArt.size();
-		for(int i=0;i<allS;++i){
+		for (int i = 0; i < allS; ++i) {
 			Art a = allArt.get(i);
-			for(int j=i+1;j<allS;++j){
+			for (int j = i + 1; j < allS; ++j) {
 				Art b = allArt.get(j);
-				float dist = distance(a,b);
+				float dist = distance(a, b);
 				a.mediumDistance += dist;
 				b.mediumDistance += dist;
 			}
 		}
-		for(int i=0;i<allS;++i){
+		for (int i = 0; i < allS; ++i) {
 			Art a = allArt.get(i);
 			a.mediumDistance /= allS;
 		}
-		Collections.sort(allArt,new ArtDispersionComparator());
+		Collections.sort(allArt, new ArtDispersionComparator());
 		Collections.reverse(allArt);
 	}
 
 	private float distance(Art a, Art b) {
-		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude,2)+Math.pow(a.longitude - b.longitude, 2));
-	}
-	
-	/*private void displayArt(ArrayList<Art> art) {
-		
-		if (art != null && !art.isEmpty()) {
-			for (int i = 0; i < art.size(); i++) {
-				OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
-				artOverlay.addOverlay(pin);
-			}
-			// re-draw map view
-			mapView.invalidate();
-		}
-	}*/
-
-	private ArrayList<Art> filterArt(ArrayList<Art> art) {
-		return filterByZoom( 
-			   filterByCategories(
-			   art));
-		/* String categoriesStr = prefs.getString(Utils.KEY_CATEGORIES, null);
-
-		if (!TextUtils.isEmpty(categoriesStr)) {
-			ArrayList<Art> result = new ArrayList<Art>();
-			String[] categories = TextUtils.split(categoriesStr, Utils.STR_SEP);
-
-			for (int i = 0; i < art.size(); i++) {
-				Art a = art.get(i);
-				for (int j = 0; j < categories.length; j++) {
-					if (a.category.equals(categories[j])) {
-						result.add(a);
-						break;
-					}
-				}
-			}
-			return result;
-		}
-		return null; */
+		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
 	}
 
-	private static final int[] MAX_PINS_PER_LEVEL = {3,5,10,15,20,30,40,60}; 
-	private static final int MIN_LEVEL = 7;
-	private static final int MAX_LEVEL = 15;
-	private final ArrayList<Art> artFiltered = new ArrayList<Art>();
-	private final ArrayList<Art> artToAdd = new ArrayList<Art>();
-	private final ArrayList<Art> artToRemove = new ArrayList<Art>();
-	
-	private ArrayList<Art> filterByZoom(ArrayList<Art> art) {
+	private List<Art> filterArt(List<Art> art) {
+		return filterByZoom(filterByCategories(art));
+	}
+
+	private List<Art> filterByZoom(List<Art> art) {
 		int newNrPins = 0;
-		if(newZoom<=MIN_LEVEL){
+		if (newZoom <= MIN_LEVEL) {
 			newNrPins = 1;
-		}else if(newZoom>MAX_LEVEL){
+		} else if (newZoom > MAX_LEVEL) {
 			newNrPins = art.size();
-		}else{
-			newNrPins = MAX_PINS_PER_LEVEL[newZoom-MIN_LEVEL-1];
+		} else {
+			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 		}
-		
+
 		int oldNrPins = artFiltered.size();
-		
+
 		artToAdd.clear();
 		artToRemove.clear();
-		
-		if(newNrPins > oldNrPins){ //must add pins
-			for(int i=oldNrPins;i<newNrPins;++i){
+
+		if (newNrPins > oldNrPins) { //must add pins
+			for (int i = oldNrPins; i < newNrPins; ++i) {
 				artToAdd.add(art.get(i));
 			}
 			artFiltered.addAll(artToAdd);
-		}else{ //must remove pins
-			for(int i=oldNrPins-1;i>=newNrPins;--i){
+		} else { //must remove pins
+			for (int i = oldNrPins - 1; i >= newNrPins; --i) {
 				artToRemove.add(artFiltered.get(i));
 				artFiltered.remove(i);
 			}
 		}
-		return artFiltered;		
+		return artFiltered;
 	}
 
-	private ArrayList<Art> filterByCategories(ArrayList<Art> art) {
+	private List<Art> filterByCategories(List<Art> art) {
 		return art;
 	}
 
-	private int oldZoom;
-	private int newZoom;
 	@Override
 	public void onZoom(int oldZoom, int newZoom) {
-		Log.d(Utils.TAG, "Zoom changed from "+oldZoom+" to "+newZoom);
-		this.oldZoom = oldZoom;
+		Log.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
+		//this.oldZoom = oldZoom;
 		this.newZoom = newZoom;
 		reDisplayArt();
-	}	
+	}
+
+	private void updateLocation() {
+		// step 1: suggest the user to enable gps and network providers
+		suggestLocationSettings();
+
+		// step 2: try the last known location
+		currentLocation = fromStoredLocation();
+
+		if (currentLocation != null) {
+			return;
+		}
+
+		// step 3: request an update from enabled providers
+		if (!fromLocationListener()) {
+			showDialog(DIALOG_UPDATE_FAILURE);
+		}
+	}
+
+	private void suggestLocationSettings() {
+		// don't bother the user if he already has chosen not to
+		if (!prefs.getBoolean(Utils.KEY_SUGGEST_LOCATION_SETTINGS, true)) {
+			return;
+		}
+
+		int count = 0;
+		for (int i = 0; i < Utils.PROVIDERS.length; i++) {
+			if (manager.isProviderEnabled(Utils.PROVIDERS[i])) {
+				count++;
+			}
+		}
+		if (count < Utils.PROVIDERS.length) {
+			// safeguard against non-existing activity
+			PackageManager manager = getPackageManager();
+			ResolveInfo info = manager.resolveActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+					PackageManager.GET_INTENT_FILTERS);
+			IntentFilter filter = info.filter;
+			if (filter != null && filter.hasAction(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) {
+				showDialog(DIALOG_SUGGEST_LOCATION_SETTINGS);
+			}
+		}
+	}
+
+	private Location fromStoredLocation() {
+		Location location = null;
+		for (int i = 0; i < Utils.PROVIDERS.length; i++) {
+			location = manager.getLastKnownLocation(Utils.PROVIDERS[i]);
+			if (location != null) {
+				break;
+			}
+		}
+		return location;
+	}
+
+	private boolean fromLocationListener() {
+		boolean enabled = false;
+		for (int i = 0; i < Utils.PROVIDERS.length; i++) {
+			if (manager.isProviderEnabled(Utils.PROVIDERS[i])) {
+				manager.requestLocationUpdates(Utils.PROVIDERS[i], 0, 0, this);
+				enabled = true;
+				break;
+			}
+		}
+		return enabled;
+	}
+
+	private void doUpdatePrefs() {
+		prefs.edit().putBoolean(Utils.KEY_SUGGEST_LOCATION_SETTINGS, false).commit();
+	}
+
+	private void doMySearch(String query) {
+		// TODO Auto-generated method stub
+	}
 }

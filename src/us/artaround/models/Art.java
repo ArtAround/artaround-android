@@ -2,7 +2,6 @@ package us.artaround.models;
 
 import java.util.Date;
 
-
 public class Art {
 	public String slug;
 	public String category;
@@ -44,14 +43,14 @@ public class Art {
 
 	@Override
 	public boolean equals(Object o) {
-		if(o == null || o instanceof Art) return false;
+		if (o == null || o instanceof Art) return false;
 		Art a = (Art) o;
 		return this.latitude == a.latitude && this.longitude == a.longitude;
 	}
 
 	@Override
 	public int hashCode() {
-		return (int) (latitude*101 + latitude);
+		return (int) (latitude * 101 + latitude);
 	}
 
 }
