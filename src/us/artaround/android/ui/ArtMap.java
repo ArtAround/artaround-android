@@ -48,8 +48,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public static final int PER_PAGE = 1000;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
-	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 15, 20, 30, 40, 60 };
-	private static final int MIN_LEVEL = 7;
+	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
+	private static final int MIN_LEVEL = 8;
 	private static final int MAX_LEVEL = 15;
 
 	public static final int DIALOG_ART_INFO = 0;
@@ -59,14 +59,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	
 	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
+	public static final int doNothing = 1;
+
 	private ArtMapView mapView;
 
-	private final ArrayList<Art> artFiltered = new ArrayList<Art>();
-	private final ArrayList<Art> artToAdd = new ArrayList<Art>();
-	private final ArrayList<Art> artToRemove = new ArrayList<Art>();
 	private List<Art> allArt;
+	private List<Art> artFiltered = new ArrayList<Art>();
 
-	//private int oldZoom;
 	private int newZoom;
 
 	private ArtItemOverlay artOverlay;
@@ -231,7 +230,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
 
-		mapView.setZoomLevel(DEFAULT_ZOOM_LEVEL);
+		mapView.setZoomLevel(newZoom = DEFAULT_ZOOM_LEVEL);
 		mapView.setZoomListener(this);
 		mapView.getController().setCenter(currentLocation);
 
@@ -332,15 +331,15 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		displayArt(filterArt(allArt));
 	}
 
-	private void displayArt(List<Art> art) {
+	private void displayArt(RenderingContext art) {
 		//remove art
-		Log.d(Utils.TAG, "Removing " + artToRemove.size() + " pins.");
-		for (Art a : artToRemove) {
+		Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
+		for (Art a : art.artToRemove) {
 			artOverlay.removeOverlay(items.get(a));
 		}
 		//add new art
-		Log.d(Utils.TAG, "Adding " + artToAdd.size() + " pins.");
-		for (Art a : artToAdd) {
+		Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
+		for (Art a : art.artToAdd) {
 			artOverlay.addOverlay(newOverlay(a));
 		}
 		//redraw
@@ -381,12 +380,16 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
 	}
 
-	private List<Art> filterArt(List<Art> art) {
-		return filterByZoom(filterByCategories(art));
+	private RenderingContext filterArt(List<Art> art) {
+		return filterByZoom(filterByCategories(new RenderingContext(art)));
 	}
 
-	private List<Art> filterByZoom(List<Art> art) {
+	private RenderingContext filterByZoom(RenderingContext context) {
 		int newNrPins = 0;
+		List<Art> art = context.art;
+		List<Art> artToAdd = context.artToAdd;
+		List<Art> artToRemove = context.artToRemove;
+
 		if (newZoom <= MIN_LEVEL) {
 			newNrPins = 1;
 		} else if (newZoom > MAX_LEVEL) {
@@ -394,11 +397,9 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		} else {
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 		}
+		Log.d(Utils.TAG, "nr pins = " + newNrPins);
 
 		int oldNrPins = artFiltered.size();
-
-		artToAdd.clear();
-		artToRemove.clear();
 
 		if (newNrPins > oldNrPins) { //must add pins
 			for (int i = oldNrPins; i < newNrPins; ++i) {
@@ -411,11 +412,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				artFiltered.remove(i);
 			}
 		}
-		return artFiltered;
+		return context;
 	}
 
-	private List<Art> filterByCategories(List<Art> art) {
-		return art;
+	private RenderingContext filterByCategories(RenderingContext context) {
+		return context;
 	}
 
 	@Override
@@ -497,5 +498,14 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void doMySearch(String query) {
 		// TODO Auto-generated method stub
+	}
+
+	public static class RenderingContext {
+		public RenderingContext(List<Art> art) {
+			this.art.addAll(art);
+		}
+		public final List<Art> art = new ArrayList<Art>();
+		public final List<Art> artToRemove = new ArrayList<Art>();
+		public final List<Art> artToAdd = new ArrayList<Art>();
 	}
 }
