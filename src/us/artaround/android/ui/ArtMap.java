@@ -79,7 +79,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
-	private List<Art> arts;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -105,7 +104,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void doCreate() {
-		arts = new ArrayList<Art>();
 		howManyMoreTasks = new AtomicInteger(0);
 		taskCount = new AtomicInteger(0);
 		allArt = new ArrayList<Art>();
@@ -214,7 +212,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Log.d(Utils.TAG, "Result of task is" + result);
 		processLoadedArt(result.art);
 
-		if (result.totalCount == arts.size()) {
+		if (result.totalCount == allArt.size()) {
 			// finished to load all arts; update database cache			
 		} else {
 			Log.d(Utils.TAG, "Loading more art from server...");
