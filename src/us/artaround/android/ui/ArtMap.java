@@ -46,7 +46,7 @@ import com.google.android.maps.OverlayItem;
 public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener, ZoomListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 1000;
+	public static final int PER_PAGE = 50;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -234,18 +234,25 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		processLoadedArt(result.art);
 
 		if (result.totalCount == allArt.size()) {
-			// finished to load all arts; clear database cache
-			new SaveArtTask().execute(database, allArt);
-			setLastUpdate();
+			// finished to load all arts 
+			onFinishLoadArt();
 		} else {
 			Log.d(Utils.TAG, "Loading more art from server...");
 			loadMoreArtFromServer(result, task);
 		}
 	}
 
+	private void onFinishLoadArt() {
+		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
+		recalculateMaximumDispersion();
+		//clear database cache
+		new SaveArtTask().execute(database, allArt);
+		setLastUpdate();
+	}
+
 	@Override
 	public void onLoadArtError(Throwable e) {
-		Log.d(Utils.TAG, "Failed to load art!", e);
+		Log.w(Utils.TAG, "Failed to load art!", e);
 		OnClickListener onOk = new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -374,7 +381,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void processLoadedArt(List<Art> art) {
 		if (art != null && !art.isEmpty()) {
 			allArt.addAll(art);
-			calculateMaximumDispersion();
+			calculateMaximumDispersion(art);
 			displayArt(filterArt(allArt));
 			// save to database
 		}
@@ -410,23 +417,33 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
-	private void calculateMaximumDispersion() {
-		final int allS = allArt.size();
+	private void calculateMaximumDispersion(List<Art> art) {
+		Log.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
+		final int allS = art.size();
 		for (int i = 0; i < allS; ++i) {
-			Art a = allArt.get(i);
+			art.get(i).mediumDistance = 0;
+		}
+		for (int i = 0; i < allS; ++i) {
+			Art a = art.get(i);
 			for (int j = i + 1; j < allS; ++j) {
-				Art b = allArt.get(j);
+				Art b = art.get(j);
 				float dist = distance(a, b);
 				a.mediumDistance += dist;
 				b.mediumDistance += dist;
 			}
 		}
 		for (int i = 0; i < allS; ++i) {
-			Art a = allArt.get(i);
-			a.mediumDistance /= allS;
+			art.get(i).mediumDistance /= allS;
 		}
-		Collections.sort(allArt, new ArtDispersionComparator());
-		Collections.reverse(allArt);
+		Collections.sort(art, new ArtDispersionComparator());
+		Collections.reverse(art);
+	}
+
+	private void recalculateMaximumDispersion() {
+		if (allArt.size() > PER_PAGE) { //only need to do this if we have more than one page
+			Log.d(Utils.TAG, "Computing maxium dispersion for all art (" + allArt.size() + ").");
+			calculateMaximumDispersion(allArt);
+		}
 	}
 
 	private float distance(Art a, Art b) {
