@@ -1,6 +1,6 @@
 package us.artaround.android.ui;
 
-import us.artaround.android.R;
+import us.artaround.R;
 import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
 import android.app.Activity;

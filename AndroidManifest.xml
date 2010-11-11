@@ -2,7 +2,7 @@
 
 <manifest
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	package="us.artaround.android"
+	package="us.artaround"
 	android:versionCode="1"
 	android:versionName="1.0"
 	android:installLocation="auto"> <!-- This will be ignored by versions lower than 2.2 -->
@@ -13,7 +13,7 @@
 		android:debuggable="true">
 
 		<activity
-			android:name=".ui.ArtMap"
+			android:name=".android.ui.ArtMap"
 			android:label="@string/app_label"
 			android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>
@@ -34,16 +34,6 @@
 
 		</activity>
 
-		<receiver
-			android:name=".core.LocationUpdateReceiver">
-			<intent-filter>
-				<action
-					android:name="us.artaround.android.ACTION_UPDATE_SUCCESS" />
-				<action
-					android:name="us.artaround.android.ACTION_UPDATE_FAILURE" />
-			</intent-filter>
-		</receiver>
-
 		<uses-library
 			android:name="com.google.android.maps" />
 	<activity android:name=".ui.ArtDetails" android:theme="@android:style/Theme.NoTitleBar" android:label="@string/app_label"></activity>
@@ -56,8 +46,6 @@
 		android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<uses-permission
 		android:name="android.permission.ACCESS_COARSE_LOCATION" />
-	<uses-permission
-		android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 	<uses-sdk                                                                                                          
 		android:minSdkVersion="3"

@@ -1,4 +1,4 @@
-package us.artaround.android.tasks;
+package us.artaround.android.commons.tasks;
 
 import us.artaround.android.commons.Utils;
 import us.artaround.models.ArtAroundException;

@@ -15,7 +15,7 @@ import us.artaround.models.ArtAroundException;
 public abstract class BaseService {
 	public static final String FORMAT = "json";
 	public static final String BASE_URL = "http://theartaround.us/api/v1/";
-	public static final String USER_AGENT = "us.artaround-android.services.BaseService";
+	public static final String USER_AGENT = "us.artaround";
 
 	public static String extraHeaderKey = null;
 	public static String extraHeaderValue = null;
