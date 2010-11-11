@@ -7,15 +7,16 @@ import android.graphics.drawable.Drawable;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
 
-public class ArtItemOverlay extends ItemizedOverlay<OverlayItem> {
+public class ArtOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
 	private OverlayTapListener context;
 
-	public ArtItemOverlay(Drawable defaultMarker) {
+	public ArtOverlay(Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
+		this.doPopulate(); //do populate after constructor so it doen't crash when empty
 	}
 
-	public ArtItemOverlay(Drawable defaultMarker, OverlayTapListener context) {
+	public ArtOverlay(Drawable defaultMarker, OverlayTapListener context) {
 		this(defaultMarker);
 		this.context = context;
 	}
@@ -45,7 +46,12 @@ public class ArtItemOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	public void doPopulate() {
+		setLastFocusedIndex(-1);
 		populate();
+	}
+
+	public void doClear() {
+		overlays.clear();
 	}
 
 	public static interface OverlayTapListener {

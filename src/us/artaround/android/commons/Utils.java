@@ -12,6 +12,7 @@ public class Utils {
 	public static final String KEY_UPDATE_INTERVAL = "updateInterval";
 	public static final String KEY_CATEGORIES = "categories";
 	public static final String KEY_SUGGEST_LOCATION_SETTINGS = "suggestLocationSettings";
+	public static final String KEY_ART_ID = "artId";
 
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
 
