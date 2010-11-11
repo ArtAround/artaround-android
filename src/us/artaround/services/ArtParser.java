@@ -1,16 +1,20 @@
 package us.artaround.services;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import us.artaround.android.commons.Utils;
-import us.artaround.models.Art;
-import us.artaround.models.ArtAroundException;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import us.artaround.android.commons.Utils;
+import us.artaround.models.Art;
+import us.artaround.models.ArtAroundException;
+import us.artaround.models.Artist;
+import android.text.TextUtils;
+import android.util.Log;
 
 public class ArtParser extends Parser {
 	public static final String EXC_MSG = "JSON parsing exception";
@@ -32,6 +36,7 @@ public class ArtParser extends Parser {
 	public static final String PARAM_NEIGHBORHOOD = "neighborhood";
 	public static final String PARAM_ARTIST = "artist";
 	public static final String PARAM_PHOTOS = "flickr_ids";
+	public static final String PARAM_NAME = "name";
 
 	public static int parseTotalCount(JSONObject json) throws JSONException {
 		return json.getInt(PARAM_TOTAL_COUNT);
@@ -72,14 +77,23 @@ public class ArtParser extends Parser {
 		}
 		art.photoIds = photoIds;
 		
-		// art.artist = ArtistParser.parse(propO(json, PARAM_ARTIST));
-		art.artist = prop(json, PARAM_ARTIST);
+		// FIXME make artist a json object
+		String artistSlug = prop(json, PARAM_ARTIST);
+		if (!TextUtils.isEmpty(artistSlug)) {
+			if (!ArtService.artists.containsKey(artistSlug)) {
+				Artist artist = new Artist(prop(json, PARAM_ARTIST));
+				ArtService.artists.put(artistSlug, artist);
+				art.artist = artist;
+			} else {
+				art.artist = ArtService.artists.get(artistSlug);
+			}
+		}
 		return art;
 	}
 
 	public static Art parse(String json) throws ArtAroundException {
 		try {
-			// Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
+			Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
 			return parse(new JSONObject(json));
 		} catch (JSONException e) {
 			throw new ArtAroundException(EXC_MSG, e);
@@ -89,7 +103,7 @@ public class ArtParser extends Parser {
 	}
 
 	public static ParseResult parseArt(String json) throws ArtAroundException {
-		// Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
+		Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
 		ParseResult result = new ParseResult();
 
 		try {
@@ -119,5 +133,11 @@ public class ArtParser extends Parser {
 			throw new ArtAroundException(EXC_MSG, e);
 		}
 		return result;
+	}
+
+	public static Artist parseArtist(JSONObject json) throws JSONException {
+		Artist artist = new Artist();
+		artist.name = prop(json, PARAM_NAME);
+		return artist;
 	}
 }

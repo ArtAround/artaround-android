@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import us.artaround.android.R;
+import us.artaround.R;
+import us.artaround.android.commons.Database;
 import us.artaround.android.commons.Utils;
-import us.artaround.android.tasks.LoadArtTask;
-import us.artaround.android.tasks.LoadArtTask.LoadArtCallback;
+import us.artaround.android.commons.tasks.LoadArtTask;
+import us.artaround.android.commons.tasks.SaveArtTask;
+import us.artaround.android.commons.tasks.LoadArtTask.LoadArtCallback;
 import us.artaround.android.ui.ArtItemOverlay.OverlayTapListener;
 import us.artaround.models.Art;
 import us.artaround.services.ParseResult;
@@ -38,27 +40,30 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
-public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener {
+public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener,
+		LocationListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 3;
 	public static final int PER_PAGE = 20;
 
 	public static final int DIALOG_ART_INFO = 0;
 	public static final int DIALOG_SUGGEST_LOCATION_SETTINGS = 1;
-	public static final int DIALOG_UPDATE_FAILURE = 2;
-	public static final int DIALOG_DATABASE_ACCESS_ERROR = 3;
+	public static final int DIALOG_LOCATION_UPDATE_FAILURE = 2;
 
 	private MapView mapView;
-	ArtItemOverlay artOverlay;
+	private ArtItemOverlay artOverlay;
 
 	private SharedPreferences prefs;
 	private Location currentLocation;
 	private LocationManager manager;
+	private Database database;
 
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
 	private List<Art> arts;
+
+	private SaveArtTask saveArtTask;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -72,13 +77,22 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			doMySearch(query);
 		}
 
-		arts = new ArrayList<Art>();
-		howManyMoreTasks = new AtomicInteger(0);
-		taskCount = new AtomicInteger(0);
-		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+		Holder holder = (Holder) getLastNonConfigurationInstance();
+		if (holder != null) {
+			arts = holder.arts;
+			howManyMoreTasks = holder.howManyMoreTasks;
+			taskCount = holder.taskCount;
+			runningTasks = holder.runningTasks;
+		} else {
+			arts = new ArrayList<Art>();
+			howManyMoreTasks = new AtomicInteger(0);
+			taskCount = new AtomicInteger(0);
+			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+		}
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		database = Database.getInstance(this);
 
 		setupUi();
 		updateLocation();
@@ -88,6 +102,18 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	protected void onDestroy() {
 		super.onDestroy();
 		manager.removeUpdates(this);
+		database.close();
+	}
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		Holder holder = new Holder();
+		holder.saveArtTask = saveArtTask;
+		holder.runningTasks = runningTasks;
+		holder.howManyMoreTasks = howManyMoreTasks;
+		holder.taskCount = taskCount;
+		holder.arts = arts;
+		return holder;
 	}
 
 	@Override
@@ -128,18 +154,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				}
 			});
 			break;
-		case DIALOG_DATABASE_ACCESS_ERROR:
-			builder.setIcon(android.R.drawable.ic_dialog_alert);
-			builder.setTitle(R.string.database_access_error_title);
-			builder.setMessage(R.string.database_access_error_msg);
-			builder.setCancelable(true);
-			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.dismiss();
-				}
-			});
-			break;
 		}
 		return builder.create();
 	}
@@ -166,11 +180,20 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	@Override
 	public void onLoadArt(ParseResult result, LoadArtTask task) {
-		Log.d(Utils.TAG, "Result of task is" + result);
+		Log.d(Utils.TAG, "Result of task is: " + result);
+
+		if (result == null) {
+			// TODO show dialog with failure message
+			return;
+		}
+
 		processLoadedArt(result.art);
 
 		if (result.totalCount == arts.size()) {
-			// finished to load all arts; update database cache
+			// finished to load all arts; clear database cache
+			new SaveArtTask().execute(database, arts);
+
+			setLastUpdate();
 			
 		} else {
 			Log.d(Utils.TAG, "Loading more art from server...");
@@ -200,7 +223,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void loadArt() {
 		Date lastUpdate = getLastUpdate();
 		Log.d(Utils.TAG, "Last art update was " + lastUpdate);
-		if(isOutdated(lastUpdate)) {
+
+		if (isOutdated(lastUpdate)) {
 			loadArtFromServer();
 		} else {
 			loadArtFromDatabase();
@@ -208,7 +232,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 	
 	private void loadArtFromDatabase() {
-	
+		processLoadedArt(database.getArts());
 	}
 
 	private boolean isLoadingArt() {
@@ -221,26 +245,30 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			return;
 		}
 
-		howManyMoreTasks.set(1);
-		taskCount.set(MAX_CONCURRENT_TASKS);
-		for (int page = 1; page <= MAX_CONCURRENT_TASKS; page++) {
-			startTask(page);
-		}
+		taskCount.set(1);
+		startTask(1);
 	}
 
 	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
 		runningTasks.remove(task);
-		howManyMoreTasks.decrementAndGet();
 
 		if (result.page == 1) {
-			howManyMoreTasks.set((int) (Math.floor(result.totalCount - result.count) / result.perPage));
-		}
+			howManyMoreTasks.set((int) (Math
+					.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
 
-		Log.d(Utils.TAG, "There are " + howManyMoreTasks.get() + " more tasks to start.");
-
-		if (result.count == result.perPage && howManyMoreTasks.get() > 0) {
-			if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
+			int min = howManyMoreTasks.get() < MAX_CONCURRENT_TASKS ? howManyMoreTasks.get() : MAX_CONCURRENT_TASKS;
+			for (int i = 0; i < min; i++) {
 				startTask(taskCount.incrementAndGet());
+			}
+		} else {
+			howManyMoreTasks.decrementAndGet();
+
+			if (result.count == result.perPage && howManyMoreTasks.get() > 0) {
+				Log.d(Utils.TAG, "There are " + howManyMoreTasks.get() + " more tasks to start.");
+
+				if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
+					startTask(taskCount.incrementAndGet());
+				}
 			}
 		}
 	}
@@ -263,6 +291,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			return null;
 		}
 		return new Date(time);
+	}
+
+	private void setLastUpdate() {
+		prefs.edit().putLong(Utils.KEY_LAST_UPDATE, new Date().getTime()).commit();
 	}
 
 	private void processLoadedArt(List<Art> art) {
@@ -319,7 +351,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 		// step 3: request an update from enabled providers
 		if (!fromLocationListener()) {
-			showDialog(DIALOG_UPDATE_FAILURE);
+			showDialog(DIALOG_LOCATION_UPDATE_FAILURE);
 		}
 	}
 
@@ -377,5 +409,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void doMySearch(String query) {
 		// TODO Auto-generated method stub
 
+	}
+
+	private static class Holder {
+		SaveArtTask saveArtTask;
+		Set<LoadArtTask> runningTasks;
+		AtomicInteger taskCount;
+		AtomicInteger howManyMoreTasks;
+		List<Art> arts;
 	}
 }

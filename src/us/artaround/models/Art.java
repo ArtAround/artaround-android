@@ -1,5 +1,6 @@
 package us.artaround.models;
 
+import java.util.Arrays;
 import java.util.Date;
 
 
@@ -19,26 +20,15 @@ public class Art {
 	public String locationDesc;
 	public String neighborhood;
 
-	// public Artist artist;
-	public String artist;
-
+	public Artist artist;
 	public String[] photoIds;
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder("Art={");
-		builder.append("slug: ").append(slug);
-		builder.append(",title: ").append(title);
-		builder.append(",category: ").append(category);
-		builder.append(",neighborhood: ").append(neighborhood);
-		builder.append(",createdAt: ").append(createdAt);
-		builder.append(",updatedAt: ").append(updatedAt);
-		builder.append(",latitude: ").append(latitude);
-		builder.append(",longitude: ").append(longitude);
-		builder.append(",locationDesc: ").append(locationDesc);
-		builder.append(",artist: ").append(artist);
-		builder.append("}");
-		return builder.toString();
+		return "Art [artist=" + artist + ", category=" + category + ", createdAt=" + createdAt + ", latitude="
+				+ latitude + ", locationDesc=" + locationDesc + ", longitude=" + longitude + ", neighborhood="
+				+ neighborhood + ", photoIds=" + Arrays.toString(photoIds) + ", slug=" + slug + ", title=" + title
+				+ ", updatedAt=" + updatedAt + ", ward=" + ward + "]";
 	}
 
 }
