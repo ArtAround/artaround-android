@@ -46,7 +46,8 @@
 
 		<uses-library
 			android:name="com.google.android.maps" />
-	</application>
+	<activity android:name=".ui.ArtDetails" android:theme="@android:style/Theme.NoTitleBar" android:label="@string/app_label"></activity>
+</application>
 
 
 	<uses-permission

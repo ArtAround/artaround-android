@@ -13,7 +13,7 @@ import us.artaround.android.R;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.tasks.LoadArtTask;
 import us.artaround.android.tasks.LoadArtTask.LoadArtCallback;
-import us.artaround.android.ui.ArtItemOverlay.OverlayTapListener;
+import us.artaround.android.ui.ArtOverlay.OverlayTapListener;
 import us.artaround.models.Art;
 import us.artaround.models.ArtDispersionComparator;
 import us.artaround.services.ParseResult;
@@ -61,6 +61,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	public static final int doNothing = 1;
 
+	private boolean initialized = false;
 	private ArtMapView mapView;
 
 	private List<Art> allArt;
@@ -68,7 +69,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private int newZoom;
 
-	private ArtItemOverlay artOverlay;
+	private ArtOverlay artOverlay;
 	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
 
 	private SharedPreferences prefs;
@@ -92,6 +93,18 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			doMySearch(query);
 		}
 
+		doCreate();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (!initialized) {
+			doCreate();
+		}
+	}
+
+	private void doCreate() {
 		arts = new ArrayList<Art>();
 		howManyMoreTasks = new AtomicInteger(0);
 		taskCount = new AtomicInteger(0);
@@ -102,6 +115,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 		setupUi();
+		initialized = true;
 	}
 
 	@Override
@@ -167,6 +181,15 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	@Override
 	public void onTap(OverlayItem item) {
 		Log.d(Utils.TAG, "Tapped!");
+		if (item instanceof ArtOverlayItem) {
+			gotoArtDetails(((ArtOverlayItem) item).art);
+		}
+	}
+
+	private void gotoArtDetails(Art art) {
+		Intent intent = new Intent(this, ArtDetails.class);
+		intent.putExtra(Utils.KEY_ART_ID, art.slug);
+		startActivity(intent);
 	}
 
 	@Override
@@ -222,6 +245,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	protected void gotoWifiSettings() {
+		//prepare for refresh when we come back
+		initialized = false;
 		//go to wireless settings
 		startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
 	}
@@ -234,7 +259,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		mapView.setZoomListener(this);
 		mapView.getController().setCenter(currentLocation);
 
-		artOverlay = new ArtItemOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
+		artOverlay = new ArtOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
 		mapView.getOverlays().add(artOverlay);
 
 		View btnSearch = findViewById(R.id.btn_search);
@@ -351,7 +376,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		if (items.containsKey(a)) {
 			return items.get(a);
 		} else {
-			OverlayItem pin = new OverlayItem(Utils.geo(a.latitude, a.longitude), a.title, a.locationDesc);
+			ArtOverlayItem pin = new ArtOverlayItem(a);
 			items.put(a, pin);
 			return pin;
 		}

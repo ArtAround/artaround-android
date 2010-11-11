@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
@@ -17,7 +16,8 @@
 			android:layout_weight="1"
 			android:layout_height="wrap_content"
 			android:layout_gravity="center"
-			android:text="Your location here" />
+			android:ellipsize="end"
+			android:text="Your location" />
 
 		<LinearLayout
 			android:id="@+id/wrapper_buttons"
