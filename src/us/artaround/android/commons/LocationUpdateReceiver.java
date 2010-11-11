@@ -3,7 +3,6 @@ package us.artaround.android.commons;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

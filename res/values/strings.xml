@@ -13,4 +13,7 @@
     <string name="database_access_error_msg"> Please make sure your sdcard is mounted with appropriate permissions for writing. Restart the application to have your data stored locally.</string>
     
     <string name="search_hint">Search by zip code</string>
+<string name="connection_fail_message">Couldn\'t contact the server!</string>
+<string name="connection_fail_ok">WiFi Options</string>
+<string name="connection_fail_cancel">Hmm ...</string>
 </resources>

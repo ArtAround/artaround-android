@@ -47,8 +47,7 @@ public abstract class BaseService {
 			case HttpStatus.SC_NOT_FOUND:
 				throw new ArtAroundException.NotFound("404 - Not Found from " + url);
 			default:
-				throw new ArtAroundException("Bad status code " + statusCode
-						+ " on fetching JSON from " + url);
+				throw new ArtAroundException("Bad status code " + statusCode + " on fetching JSON from " + url);
 			}
 		} catch (ClientProtocolException e) {
 			throw new ArtAroundException("Problem fetching JSON from " + url, e);

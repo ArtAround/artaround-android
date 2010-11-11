@@ -52,7 +52,7 @@ public class ArtParser extends Parser {
 
 	public static Art parse(JSONObject json) throws JSONException, ParseException {
 		SimpleDateFormat df = new SimpleDateFormat(Utils.DATE_FORMAT);
-		
+
 		Art art = new Art();
 		art.slug = prop(json, PARAM_SLUG);
 		art.category = prop(json, PARAM_CATEGORY);
@@ -69,7 +69,7 @@ public class ArtParser extends Parser {
 
 		art.locationDesc = prop(json, PARAM_LOCATION_DESC);
 		art.neighborhood = prop(json, PARAM_NEIGHBORHOOD);
-		
+
 		arr = propA(json, PARAM_PHOTOS);
 		String[] photoIds = new String[arr.length()];
 		for (int i = 0; i < arr.length(); i++) {

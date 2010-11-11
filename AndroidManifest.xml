@@ -46,10 +46,10 @@
 	<uses-permission
 		android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-	<uses-sdk
+	<uses-sdk                                                                                                          
 		android:minSdkVersion="3"
 		android:targetSdkVersion="4" />
-
+                                                                                                              
 	<supports-screens
 		android:smallScreens="true"
 		android:normalScreens="true"

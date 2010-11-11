@@ -40,6 +40,10 @@ public class ArtItemOverlay extends ItemizedOverlay<OverlayItem> {
 		overlays.add(overlay);
 	}
 
+	public void removeOverlay(OverlayItem overay) {
+		overlays.remove(overay);
+	}
+
 	public void doPopulate() {
 		populate();
 	}
