@@ -46,7 +46,7 @@ import com.google.android.maps.OverlayItem;
 public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener, ZoomListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 50;
+	public static final int PER_PAGE = 1000;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -60,13 +60,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	
 	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
-	public static final int doNothing = 1;
+	public static final int doNothing = 2;
 
 	private boolean initialized = false;
 	private ArtMapView mapView;
 
 	private List<Art> allArt;
-	private List<Art> artFiltered = new ArrayList<Art>();
+	private List<Art> artFiltered;
 
 	private int newZoom;
 
@@ -112,16 +112,23 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
 
 		Holder holder = (Holder) getLastNonConfigurationInstance();
-		if (holder != null) {
-			allArt = holder.arts;
-			howManyMoreTasks = holder.howManyMoreTasks;
-			taskCount = holder.taskCount;
-			runningTasks = holder.runningTasks;
-		} else {
+		if (holder == null) {
+			//if holder is null it means we got here from a fresh application start
 			allArt = new ArrayList<Art>();
+			artFiltered = new ArrayList<Art>();
 			howManyMoreTasks = new AtomicInteger(0);
 			taskCount = new AtomicInteger(0);
 			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+			newZoom = DEFAULT_ZOOM_LEVEL;
+		} else {
+			//if we have a holder it means we got here from a screen flip
+			allArt = holder.allArt;
+			artFiltered = new ArrayList<Art>();
+			howManyMoreTasks = holder.howManyMoreTasks;
+			taskCount = holder.taskCount;
+			runningTasks = holder.runningTasks;
+			newZoom = holder.zoom;
+			initialized = holder.initialized;
 		}
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -129,6 +136,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		database = Database.getInstance(this);
 
 		setupUi();
+		if (holder == null) {
+			//load fresh art
+			loadArt();
+		} else {
+			//just use the art we already have loaded
+			reDisplayArt();
+		}
 		initialized = true;
 	}
 
@@ -145,7 +159,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		holder.runningTasks = runningTasks;
 		holder.howManyMoreTasks = howManyMoreTasks;
 		holder.taskCount = taskCount;
-		holder.arts = allArt;
+		holder.allArt = allArt;
+		//we don't need to save filtered art because it will be recalculated
+		holder.initialized = initialized;
+		holder.zoom = newZoom;
 		return holder;
 	}
 
@@ -282,7 +299,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
 
-		mapView.setZoomLevel(newZoom = DEFAULT_ZOOM_LEVEL);
+		mapView.setZoomLevel(newZoom);
 		mapView.setZoomListener(this);
 		mapView.getController().setCenter(currentLocation);
 
@@ -296,8 +313,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				onSearchRequested();
 			}
 		});
-
-		loadArt();
 	}
 
 	private void loadArt() {
@@ -583,6 +598,9 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Set<LoadArtTask> runningTasks;
 		AtomicInteger taskCount;
 		AtomicInteger howManyMoreTasks;
-		List<Art> arts;
+		List<Art> allArt;
+		List<Art> artFiltered;
+		int zoom;
+		boolean initialized;
 	}
 }
