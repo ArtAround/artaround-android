@@ -231,8 +231,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				//TODO
 			}
 		};
-		new AlertDialog.Builder(this)
-.setMessage(R.string.connection_fail_message)
+		new AlertDialog.Builder(this).setMessage(R.string.connection_fail_message)
 				.setPositiveButton(R.string.connection_fail_ok, onOk)
 				.setNegativeButton(R.string.connection_fail_cancel, onCancel)
 				.show();
