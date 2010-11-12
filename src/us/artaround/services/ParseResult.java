@@ -13,12 +13,8 @@ public class ParseResult {
 
 	@Override
 	public String toString() {
-		StringBuilder build = new StringBuilder();
-		build.append("totalCount=").append(totalCount);
-		build.append(",count=").append(count);
-		build.append(",page=").append(page);
-		build.append(",perPage").append(perPage);
-		return build.toString();
+		return "ParseResult [art.size=" + (art == null ? 0 : art.size()) + ", count=" + count + ", page=" + page
+				+ ", perPage=" + perPage
+				+ ", totalCount=" + totalCount + "]";
 	}
-
 }

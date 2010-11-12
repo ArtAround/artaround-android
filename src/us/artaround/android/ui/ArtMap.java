@@ -13,8 +13,8 @@ import us.artaround.R;
 import us.artaround.android.commons.Database;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.tasks.LoadArtTask;
-import us.artaround.android.commons.tasks.LoadArtTask.LoadArtCallback;
 import us.artaround.android.commons.tasks.SaveArtTask;
+import us.artaround.android.commons.tasks.LoadArtTask.LoadArtCallback;
 import us.artaround.android.ui.ArtOverlay.OverlayTapListener;
 import us.artaround.models.Art;
 import us.artaround.models.ArtDispersionComparator;
@@ -24,10 +24,10 @@ import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.location.Location;
@@ -46,7 +46,7 @@ import com.google.android.maps.OverlayItem;
 public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener, ZoomListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 1000;
+	public static final int PER_PAGE = 50;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -56,7 +56,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public static final int DIALOG_ART_INFO = 0;
 	public static final int DIALOG_SUGGEST_LOCATION_SETTINGS = 1;
 	public static final int DIALOG_LOCATION_UPDATE_FAILURE = 2;
-	public static final int DIALOG_DATABASE_ACCESS_ERROR = 3;
+	public static final int DIALOG_LOADING_ART_FAILURE = 3;
 	
 	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
@@ -165,12 +165,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			builder.setMessage(getString(R.string.location_suggest_settings_msg));
 			builder.setCancelable(true);
 			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 					doUpdatePrefs();
-					startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+					ArtMap.this.gotoLocationSettings();
 				}
 			});
 			builder.setNegativeButton(getString(R.string.skip), new DialogInterface.OnClickListener() {
@@ -184,6 +183,23 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				@Override
 				public void onCancel(DialogInterface dialog) {
 					doUpdatePrefs();
+				}
+			});
+			break;
+		case DIALOG_LOADING_ART_FAILURE:
+			builder.setCancelable(true);
+			builder.setMessage(R.string.connection_fail_message);
+			builder.setPositiveButton(R.string.connection_fail_ok, new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+					ArtMap.this.gotoWifiSettings();
+				}
+			});
+			builder.setNegativeButton(R.string.connection_fail_cancel, new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
 				}
 			});
 			break;
@@ -246,22 +262,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	@Override
 	public void onLoadArtError(Throwable e) {
 		Log.d(Utils.TAG, "Failed to load art!", e);
-		OnClickListener onOk = new OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				ArtMap.this.gotoWifiSettings();
-			}
-		};
-		OnClickListener onCancel = new OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				//TODO
-			}
-		};
-		new AlertDialog.Builder(this).setMessage(R.string.connection_fail_message)
-				.setPositiveButton(R.string.connection_fail_ok, onOk)
-				.setNegativeButton(R.string.connection_fail_cancel, onCancel)
-				.show();
+		showDialog(DIALOG_LOADING_ART_FAILURE);
 	}
 
 	protected void gotoWifiSettings() {
@@ -269,6 +270,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		initialized = false;
 		//go to wireless settings
 		startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+	}
+
+	protected void gotoLocationSettings() {
+		startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
 	}
 
 	private void setupUi() {
@@ -450,7 +455,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		} else {
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 		}
-		Log.d(Utils.TAG, "nr pins = " + newNrPins);
+		Log.d(Utils.TAG, "There are " + newNrPins + " new pins.");
 
 		int oldNrPins = artFiltered.size();
 
