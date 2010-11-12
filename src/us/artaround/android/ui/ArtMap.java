@@ -60,7 +60,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	
 	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
-	public static final int doNothing = 2;
+	public static final int doNothing = 1;
 
 	private boolean initialized = false;
 	private ArtMapView mapView;
@@ -123,7 +123,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		} else {
 			//if we have a holder it means we got here from a screen flip
 			allArt = holder.allArt;
-			artFiltered = new ArrayList<Art>();
+			artFiltered = holder.artFiltered;
 			howManyMoreTasks = holder.howManyMoreTasks;
 			taskCount = holder.taskCount;
 			runningTasks = holder.runningTasks;
@@ -141,7 +141,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			loadArt();
 		} else {
 			//just use the art we already have loaded
-			reDisplayArt();
+			displayLastArt();
 		}
 		initialized = true;
 	}
@@ -160,7 +160,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		holder.howManyMoreTasks = howManyMoreTasks;
 		holder.taskCount = taskCount;
 		holder.allArt = allArt;
-		//we don't need to save filtered art because it will be recalculated
+		holder.artFiltered = artFiltered;
 		holder.initialized = initialized;
 		holder.zoom = newZoom;
 		return holder;
@@ -397,38 +397,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		if (art != null && !art.isEmpty()) {
 			allArt.addAll(art);
 			calculateMaximumDispersion(art);
-			displayArt(filterArt(allArt));
-			// save to database
-		}
-	}
-
-	private void reDisplayArt() {
-		displayArt(filterArt(allArt));
-	}
-
-	private void displayArt(RenderingContext art) {
-		//remove art
-		Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
-		for (Art a : art.artToRemove) {
-			artOverlay.removeOverlay(items.get(a));
-		}
-		//add new art
-		Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
-		for (Art a : art.artToAdd) {
-			artOverlay.addOverlay(newOverlay(a));
-		}
-		//redraw
-		artOverlay.doPopulate();
-		mapView.invalidate();
-	}
-
-	private OverlayItem newOverlay(Art a) {
-		if (items.containsKey(a)) {
-			return items.get(a);
-		} else {
-			ArtOverlayItem pin = new ArtOverlayItem(a);
-			items.put(a, pin);
-			return pin;
+			filterAndDisplayArt(art);
 		}
 	}
 
@@ -463,6 +432,48 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private float distance(Art a, Art b) {
 		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
+	}
+
+	private void filterAndDisplayArt(List<Art> art) {
+		if (art != null && art.size() > 0) {
+			displayArt(filterArt(art));
+		}
+	}
+
+	private void filterAndDisplayAllArt() {
+		filterAndDisplayArt(allArt);
+	}
+
+	private void displayLastArt() {
+		RenderingContext context = new RenderingContext(artFiltered);
+		context.artToAdd.addAll(artFiltered);
+		displayArt(context);
+	}
+
+	private void displayArt(RenderingContext art) {
+		//remove art
+		Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
+		for (Art a : art.artToRemove) {
+			artOverlay.removeOverlay(items.get(a));
+		}
+		//add new art
+		Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
+		for (Art a : art.artToAdd) {
+			artOverlay.addOverlay(newOverlay(a));
+		}
+		//redraw
+		artOverlay.doPopulate();
+		mapView.invalidate();
+	}
+
+	private OverlayItem newOverlay(Art a) {
+		if (items.containsKey(a)) {
+			return items.get(a);
+		} else {
+			ArtOverlayItem pin = new ArtOverlayItem(a);
+			items.put(a, pin);
+			return pin;
+		}
 	}
 
 	private RenderingContext filterArt(List<Art> art) {
@@ -509,7 +520,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Log.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
 		//this.oldZoom = oldZoom;
 		this.newZoom = newZoom;
-		reDisplayArt();
+		filterAndDisplayAllArt();
 	}
 
 	private void updateLocation() {
