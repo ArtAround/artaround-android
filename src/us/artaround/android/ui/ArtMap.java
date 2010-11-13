@@ -81,7 +81,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
-	private boolean loadingDone = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -101,13 +100,20 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	@Override
 	protected void onResume() {
 		super.onResume();
+
 		if (!initialized) {
 			doCreate();
 		}
 	}
 
 	private void doCreate() {
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		database = Database.getInstance(this);
+
 		Holder holder = (Holder) getLastNonConfigurationInstance();
+		LoadArtTask lastTask = null;
+
 		if (holder == null) {
 			//if holder is null it means we got here from a fresh application start
 			allArt = new ArrayList<Art>();
@@ -116,6 +122,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			taskCount = new AtomicInteger(0);
 			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
 			newZoom = DEFAULT_ZOOM_LEVEL;
+
 		} else {
 			//if we have a holder it means we got here from a screen flip
 			allArt = holder.allArt;
@@ -125,17 +132,29 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			runningTasks = holder.runningTasks;
 			newZoom = holder.zoom;
 			initialized = holder.initialized;
-			loadingDone = holder.loadingDone;
+
+			int maxPage = 1;
+			for (LoadArtTask task : runningTasks) {
+				task.setCallback(this);
+				if (task.getPage() > maxPage) {
+					lastTask = task;
+					maxPage = task.getPage();
+				}
+			}
 		}
 
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		database = Database.getInstance(this);
-
 		setupUi();
-		if (!loadingDone) {
-			//load fresh art
+
+		if (holder == null) {
+			//first time; load fresh art
 			loadArt();
+		} else if (isLoadingArt()) {
+			try {
+				loadMoreArtFromServer(lastTask.get(), lastTask);
+			} catch (Exception e) {
+				Log.e(Utils.TAG, "Could not continue loading arts from server!", e);
+				showDialog(DIALOG_LOADING_ART_FAILURE);
+			}
 		} else {
 			//just use the art we already have loaded
 			displayLastArt();
@@ -277,7 +296,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		// clear database cache
 		new SaveArtTask().execute(database, allArt);
 		setLastUpdate();
-		loadingDone = true;
 	}
 
 	@Override
@@ -331,7 +349,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void loadArtFromDatabase() {
 		processLoadedArt(database.getArts());
-		loadingDone = true;
 	}
 
 	private boolean isLoadingArt() {
@@ -350,12 +367,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
 		Log.d(Utils.TAG, "Loading more art from server...");
-
 		runningTasks.remove(task);
 
 		if (result.page == 1) {
-			howManyMoreTasks.set((int) (Math
-					.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
+			howManyMoreTasks.set((int)(Math.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
 
 			int min = howManyMoreTasks.get() < MAX_CONCURRENT_TASKS ? howManyMoreTasks.get() : MAX_CONCURRENT_TASKS;
 			for (int i = 0; i < min; i++) {
@@ -375,7 +390,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void startTask(int page) {
-		new LoadArtTask(this).execute(PER_PAGE, page);
+		new LoadArtTask(this, page, PER_PAGE).execute();
 	}
 
 	private boolean isOutdated(Date lastUpdate) {
@@ -618,6 +633,5 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		List<Art> artFiltered;
 		int zoom;
 		boolean initialized;
-		boolean loadingDone;
 	}
 }

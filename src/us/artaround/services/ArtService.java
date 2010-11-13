@@ -15,7 +15,7 @@ public class ArtService extends BaseService {
 
 	public static Map<String, Artist> artists = new HashMap<String, Artist>();
 
-	public static ParseResult getArt(int perPage, int page) throws ArtAroundException {
+	public static ParseResult getArt(int page, int perPage) throws ArtAroundException {
 		clearArtistsCache(page);
 
 		StringBuilder query = new StringBuilder()
