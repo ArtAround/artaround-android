@@ -286,7 +286,6 @@ public class Database {
 
 	public int addArtists(Collection<Artist> artists) {
 		if (artists == null || artists.isEmpty()) return 0;
-		Log.d(Utils.TAG, "There are " + artists.size() + " artists to be inserted into db.");
 
 		int count = 0;
 		db.beginTransaction();

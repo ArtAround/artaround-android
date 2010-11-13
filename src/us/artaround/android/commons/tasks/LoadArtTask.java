@@ -25,6 +25,7 @@ public class LoadArtTask extends AsyncTask<Void, Void, ParseResult> {
 	@Override
 	protected ParseResult doInBackground(Void... params) {
 		try {
+			Log.d(Utils.TAG, "Running LoadArtTask with page= " + page + " and perPage= " + perPage);
 			return ArtService.getArt(page, perPage);
 		} catch (ArtAroundException e) {
 			Log.e(Utils.TAG, "LoadArtTask exception!", e);

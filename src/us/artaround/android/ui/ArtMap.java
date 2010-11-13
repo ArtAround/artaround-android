@@ -33,6 +33,7 @@ import android.content.pm.ResolveInfo;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -46,7 +47,7 @@ import com.google.android.maps.OverlayItem;
 public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, LocationListener, ZoomListener {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 50;
+	public static final int PER_PAGE = 20;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -57,10 +58,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public static final int DIALOG_SUGGEST_LOCATION_SETTINGS = 1;
 	public static final int DIALOG_LOCATION_UPDATE_FAILURE = 2;
 	public static final int DIALOG_LOADING_ART_FAILURE = 3;
-	
-	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365);//Washington 
 
-	public static final int doNothing = 1;
+	public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(38895111, -77036365); // Washington 
 
 	private boolean initialized = false;
 	private ArtMapView mapView;
@@ -81,6 +80,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
+	private SaveArtTask saveArtTask;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -110,45 +110,40 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		database = Database.getInstance(this);
-
+		
 		Holder holder = (Holder) getLastNonConfigurationInstance();
 		LoadArtTask lastTask = null;
 
 		if (holder == null) {
 			//if holder is null it means we got here from a fresh application start
-			allArt = new ArrayList<Art>();
-			artFiltered = new ArrayList<Art>();
-			howManyMoreTasks = new AtomicInteger(0);
-			taskCount = new AtomicInteger(0);
-			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
-			newZoom = DEFAULT_ZOOM_LEVEL;
+			init();
 
 		} else {
 			//if we have a holder it means we got here from a screen flip
-			allArt = holder.allArt;
-			artFiltered = holder.artFiltered;
-			howManyMoreTasks = holder.howManyMoreTasks;
-			taskCount = holder.taskCount;
-			runningTasks = holder.runningTasks;
-			newZoom = holder.zoom;
-			initialized = holder.initialized;
+			restoreSavedConfig(holder);
 
 			int maxPage = 1;
 			for (LoadArtTask task : runningTasks) {
-				task.setCallback(this);
+				task.setCallback(this); // pass the new context
+
 				if (task.getPage() > maxPage) {
 					lastTask = task;
 					maxPage = task.getPage();
 				}
+			}
+
+			if (saveArtTask != null && saveArtTask.getStatus() == AsyncTask.Status.RUNNING) {
+				saveArtTask.setDatabase(database); // pass the new database connection
 			}
 		}
 
 		setupUi();
 
 		if (holder == null) {
-			//first time; load fresh art
+			// first time; load fresh art
 			loadArt();
 		} else if (isLoadingArt()) {
+			// continue with loading art
 			try {
 				loadMoreArtFromServer(lastTask.get(), lastTask);
 			} catch (Exception e) {
@@ -179,6 +174,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		holder.artFiltered = artFiltered;
 		holder.initialized = initialized;
 		holder.zoom = newZoom;
+		holder.saveArtTask = saveArtTask;
 		return holder;
 	}
 
@@ -276,7 +272,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Log.d(Utils.TAG, "Result of task is: " + result);
 
 		if (result == null) {
-			// TODO show dialog with failure message
+			showDialog(DIALOG_LOADING_ART_FAILURE);
 			return;
 		}
 
@@ -289,30 +285,39 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 		loadMoreArtFromServer(result, task);
 	}
-
-	private void onFinishLoadArt() {
-		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
-		recalculateMaximumDispersion();
-		// clear database cache
-		new SaveArtTask().execute(database, allArt);
-		setLastUpdate();
-	}
-
+	
 	@Override
 	public void onLoadArtError(Throwable e) {
 		Log.d(Utils.TAG, "Failed to load art!", e);
 		showDialog(DIALOG_LOADING_ART_FAILURE);
 	}
 
-	protected void gotoWifiSettings() {
-		//prepare for refresh when we come back
-		initialized = false;
-		//go to wireless settings
-		startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+	private void init() {
+		allArt = new ArrayList<Art>();
+		artFiltered = new ArrayList<Art>();
+		howManyMoreTasks = new AtomicInteger(0);
+		taskCount = new AtomicInteger(0);
+		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+		newZoom = DEFAULT_ZOOM_LEVEL;
 	}
 
-	protected void gotoLocationSettings() {
-		startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+	private void restoreSavedConfig(Holder holder) {
+		allArt = holder.allArt;
+		artFiltered = holder.artFiltered;
+		howManyMoreTasks = holder.howManyMoreTasks;
+		taskCount = holder.taskCount;
+		runningTasks = holder.runningTasks;
+		newZoom = holder.zoom;
+		initialized = holder.initialized;
+		saveArtTask = holder.saveArtTask;
+	}
+
+	private void onFinishLoadArt() {
+		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
+		recalculateMaximumDispersion();
+		// clear database cache
+		saveArtTask = (SaveArtTask) new SaveArtTask(allArt, database).execute();
+		setLastUpdate();
 	}
 
 	private void setupUi() {
@@ -366,7 +371,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
-		Log.d(Utils.TAG, "Loading more art from server...");
 		runningTasks.remove(task);
 
 		if (result.page == 1) {
@@ -421,8 +425,19 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
+	private void gotoWifiSettings() {
+		//prepare for refresh when we come back
+		initialized = false;
+		//go to wireless settings
+		startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+	}
+
+	private void gotoLocationSettings() {
+		startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+	}
+
 	private void calculateMaximumDispersion(List<Art> art) {
-		Log.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
+		//Log.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
 		final int allS = art.size();
 		for (int i = 0; i < allS; ++i) {
 			art.get(i).mediumDistance = 0;
@@ -445,7 +460,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void recalculateMaximumDispersion() {
 		if (allArt.size() > PER_PAGE) { //only need to do this if we have more than one page
-			Log.d(Utils.TAG, "Computing maxium dispersion for all art (" + allArt.size() + ").");
+			//Log.d(Utils.TAG, "Computing maxium dispersion for all art (" + allArt.size() + ").");
 			calculateMaximumDispersion(allArt);
 		}
 	}
@@ -472,12 +487,12 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void displayArt(RenderingContext art) {
 		//remove art
-		Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
+		//Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
 		for (Art a : art.artToRemove) {
 			artOverlay.removeOverlay(items.get(a));
 		}
 		//add new art
-		Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
+		//Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
 		for (Art a : art.artToAdd) {
 			artOverlay.addOverlay(newOverlay(a));
 		}
@@ -513,7 +528,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		} else {
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 		}
-		Log.d(Utils.TAG, "There are " + newNrPins + " new pins.");
+		//Log.d(Utils.TAG, "There are " + newNrPins + " new pins.");
 
 		int oldNrPins = artFiltered.size();
 
@@ -537,7 +552,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	@Override
 	public void onZoom(int oldZoom, int newZoom) {
-		Log.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
+		//Log.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
 		//this.oldZoom = oldZoom;
 		this.newZoom = newZoom;
 		filterAndDisplayAllArt();
@@ -626,6 +641,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private static class Holder {
+		SaveArtTask saveArtTask;
 		Set<LoadArtTask> runningTasks;
 		AtomicInteger taskCount;
 		AtomicInteger howManyMoreTasks;
