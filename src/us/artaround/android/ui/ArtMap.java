@@ -66,7 +66,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private ArtMapView mapView;
 
 	private List<Art> allArt;
-	private List<Art> artFiltered = new ArrayList<Art>();
+	private List<Art> artFiltered;
 
 	private int newZoom;
 
@@ -81,6 +81,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private Set<LoadArtTask> runningTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
+	private boolean loadingDone = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -106,22 +107,25 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void doCreate() {
-		howManyMoreTasks = new AtomicInteger(0);
-		taskCount = new AtomicInteger(0);
-		allArt = new ArrayList<Art>();
-		runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
-
 		Holder holder = (Holder) getLastNonConfigurationInstance();
-		if (holder != null) {
-			allArt = holder.arts;
-			howManyMoreTasks = holder.howManyMoreTasks;
-			taskCount = holder.taskCount;
-			runningTasks = holder.runningTasks;
-		} else {
+		if (holder == null) {
+			//if holder is null it means we got here from a fresh application start
 			allArt = new ArrayList<Art>();
+			artFiltered = new ArrayList<Art>();
 			howManyMoreTasks = new AtomicInteger(0);
 			taskCount = new AtomicInteger(0);
 			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+			newZoom = DEFAULT_ZOOM_LEVEL;
+		} else {
+			//if we have a holder it means we got here from a screen flip
+			allArt = holder.allArt;
+			artFiltered = holder.artFiltered;
+			howManyMoreTasks = holder.howManyMoreTasks;
+			taskCount = holder.taskCount;
+			runningTasks = holder.runningTasks;
+			newZoom = holder.zoom;
+			initialized = holder.initialized;
+			loadingDone = holder.loadingDone;
 		}
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -129,6 +133,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		database = Database.getInstance(this);
 
 		setupUi();
+		if (!loadingDone) {
+			//load fresh art
+			loadArt();
+		} else {
+			//just use the art we already have loaded
+			displayLastArt();
+		}
 		initialized = true;
 	}
 
@@ -145,7 +156,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		holder.runningTasks = runningTasks;
 		holder.howManyMoreTasks = howManyMoreTasks;
 		holder.taskCount = taskCount;
-		holder.arts = allArt;
+		holder.allArt = allArt;
+		holder.artFiltered = artFiltered;
+		holder.initialized = initialized;
+		holder.zoom = newZoom;
 		return holder;
 	}
 
@@ -250,13 +264,20 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		processLoadedArt(result.art);
 
 		if (result.totalCount == allArt.size()) {
-			// finished to load all arts; clear database cache
-			new SaveArtTask().execute(database, allArt);
-			setLastUpdate();
-		} else {
-			Log.d(Utils.TAG, "Loading more art from server...");
-			loadMoreArtFromServer(result, task);
+			// finished to load all arts 
+			onFinishLoadArt();
 		}
+
+		loadMoreArtFromServer(result, task);
+	}
+
+	private void onFinishLoadArt() {
+		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
+		recalculateMaximumDispersion();
+		// clear database cache
+		new SaveArtTask().execute(database, allArt);
+		setLastUpdate();
+		loadingDone = true;
 	}
 
 	@Override
@@ -280,7 +301,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
 
-		mapView.setZoomLevel(newZoom = DEFAULT_ZOOM_LEVEL);
+		mapView.setZoomLevel(newZoom);
 		mapView.setZoomListener(this);
 		mapView.getController().setCenter(currentLocation);
 
@@ -294,8 +315,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				onSearchRequested();
 			}
 		});
-
-		loadArt();
 	}
 
 	private void loadArt() {
@@ -312,6 +331,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void loadArtFromDatabase() {
 		processLoadedArt(database.getArts());
+		loadingDone = true;
 	}
 
 	private boolean isLoadingArt() {
@@ -329,6 +349,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
+		Log.d(Utils.TAG, "Loading more art from server...");
+
 		runningTasks.remove(task);
 
 		if (result.page == 1) {
@@ -379,14 +401,58 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void processLoadedArt(List<Art> art) {
 		if (art != null && !art.isEmpty()) {
 			allArt.addAll(art);
-			calculateMaximumDispersion();
-			displayArt(filterArt(allArt));
-			// save to database
+			calculateMaximumDispersion(art);
+			filterAndDisplayArt(art);
 		}
 	}
 
-	private void reDisplayArt() {
-		displayArt(filterArt(allArt));
+	private void calculateMaximumDispersion(List<Art> art) {
+		Log.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
+		final int allS = art.size();
+		for (int i = 0; i < allS; ++i) {
+			art.get(i).mediumDistance = 0;
+		}
+		for (int i = 0; i < allS; ++i) {
+			Art a = art.get(i);
+			for (int j = i + 1; j < allS; ++j) {
+				Art b = art.get(j);
+				float dist = distance(a, b);
+				a.mediumDistance += dist;
+				b.mediumDistance += dist;
+			}
+		}
+		for (int i = 0; i < allS; ++i) {
+			art.get(i).mediumDistance /= allS;
+		}
+		Collections.sort(art, new ArtDispersionComparator());
+		Collections.reverse(art);
+	}
+
+	private void recalculateMaximumDispersion() {
+		if (allArt.size() > PER_PAGE) { //only need to do this if we have more than one page
+			Log.d(Utils.TAG, "Computing maxium dispersion for all art (" + allArt.size() + ").");
+			calculateMaximumDispersion(allArt);
+		}
+	}
+
+	private float distance(Art a, Art b) {
+		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
+	}
+
+	private void filterAndDisplayArt(List<Art> art) {
+		if (art != null && art.size() > 0) {
+			displayArt(filterArt(art));
+		}
+	}
+
+	private void filterAndDisplayAllArt() {
+		filterAndDisplayArt(allArt);
+	}
+
+	private void displayLastArt() {
+		RenderingContext context = new RenderingContext(artFiltered);
+		context.artToAdd.addAll(artFiltered);
+		displayArt(context);
 	}
 
 	private void displayArt(RenderingContext art) {
@@ -413,29 +479,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			items.put(a, pin);
 			return pin;
 		}
-	}
-
-	private void calculateMaximumDispersion() {
-		final int allS = allArt.size();
-		for (int i = 0; i < allS; ++i) {
-			Art a = allArt.get(i);
-			for (int j = i + 1; j < allS; ++j) {
-				Art b = allArt.get(j);
-				float dist = distance(a, b);
-				a.mediumDistance += dist;
-				b.mediumDistance += dist;
-			}
-		}
-		for (int i = 0; i < allS; ++i) {
-			Art a = allArt.get(i);
-			a.mediumDistance /= allS;
-		}
-		Collections.sort(allArt, new ArtDispersionComparator());
-		Collections.reverse(allArt);
-	}
-
-	private float distance(Art a, Art b) {
-		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
 	}
 
 	private RenderingContext filterArt(List<Art> art) {
@@ -482,7 +525,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Log.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
 		//this.oldZoom = oldZoom;
 		this.newZoom = newZoom;
-		reDisplayArt();
+		filterAndDisplayAllArt();
 	}
 
 	private void updateLocation() {
@@ -571,6 +614,10 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Set<LoadArtTask> runningTasks;
 		AtomicInteger taskCount;
 		AtomicInteger howManyMoreTasks;
-		List<Art> arts;
+		List<Art> allArt;
+		List<Art> artFiltered;
+		int zoom;
+		boolean initialized;
+		boolean loadingDone;
 	}
 }
