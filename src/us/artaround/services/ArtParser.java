@@ -14,7 +14,6 @@ import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import us.artaround.models.Artist;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class ArtParser extends Parser {
 	public static final String EXC_MSG = "JSON parsing exception";
@@ -93,7 +92,7 @@ public class ArtParser extends Parser {
 
 	public static Art parse(String json) throws ArtAroundException {
 		try {
-			Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
+			//Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
 			return parse(new JSONObject(json));
 		} catch (JSONException e) {
 			throw new ArtAroundException(EXC_MSG, e);
@@ -103,7 +102,7 @@ public class ArtParser extends Parser {
 	}
 
 	public static ParseResult parseArt(String json) throws ArtAroundException {
-		Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
+		//Log.d(Utils.TAG, "ArtParser received JSON: \n" + json);
 		ParseResult result = new ParseResult();
 
 		try {

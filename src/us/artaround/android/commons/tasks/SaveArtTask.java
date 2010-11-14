@@ -8,23 +8,25 @@ import us.artaround.models.Art;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class SaveArtTask extends AsyncTask<Object, Void, Void> {
+public class SaveArtTask extends AsyncTask<Void, Void, Void> {
+	private Database db;
+	private List<Art> arts;
 
-	@SuppressWarnings("unchecked")
+	public SaveArtTask(List<Art> art, Database db) {
+		this.db = db;
+		this.arts = art;
+	}
+
+	public void setDatabase(Database database) {
+		this.db = database;
+	}
+
 	@Override
-	protected Void doInBackground(Object... params) {
-		if (params == null || params.length < 2) {
-			Log.w(Utils.TAG, "SaveArtTask needs 'database' and 'arts' parameter!");
-			return null;
-		}
-		Database db = (Database) params[0];
-		List<Art> arts = (List<Art>) params[1];
-		
+	protected Void doInBackground(Void... params) {
 		if (!db.isOpen()) {
 			Log.w(Utils.TAG, "SaveArtTask needs an open database connection!");
 			return null;
 		}
-
 		db.updateCache(arts);
 		return null;
 	}

@@ -27,17 +27,21 @@
 				<action
 					android:name="android.intent.action.SEARCH" />
 			</intent-filter>
-			
+
 			<meta-data
 				android:name="android.app.searchable"
 				android:resource="@xml/searchable" />
 
 		</activity>
 
+		<activity
+			android:name=".android.ui.ArtDetails"
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
+
 		<uses-library
 			android:name="com.google.android.maps" />
-	<activity android:name=".ui.ArtDetails" android:theme="@android:style/Theme.NoTitleBar" android:label="@string/app_label"></activity>
-</application>
+	</application>
 
 
 	<uses-permission
@@ -47,10 +51,10 @@
 	<uses-permission
 		android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-	<uses-sdk                                                                                                          
+	<uses-sdk
 		android:minSdkVersion="3"
 		android:targetSdkVersion="4" />
-                                                                                                              
+
 	<supports-screens
 		android:smallScreens="true"
 		android:normalScreens="true"

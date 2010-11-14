@@ -15,8 +15,8 @@ public class ArtService extends BaseService {
 
 	public static Map<String, Artist> artists = new HashMap<String, Artist>();
 
-	public static ParseResult getArt(int perPage, int page) throws ArtAroundException {
-		artists.clear();
+	public static ParseResult getArt(int page, int perPage) throws ArtAroundException {
+		clearArtistsCache(page);
 
 		StringBuilder query = new StringBuilder()
 			.append(PARAM_PER_PAGE).append("=").append(perPage)
@@ -28,5 +28,11 @@ public class ArtService extends BaseService {
 	public static Art getArt(String slug) throws ArtAroundException {
 		StringBuilder query = new StringBuilder(ArtParser.PARAM_SLUG).append(slug);
 		return ArtParser.parse(getMethod(formUrl(METHOD_GET_ART, query.toString())));
+	}
+
+	private static void clearArtistsCache(int page) {
+		if (page == 1) { // remove the previous stored artists on a new call
+			artists.clear();
+		}
 	}
 }

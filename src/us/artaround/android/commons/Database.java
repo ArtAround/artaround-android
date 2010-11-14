@@ -42,9 +42,6 @@ public class Database {
 	private static Database instance;
 
 	private static DatabaseUtils.InsertHelper artInsert, artistInsert;
-	private static int slugIndx, categoryIndx, neighborhoodIndx, locationDescIndx, latitudeIndx, longitudeIndx,
-			titleIndx, artArtistIndx, photoIdsIndx, wardIndx, createdAtIndx, updatedAtIndx;
-	private static int artistSlugIndx, artistNameIndx;
 
 	private String prop(Cursor cursor, String name) {
 		return cursor.getString(cursor.getColumnIndex(name));
@@ -116,37 +113,33 @@ public class Database {
 		return artists;
 	}
 
-	private boolean bindAndInsert(Artist artist) {
-		artistInsert.prepareForInsert();
-		artistInsert.bind(artistSlugIndx, artist.slug);
-		artistInsert.bind(artistNameIndx, artist.name);
-		return artistInsert.execute() != -1;
-	}
-
-	private boolean bindAndInsert(Art art) {
-		artInsert.prepareForInsert();
-		artInsert.bind(slugIndx, art.slug);
-		artInsert.bind(titleIndx, art.title);
-		artInsert.bind(categoryIndx, art.category);
-		artInsert.bind(neighborhoodIndx, art.neighborhood);
-		artInsert.bind(locationDescIndx, art.locationDesc);
-		artInsert.bind(latitudeIndx, art.latitude);
-		artInsert.bind(longitudeIndx, art.longitude);
-		artInsert.bind(createdAtIndx, df.format(art.createdAt));
-		artInsert.bind(updatedAtIndx, df.format(art.updatedAt));
-		artInsert.bind(wardIndx, art.ward);
+	private ContentValues artToValues(Art art) {
+		ContentValues cv = new ContentValues(12);
+		cv.put(Arts.SLUG, art.slug);
+		cv.put(Arts.TITLE, art.title);
+		cv.put(Arts.CATEGORY, art.category);
+		cv.put(Arts.NEIGHBORHOOD, art.neighborhood);
+		cv.put(Arts.LOCATION_DESCRIPTION, art.locationDesc);
+		cv.put(Arts.CREATED_AT, df.format(art.createdAt));
+		cv.put(Arts.UPDATED_AT, df.format(art.updatedAt));
+		cv.put(Arts.WARD, art.ward);
+		cv.put(Arts.LATITUDE, art.latitude);
+		cv.put(Arts.LONGITUDE, art.longitude);
 
 		if (art.photoIds != null) {
-			artInsert.bind(photoIdsIndx, TextUtils.join(Utils.STR_SEP, art.photoIds));
-		} else {
-			artInsert.bind(photoIdsIndx, "");
+			cv.put(Arts.PHOTO_IDS, TextUtils.join(Utils.STR_SEP, art.photoIds));
 		}
-
 		if (art.artist != null) {
-			artInsert.bind(artArtistIndx, art.artist.slug);
+			cv.put(Arts.ARTIST_SLUG, art.artist.slug);
 		}
+		return cv;
+	}
 
-		return artInsert.execute() != -1;
+	private ContentValues artistToValues(Artist artist) {
+		ContentValues cv = new ContentValues(2);
+		cv.put(Artists.SLUG, artist.slug);
+		cv.put(Artists.NAME, artist.name);
+		return cv;
 	}
 
 	/* Art CRUD */
@@ -165,7 +158,7 @@ public class Database {
 
 			List<Art> results = artsFromCursor(c);
 			safeClose(c);
-			Log.d(Utils.TAG, "SQL: There are " + results + " arts in the db.");
+			Log.d(Utils.TAG, "SQL: There are " + results.size() + " arts in the db.");
 			return results;
 		} finally {
 			db.endTransaction();
@@ -177,13 +170,14 @@ public class Database {
 		if (arts == null || arts.isEmpty()) return 0;
 
 		int count = 0;
-		long start = System.currentTimeMillis();
 		db.beginTransaction();
+		long start = System.currentTimeMillis();
 		try {
 			for (int i = 0; i < arts.size(); i++) {
 				Art art = arts.get(i);
 				//if (db.insert(Arts.TABLE_NAME, "", artToValues(art)) != -1) {
-				if (bindAndInsert(art)) {
+				//if (bindAndInsert(art)) {
+				if (artInsert.insert(artToValues(art)) != -1) {
 					++count;
 				}
 			}
@@ -270,6 +264,7 @@ public class Database {
 		qb.setProjectionMap(ARTISTS_PROJECTION);
 
 		db.beginTransaction();
+		long start = System.currentTimeMillis();
 		try {
 			String[] projection = ARTISTS_PROJECTION.keySet().toArray(new String[ARTISTS_PROJECTION.size()]);
 			Cursor c = qb.query(db, projection, null, null, null, null, null);
@@ -277,10 +272,11 @@ public class Database {
 
 			List<Artist> results = artistsFromCursor(c);
 			safeClose(c);
-			Log.d(Utils.TAG, "SQL: There are " + results + " artists in the db.");
+			Log.d(Utils.TAG, "SQL: There are " + results.size() + " artists in the db.");
 			return results;
 		} finally {
 			db.endTransaction();
+			Log.d(Utils.TAG, "SQL: Retrieval of artists took " + (System.currentTimeMillis() - start) + " millis.");
 		}
 	}
 
@@ -290,14 +286,15 @@ public class Database {
 
 	public int addArtists(Collection<Artist> artists) {
 		if (artists == null || artists.isEmpty()) return 0;
-		Log.d(Utils.TAG, "There are " + artists.size() + " artists to be inserted into db.");
 
 		int count = 0;
 		db.beginTransaction();
 		long start = System.currentTimeMillis();
 		try {
 			for (Artist artist : artists) {
-				if (bindAndInsert(artist)) {
+				//if (db.insert(Artists.TABLE_NAME, "", artistToValues(artist)) != -1) {
+				//if (bindAndInsert(artist)) {
+				if (artistInsert.insert(artistToValues(artist)) != -1) {
 					++count;
 				}
 			}
@@ -335,32 +332,14 @@ public class Database {
 			}
 		}
 
-		newArtInsert();
-		newArtistInsert();
+		newInsert();
 
 		return instance;
 	}
 
-	private static void newArtInsert() {
+	private static void newInsert() {
 		artInsert = new InsertHelper(db, Arts.TABLE_NAME);
-		slugIndx = artInsert.getColumnIndex(Arts.SLUG);
-		titleIndx = artInsert.getColumnIndex(Arts.TITLE);
-		categoryIndx = artInsert.getColumnIndex(Arts.CATEGORY);
-		neighborhoodIndx = artInsert.getColumnIndex(Arts.NEIGHBORHOOD);
-		locationDescIndx = artInsert.getColumnIndex(Arts.LOCATION_DESCRIPTION);
-		latitudeIndx = artInsert.getColumnIndex(Arts.LATITUDE);
-		longitudeIndx = artInsert.getColumnIndex(Arts.LONGITUDE);
-		createdAtIndx = artInsert.getColumnIndex(Arts.CREATED_AT);
-		updatedAtIndx = artInsert.getColumnIndex(Arts.UPDATED_AT);
-		wardIndx = artInsert.getColumnIndex(Arts.WARD);
-		photoIdsIndx = artInsert.getColumnIndex(Arts.PHOTO_IDS);
-		artArtistIndx = artInsert.getColumnIndex(Arts.ARTIST_SLUG);
-	}
-
-	private static void newArtistInsert() {
 		artistInsert = new InsertHelper(db, Artists.TABLE_NAME);
-		artistSlugIndx = artistInsert.getColumnIndex(Artists.SLUG);
-		artistNameIndx = artistInsert.getColumnIndex(Artists.NAME);
 	}
 
 	private static void upgradeDatabase() {
@@ -409,8 +388,11 @@ public class Database {
 		b.append(Arts.UPDATED_AT).append(" TEXT,");
 		b.append(Arts.WARD).append(" INTEGER,");
 		b.append(Arts.PHOTO_IDS).append(" TEXT,");
-		b.append(Arts.ARTIST_SLUG).append(" TEXT,");
-		b.append("UNIQUE (").append(Arts._ID).append(",").append(Arts.ARTIST_SLUG).append(") ON CONFLICT REPLACE);");
+		b.append(Arts.ARTIST_SLUG).append(" TEXT);");
+
+		// index on slug
+		b.append("CREATE INDEX idx ON ").append(Arts.TABLE_NAME).append(" (");
+		b.append(Arts.SLUG).append(");");
 
 		String str = b.toString();
 		Log.d(Utils.TAG, "SQL: " + str);
@@ -423,7 +405,11 @@ public class Database {
 		b.append("CREATE TABLE ").append(Artists.TABLE_NAME).append(" (");
 		b.append(BaseColumns._ID).append(" INTEGER PRIMARY KEY,");
 		b.append(Artists.SLUG).append(" TEXT,");
-		b.append(Artists.NAME).append(" TEXT").append(");");
+		b.append(Artists.NAME).append(" TEXT);");
+
+		// index on slug
+		b.append("CREATE INDEX idx ON ").append(Artists.TABLE_NAME).append(" (");
+		b.append(Artists.SLUG).append(");");
 
 		String str = b.toString();
 		Log.d(Utils.TAG, "SQL: " + str);
@@ -435,9 +421,11 @@ public class Database {
 
 		b.append("CREATE TABLE ").append(ArtFavorites.TABLE_NAME).append(" (");
 		b.append(BaseColumns._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(ArtFavorites.ART_SLUG).append(" TEXT,");
-		b.append("UNIQUE (").append(ArtFavorites._ID).append(",").append(ArtFavorites.ART_SLUG);
-		b.append(") ON CONFLICT REPLACE);");
+		b.append(ArtFavorites.ART_SLUG).append(" TEXT);");
+
+		// index on slug
+		b.append("CREATE INDEX idx ON ").append(ArtFavorites.TABLE_NAME).append(" (");
+		b.append(ArtFavorites.ART_SLUG).append(");");
 
 		String str = b.toString();
 		Log.d(Utils.TAG, "SQL: " + str);
@@ -496,16 +484,16 @@ public class Database {
 
 	static {
 		ARTISTS_PROJECTION = new HashMap<String, String>();
-		ARTISTS_PROJECTION.put(Artists.SLUG, Artists.SLUG);
+		ARTISTS_PROJECTION.put(Artists.SLUG, Artists.TABLE_NAME + "." + Artists.SLUG);
 		ARTISTS_PROJECTION.put(Artists.NAME, Artists.NAME);
 
 		ARTS_PROJECTION = new HashMap<String, String>();
+		ARTS_PROJECTION.put(Arts.SLUG, Arts.TABLE_NAME + "." + Arts.SLUG);
 		ARTS_PROJECTION.put(Arts.CATEGORY, Arts.CATEGORY);
 		ARTS_PROJECTION.put(Arts.NEIGHBORHOOD, Arts.NEIGHBORHOOD);
 		ARTS_PROJECTION.put(Arts.LOCATION_DESCRIPTION, Arts.LOCATION_DESCRIPTION);
 		ARTS_PROJECTION.put(Arts.LONGITUDE, Arts.LONGITUDE);
 		ARTS_PROJECTION.put(Arts.LATITUDE, Arts.LATITUDE);
-		ARTS_PROJECTION.put(Arts.SLUG, Arts.SLUG);
 		ARTS_PROJECTION.put(Arts.ARTIST_SLUG, Arts.ARTIST_SLUG);
 		ARTS_PROJECTION.put(Arts.CREATED_AT, Arts.CREATED_AT);
 		ARTS_PROJECTION.put(Arts.UPDATED_AT, Arts.UPDATED_AT);
@@ -522,13 +510,13 @@ public class Database {
 		ART_FAVORITES_TABLES = ArtFavorites.TABLE_NAME + "," + Arts.TABLE_NAME;
 
 		StringBuilder b = new StringBuilder();
-		b.append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST_SLUG).append("=").append(Artists.TABLE_NAME).append(
-				".").append(Artists.SLUG);
+		b.append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST_SLUG).append("=")
+		.append(Artists.TABLE_NAME).append(".").append(Artists.SLUG);
 		ARTS_WHERE = b.toString();
 
 		b.delete(0, b.length()); // clear and re-use
-		b.append(ArtFavorites.TABLE_NAME).append(".").append(ArtFavorites.ART_SLUG).append("=").append(Arts.TABLE_NAME)
-				.append(".").append(Arts.SLUG);
+		b.append(ArtFavorites.TABLE_NAME).append(".").append(ArtFavorites.ART_SLUG).append("=")
+		.append(Arts.TABLE_NAME).append(".").append(Arts.SLUG);
 		ART_FAVORITES_WHERE = b.toString();
 	}
 }

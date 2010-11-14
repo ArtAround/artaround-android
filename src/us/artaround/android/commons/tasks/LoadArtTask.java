@@ -7,12 +7,15 @@ import us.artaround.services.ParseResult;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class LoadArtTask extends AsyncTask<Object, Void, ParseResult> {
+public class LoadArtTask extends AsyncTask<Void, Void, ParseResult> {
 	private LoadArtCallback callback;
-	private Exception lastException;
+	private Exception exception;
+	private int perPage, page;
 
-	public LoadArtTask(LoadArtCallback callback) {
+	public LoadArtTask(LoadArtCallback callback, int page, int perPage) {
 		this.callback = callback;
+		this.perPage = perPage;
+		this.page = page;
 	}
 
 	public void setCallback(LoadArtCallback callback) {
@@ -20,20 +23,13 @@ public class LoadArtTask extends AsyncTask<Object, Void, ParseResult> {
 	}
 
 	@Override
-	protected ParseResult doInBackground(Object... params) {
+	protected ParseResult doInBackground(Void... params) {
 		try {
-			if (params == null || params.length < 2) {
-				throw new IllegalArgumentException("LoadArtTask needs 'page' and 'per_page' parameters!");
-			}
-			Log.d(Utils.TAG, "--> Executing task with params " + params[0] + " " + params[1]);
-			return ArtService.getArt((Integer) params[0], (Integer) params[1]);
+			Log.d(Utils.TAG, "Running LoadArtTask with page= " + page + " and perPage= " + perPage);
+			return ArtService.getArt(page, perPage);
 		} catch (ArtAroundException e) {
-			Log.w(Utils.TAG, "LoadArtTask exception", e);
-			lastException = e;
-			return null;
-		} catch (IllegalArgumentException e) {
-			Log.w(Utils.TAG, "LoadArtTask needs 'page' and 'per_page' parameters!");
-			lastException = e;
+			Log.e(Utils.TAG, "LoadArtTask exception!", e);
+			exception = e;
 			return null;
 		}
 	}
@@ -43,7 +39,15 @@ public class LoadArtTask extends AsyncTask<Object, Void, ParseResult> {
 		if (result != null)
 			callback.onLoadArt(result, this);
 		else
-			callback.onLoadArtError(lastException);
+			callback.onLoadArtError(exception);
+	}
+
+	public int getPerPage() {
+		return perPage;
+	}
+
+	public int getPage() {
+		return page;
 	}
 
 	public static interface LoadArtCallback {
