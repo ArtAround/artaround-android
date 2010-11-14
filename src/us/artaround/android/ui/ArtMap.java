@@ -1,10 +1,13 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,6 +72,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private List<Art> artFiltered;
 
 	private int newZoom;
+
+	private List<String> visibleCategories = new LinkedList<String>();
+	{
+		visibleCategories.add("Mural");
+	}
 
 	private ArtOverlay artOverlay;
 	private HashMap<Art, OverlayItem> items = new HashMap<Art, OverlayItem>();
@@ -445,28 +453,52 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void displayLastArt() {
-		RenderingContext context = new RenderingContext(artFiltered);
-		context.artToAdd.addAll(artFiltered);
-		displayArt(context);
+		displayArt(artFiltered);
+	}
+	
+	private void displayArt(List<Art> art) {
+		displayArtWithSelectiveAddRemove(art);
 	}
 
-	private void displayArt(RenderingContext art) {
-		//remove art
-		Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
-		for (Art a : art.artToRemove) {
+	private void displayArtWithSelectiveAddRemove(List<Art> art) {
+		List<Art> artToRemove = new ArrayList<Art>(artFiltered);
+		artToRemove.removeAll(art);
+		List<Art> artToAdd = new ArrayList<Art>(art);
+		artToAdd.removeAll(artFiltered);
+		artFiltered = art;
+	 
+		//remove art 
+		Log.d(Utils.TAG, "Removing " + artToRemove.size() + " pins.");
+		for (Art a : artToRemove) {
 			artOverlay.removeOverlay(items.get(a));
 		}
-		//add new art
-		Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
-		for (Art a : art.artToAdd) {
-			artOverlay.addOverlay(newOverlay(a));
+		//add new art Log.d(Utils.TAG, "Adding " + artToAdd.size() + " pins."); 
+		for (Art a : artToAdd) {
+			artOverlay.addOverlay(ensureOverlay(a));
 		}
-		//redraw
+		//redraw 
+		artOverlay.doPopulate();
+		mapView.invalidate();
+	}
+	 
+	
+	@SuppressWarnings("unused")
+	private void displayArtWithCompleteRedraw(List<Art> art) {
+		artOverlay.doClear();
+		artOverlay.addOverlay(getOverlaysForArt(art));
 		artOverlay.doPopulate();
 		mapView.invalidate();
 	}
 
-	private OverlayItem newOverlay(Art a) {
+	private Collection<OverlayItem> getOverlaysForArt(List<Art> art) {
+		LinkedList<OverlayItem> items = new LinkedList<OverlayItem>();
+		int s = art.size();
+		for (int i = 0; i < s; ++i)
+			items.add(ensureOverlay(art.get(i)));
+		return items;
+	}
+
+	private OverlayItem ensureOverlay(Art a) {
 		if (items.containsKey(a)) {
 			return items.get(a);
 		} else {
@@ -476,43 +508,48 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
-	private RenderingContext filterArt(List<Art> art) {
-		return filterByZoom(filterByCategories(new RenderingContext(art)));
+	private List<Art> filterArt(List<Art> art) {
+		Log.d(Utils.TAG, "Filtering art...");
+		return filterByZoom(filterByCategories(new LinkedList<Art>(art)));
 	}
 
-	private RenderingContext filterByZoom(RenderingContext context) {
+	private List<Art> filterByCategories(List<Art> art) {
+		Iterator<Art> i = art.iterator();
+		while (i.hasNext()) {
+			Art a = i.next();
+			if( !visibleCategories.contains( a.category ) ){
+				i.remove();
+			}
+		}
+		return art;
+	}
+
+	private List<Art> filterByZoom(List<Art> art) {
+		Log.d(Utils.TAG, "Filtering art by zoom");
+		int currentNrPins = art.size();
 		int newNrPins = 0;
-		List<Art> art = context.art;
-		List<Art> artToAdd = context.artToAdd;
-		List<Art> artToRemove = context.artToRemove;
 
-		if (newZoom <= MIN_LEVEL) {
+		if (newZoom <= MIN_LEVEL)
 			newNrPins = 1;
-		} else if (newZoom > MAX_LEVEL) {
+		else if (newZoom > MAX_LEVEL)
 			newNrPins = art.size();
-		} else {
+		else
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
+
+		if (newNrPins >= currentNrPins) {
+			Log.d(Utils.TAG, "Need to display " + newNrPins + " but we have only " + currentNrPins);
+			return art;
 		}
-		Log.d(Utils.TAG, "nr pins = " + newNrPins);
 
-		int oldNrPins = artFiltered.size();
+		Log.d(Utils.TAG, "Current nr pins " + currentNrPins + " , new nr pins " + newNrPins);
 
-		if (newNrPins > oldNrPins) { //must add pins
-			for (int i = oldNrPins; i < newNrPins; ++i) {
-				artToAdd.add(art.get(i));
-			}
-			artFiltered.addAll(artToAdd);
-		} else { //must remove pins
-			for (int i = oldNrPins - 1; i >= newNrPins; --i) {
-				artToRemove.add(artFiltered.get(i));
-				artFiltered.remove(i);
-			}
-		}
-		return context;
-	}
+		// remove the extra pins in the reverse order of dispersion
+		// (the art array should be already sorted by dispersion)
+		for (int i = art.size() - 1; i >= newNrPins; --i)
+			art.remove(i);
+		
+		return art;
 
-	private RenderingContext filterByCategories(RenderingContext context) {
-		return context;
 	}
 
 	@Override
@@ -594,15 +631,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void doMySearch(String query) {
 		// TODO Auto-generated method stub
-	}
-
-	public static class RenderingContext {
-		public RenderingContext(List<Art> art) {
-			this.art.addAll(art);
-		}
-		public final List<Art> art = new ArrayList<Art>();
-		public final List<Art> artToRemove = new ArrayList<Art>();
-		public final List<Art> artToAdd = new ArrayList<Art>();
 	}
 
 	private static class Holder {
