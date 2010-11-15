@@ -1,12 +1,10 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +67,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private List<Art> allArt;
 	private List<Art> artFiltered;
+	private int nrDisplayedArt;
 
 	private int newZoom;
 
@@ -274,25 +273,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	@Override
 	public void onProviderDisabled(String provider) {}
-
-	@Override
-	public void onLoadArt(ParseResult result, LoadArtTask task) {
-		Log.d(Utils.TAG, "Result of task is: " + result);
-
-		if (result == null) {
-			showDialog(DIALOG_LOADING_ART_FAILURE);
-			return;
-		}
-
-		processLoadedArt(result.art);
-
-		if (result.totalCount == allArt.size()) {
-			// finished to load all arts 
-			onFinishLoadArt();
-		}
-
-		loadMoreArtFromServer(result, task);
-	}
 	
 	@Override
 	public void onLoadArtError(Throwable e) {
@@ -320,14 +300,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		saveArtTask = holder.saveArtTask;
 	}
 
-	private void onFinishLoadArt() {
-		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
-		recalculateMaximumDispersion();
-		// clear database cache
-		saveArtTask = (SaveArtTask) new SaveArtTask(allArt, database).execute();
-		setLastUpdate();
-	}
-
 	private void setupUi() {
 		mapView = (ArtMapView) findViewById(R.id.map_view);
 		mapView.setBuiltInZoomControls(true);
@@ -353,6 +325,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		this.allArt.clear();
 		Log.d(Utils.TAG, "Last art update was " + lastUpdate);
 
+		resetDisplayedArt();
 		if (isOutdated(lastUpdate)) {
 			loadArtFromServer();
 		} else {
@@ -373,7 +346,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		if (isLoadingArt()) {
 			return;
 		}
-
 		taskCount.set(1);
 		startTask(1);
 	}
@@ -476,63 +448,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private float distance(Art a, Art b) {
 		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
 	}
-
-	private void filterAndDisplayArt(List<Art> art) {
-		if (art != null && art.size() > 0) {
-			displayArt(filterArt(art));
-		}
-	}
-
-	private void filterAndDisplayAllArt() {
-		filterAndDisplayArt(allArt);
-	}
-
-	private void displayLastArt() {
-		displayArt(artFiltered);
-	}
 	
-	private void displayArt(List<Art> art) {
-		displayArtWithSelectiveAddRemove(art);
-	}
-
-	private void displayArtWithSelectiveAddRemove(List<Art> art) {
-		List<Art> artToRemove = new ArrayList<Art>(artFiltered);
-		artToRemove.removeAll(art);
-		List<Art> artToAdd = new ArrayList<Art>(art);
-		artToAdd.removeAll(artFiltered);
-		artFiltered = art;
-	 
-		//remove art 
-		Log.d(Utils.TAG, "Removing " + artToRemove.size() + " pins.");
-		for (Art a : artToRemove) {
-			artOverlay.removeOverlay(items.get(a));
-		}
-		//add new art Log.d(Utils.TAG, "Adding " + artToAdd.size() + " pins."); 
-		for (Art a : artToAdd) {
-			artOverlay.addOverlay(ensureOverlay(a));
-		}
-		//redraw 
-		artOverlay.doPopulate();
-		mapView.invalidate();
-	}
-	 
-	
-	@SuppressWarnings("unused")
-	private void displayArtWithCompleteRedraw(List<Art> art) {
-		artOverlay.doClear();
-		artOverlay.addOverlay(getOverlaysForArt(art));
-		artOverlay.doPopulate();
-		mapView.invalidate();
-	}
-
-	private Collection<OverlayItem> getOverlaysForArt(List<Art> art) {
-		LinkedList<OverlayItem> items = new LinkedList<OverlayItem>();
-		int s = art.size();
-		for (int i = 0; i < s; ++i)
-			items.add(ensureOverlay(art.get(i)));
-		return items;
-	}
-
 	private OverlayItem ensureOverlay(Art a) {
 		if (items.containsKey(a)) {
 			return items.get(a);
@@ -543,48 +459,86 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
-	private List<Art> filterArt(List<Art> art) {
-		Log.d(Utils.TAG, "Filtering art...");
-		return filterByZoom(filterByCategories(new LinkedList<Art>(art)));
-	}
+	@Override
+	public void onLoadArt(ParseResult result, LoadArtTask task) {
+		Log.d(Utils.TAG, "Result of task is: " + result);
 
-	private List<Art> filterByCategories(List<Art> art) {
-		Iterator<Art> i = art.iterator();
-		while (i.hasNext()) {
-			Art a = i.next();
-			if( !visibleCategories.contains( a.category ) ){
-				i.remove();
-			}
+		if (result == null) {
+			showDialog(DIALOG_LOADING_ART_FAILURE);
+			return;
 		}
-		return art;
+		processLoadedArt(result.art);
+
+		if (result.totalCount == allArt.size()) {// finished to load all arts 
+			onFinishLoadArt();
+		}
+
+		loadMoreArtFromServer(result, task);
 	}
 
-	private List<Art> filterByZoom(List<Art> art) {
-		Log.d(Utils.TAG, "Filtering art by zoom");
-		int currentNrPins = art.size();
-		int newNrPins = 0;
+	private void onFinishLoadArt() {
+		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
+		recalculateMaximumDispersion();
+		// clear database cache
+		saveArtTask = (SaveArtTask) new SaveArtTask(allArt, database).execute();
+		setLastUpdate();
+	}
 
+	private void resetDisplayedArt() {
+		nrDisplayedArt = 0;
+		artFiltered.clear();
+	}
+
+	private void filterAndDisplayAllArt() {
+		resetDisplayedArt();
+		artOverlay.doClear();
+		filterAndDisplayArt(allArt);
+	}
+
+	private void displayLastArt() {
+		resetDisplayedArt();
+		displayArt(artFiltered);
+	}
+
+	private void filterAndDisplayArt(List<Art> art) {
+		if (art == null || art.size() == 0) {
+			return;
+		}
+
+		//find out max number of pins to display based on zoom
+		int allNrPins = art.size();
+		int newNrPins = 0;
 		if (newZoom <= MIN_LEVEL)
 			newNrPins = 1;
 		else if (newZoom > MAX_LEVEL)
-			newNrPins = art.size();
+			newNrPins = allNrPins;
 		else
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 
-		if (newNrPins >= currentNrPins) {
-			Log.d(Utils.TAG, "Need to display " + newNrPins + " but we have only " + currentNrPins);
-			return art;
+		//filter
+		boolean allCategories = visibleCategories.isEmpty();
+		for (int i = 0; i < allNrPins && nrDisplayedArt < newNrPins; ++i) {
+			Art a = art.get(i);
+			if (allCategories || visibleCategories.contains(a.category)) {
+				artOverlay.addOverlay(ensureOverlay(a));
+				artFiltered.add(a);
+				++nrDisplayedArt;
+			}
 		}
 
-		Log.d(Utils.TAG, "Current nr pins " + currentNrPins + " , new nr pins " + newNrPins);
+		artOverlay.doPopulate();
+		mapView.invalidate();
+	}
 
-		// remove the extra pins in the reverse order of dispersion
-		// (the art array should be already sorted by dispersion)
-		for (int i = art.size() - 1; i >= newNrPins; --i)
-			art.remove(i);
-		
-		return art;
-
+	private void displayArt(List<Art> art) {
+		artOverlay.doClear();
+		int nrPins = art.size();
+		for (int i = 0; i < nrPins; ++i) {
+			Art a = art.get(i);
+			artOverlay.addOverlay(ensureOverlay(a));
+		}
+		artOverlay.doPopulate();
+		mapView.invalidate();
 	}
 
 	@Override
