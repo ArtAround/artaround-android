@@ -1,6 +1,7 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import android.graphics.drawable.Drawable;
 
@@ -39,6 +40,10 @@ public class ArtOverlay extends ItemizedOverlay<OverlayItem> {
 
 	public void addOverlay(OverlayItem overlay) {
 		overlays.add(overlay);
+	}
+
+	public void addOverlay(Collection<OverlayItem> overlays) {
+		overlays.addAll(overlays);
 	}
 
 	public void removeOverlay(OverlayItem overay) {

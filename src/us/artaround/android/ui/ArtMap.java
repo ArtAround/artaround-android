@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +52,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		LocationUpdaterCallback {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 20;
+	public static final int PER_PAGE = 100;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -75,10 +76,15 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private List<Art> allArt;
 	private List<Art> artFiltered;
+	private int nrDisplayedArt;
 
 	private int newZoom;
 	private boolean toBeRessurected;
 
+	private List<String> visibleCategories = new LinkedList<String>();
+	{
+		visibleCategories.add("Mural");
+	}
 	private ConnectivityManager connectivityManager;
 	private Location currentLocation;
 	private LocationUpdater locationUpdater;
@@ -407,6 +413,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Date lastUpdate = getLastCacheUpdate();
 		Log.d(Utils.TAG, "Last art update was " + lastUpdate);
 
+		resetDisplayedArt();
 		showLoading();
 
 		if (isCacheOutdated(lastUpdate)) {
@@ -431,7 +438,9 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void loadArtFromServer() {
 		Log.d(Utils.TAG, "Loading art from server...");
-
+		if (isLoadingArt()) {
+			return;
+		}
 		taskCount.set(1);
 		startTask(1);
 	}
@@ -533,40 +542,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private float distance(Art a, Art b) {
 		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
 	}
-
-	private void filterAndDisplayArt(List<Art> art) {
-		if (art != null && art.size() > 0) {
-			displayArt(filterArt(art));
-		}
-	}
-
-	private void filterAndDisplayAllArt() {
-		filterAndDisplayArt(allArt);
-	}
-
-	private void displayLastArt() {
-		RenderingContext context = new RenderingContext(artFiltered);
-		context.artToAdd.addAll(artFiltered);
-		displayArt(context);
-	}
-
-	private void displayArt(RenderingContext art) {
-		//remove art
-		//Log.d(Utils.TAG, "Removing " + art.artToRemove.size() + " pins.");
-		for (Art a : art.artToRemove) {
-			artOverlay.removeOverlay(items.get(a));
-		}
-		//add new art
-		//Log.d(Utils.TAG, "Adding " + art.artToAdd.size() + " pins.");
-		for (Art a : art.artToAdd) {
-			artOverlay.addOverlay(newOverlay(a));
-		}
-		//redraw
-		artOverlay.doPopulate();
-		mapView.invalidate();
-	}
-
-	private OverlayItem newOverlay(Art a) {
+	
+	private OverlayItem ensureOverlay(Art a) {
 		if (items.containsKey(a)) {
 			return items.get(a);
 		} else {
@@ -576,43 +553,61 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 	}
 
-	private RenderingContext filterArt(List<Art> art) {
-		return filterByZoom(filterByCategories(new RenderingContext(art)));
+	private void resetDisplayedArt() {
+		nrDisplayedArt = 0;
+		artFiltered.clear();
 	}
 
-	private RenderingContext filterByZoom(RenderingContext context) {
+	private void filterAndDisplayAllArt() {
+		resetDisplayedArt();
+		artOverlay.doClear();
+		filterAndDisplayArt(allArt);
+	}
+
+	private void displayLastArt() {
+		nrDisplayedArt = 0;
+		displayArt(artFiltered);
+	}
+
+	private void filterAndDisplayArt(List<Art> art) {
+		if (art == null || art.size() == 0) {
+			return;
+		}
+
+		//find out max number of pins to display based on zoom
+		int allNrPins = art.size();
 		int newNrPins = 0;
-		List<Art> art = context.art;
-		List<Art> artToAdd = context.artToAdd;
-		List<Art> artToRemove = context.artToRemove;
-
-		if (newZoom <= MIN_LEVEL) {
+		if (newZoom <= MIN_LEVEL)
 			newNrPins = 1;
-		} else if (newZoom > MAX_LEVEL) {
-			newNrPins = art.size();
-		} else {
+		else if (newZoom > MAX_LEVEL)
+			newNrPins = allNrPins;
+		else
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
-		}
-		//Log.d(Utils.TAG, "There are " + newNrPins + " new pins.");
 
-		int oldNrPins = artFiltered.size();
-
-		if (newNrPins > oldNrPins) { //must add pins
-			for (int i = oldNrPins; i < newNrPins; ++i) {
-				artToAdd.add(art.get(i));
-			}
-			artFiltered.addAll(artToAdd);
-		} else { //must remove pins
-			for (int i = oldNrPins - 1; i >= newNrPins; --i) {
-				artToRemove.add(artFiltered.get(i));
-				artFiltered.remove(i);
+		//filter
+		boolean allCategories = visibleCategories.isEmpty();
+		for (int i = 0; i < allNrPins && nrDisplayedArt < newNrPins; ++i) {
+			Art a = art.get(i);
+			if (allCategories || visibleCategories.contains(a.category)) {
+				artOverlay.addOverlay(ensureOverlay(a));
+				artFiltered.add(a);
+				++nrDisplayedArt;
 			}
 		}
-		return context;
+
+		artOverlay.doPopulate();
+		mapView.invalidate();
 	}
 
-	private RenderingContext filterByCategories(RenderingContext context) {
-		return context;
+	private void displayArt(List<Art> art) {
+		artOverlay.doClear();
+		int nrPins = art.size();
+		for (int i = 0; i < nrPins; ++i) {
+			Art a = art.get(i);
+			artOverlay.addOverlay(ensureOverlay(a));
+		}
+		artOverlay.doPopulate();
+		mapView.invalidate();
 	}
 
 	@Override
@@ -661,15 +656,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void showToast(int msgId) {
 		Toast.makeText(getApplicationContext(), msgId, Toast.LENGTH_LONG).show();
-	}
-
-	private static class RenderingContext {
-		public RenderingContext(List<Art> art) {
-			this.art.addAll(art);
-		}
-		public final List<Art> art = new ArrayList<Art>();
-		public final List<Art> artToRemove = new ArrayList<Art>();
-		public final List<Art> artToAdd = new ArrayList<Art>();
 	}
 
 	private static class Holder {
