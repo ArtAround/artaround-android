@@ -52,7 +52,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		LocationUpdaterCallback {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
-	public static final int PER_PAGE = 20;
+	public static final int PER_PAGE = 100;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
@@ -557,7 +557,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void displayLastArt() {
-		resetDisplayedArt();
+		nrDisplayedArt = 0;
 		displayArt(artFiltered);
 	}
 
