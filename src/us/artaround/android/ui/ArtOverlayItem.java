@@ -6,7 +6,6 @@ import us.artaround.models.Art;
 import com.google.android.maps.OverlayItem;
 
 public class ArtOverlayItem extends OverlayItem {
-
 	public final Art art;
 
 	public ArtOverlayItem(Art a) {

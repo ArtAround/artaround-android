@@ -53,8 +53,4 @@ public class ArtOverlay extends ItemizedOverlay<OverlayItem> {
 	public void doClear() {
 		overlays.clear();
 	}
-
-	public static interface OverlayTapListener {
-		void onTap(OverlayItem item);
-	}
 }

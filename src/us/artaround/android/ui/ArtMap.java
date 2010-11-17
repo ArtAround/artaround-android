@@ -18,7 +18,6 @@ import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.commons.tasks.LoadArtTask;
 import us.artaround.android.commons.tasks.SaveArtTask;
 import us.artaround.android.commons.tasks.LoadArtTask.LoadArtCallback;
-import us.artaround.android.ui.ArtOverlay.OverlayTapListener;
 import us.artaround.models.Art;
 import us.artaround.models.ArtDispersionComparator;
 import us.artaround.services.ParseResult;
@@ -45,6 +44,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
+import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, ZoomListener,
@@ -71,6 +71,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private ArtMapView mapView;
 	private ProgressBar loading;
 	private ImageButton btnLocation;
+	private MyLocationOverlay myLocationOverlay;
 
 	private List<Art> allArt;
 	private List<Art> artFiltered;
@@ -155,7 +156,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 		items = new HashMap<Art, OverlayItem>();
 		artOverlay = new ArtOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
-		mapView.getOverlays().add(artOverlay);
+		myLocationOverlay = new MyLocationOverlay(this, R.drawable.ic_pin_current);
+
+		List<Overlay> overlays = mapView.getOverlays();
+		overlays.add(artOverlay);
+		overlays.add(myLocationOverlay);
 
 		centerMapOnCurrentLocation();
 	}
@@ -347,10 +352,13 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	@Override
-	public void onTap(OverlayItem item) {
+	public void onTap(Object item) {
 		Log.d(Utils.TAG, "Tapped!");
 		if (item instanceof ArtOverlayItem) {
 			gotoArtDetails(((ArtOverlayItem) item).art);
+		}
+		else if (item instanceof Overlay) {
+			//TODO
 		}
 	}
 
@@ -642,6 +650,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void centerMapOnCurrentLocation() {
 		final GeoPoint geo = currentLocation == null ? DEFAULT_GEOPOINT : Utils.geo(currentLocation);
 		mapView.getController().animateTo(geo);
+		myLocationOverlay.setGeoPoint(geo);
+
 		Log.d(Utils.TAG, "Centered map on " + geo);
 	}
 

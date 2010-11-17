@@ -13,6 +13,8 @@
 
 	<!-- Location -->
 	<string
+		name="current_location">You are here</string>
+	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
