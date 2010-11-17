@@ -25,6 +25,7 @@ import us.artaround.models.ArtDispersionComparator;
 import us.artaround.services.ParseResult;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -61,6 +62,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public static final int DIALOG_ART_INFO = 0;
 	public static final int DIALOG_LOCATION_SETTINGS = 1;
 	public static final int DIALOG_WIFI_FAIL = 2;
+	public static final int DIALOG_LOADING = 3;
 
 	public static final GeoPoint DEFAULT_GEOPOINT = new GeoPoint(38895111, -77036365); // Washington 
 
@@ -341,6 +343,11 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 				}
 			});
 			break;
+		case DIALOG_LOADING:
+			ProgressDialog dialog = new ProgressDialog(this);
+			dialog.setCancelable(false);
+			dialog.setMessage(getString(R.string.loading));
+			return dialog;
 		}
 		return builder.create();
 	}
