@@ -114,6 +114,8 @@ public class LocationUpdater implements TimeoutCallback {
 	}
 
 	public void removeUpdates() {
+		if (providers == null || providers.isEmpty()) return;
+
 		int size = providers.size();
 		for (int i = 0; i < size; i++) {
 			String provider = providers.get(i);

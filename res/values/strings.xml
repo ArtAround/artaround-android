@@ -7,6 +7,9 @@
 		name="ok">OK</string>
 	<string
 		name="cancel">No, thanks</string>
+		
+	<string 
+		name="loading">Loading...</string>
 
 	<!-- Location -->
 	<string
