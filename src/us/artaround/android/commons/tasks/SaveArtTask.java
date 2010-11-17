@@ -22,11 +22,12 @@ public class SaveArtTask extends AsyncTask<Void, Void, Void> {
 	}
 
 	@Override
-	protected Void doInBackground(Void... params) {
+	public Void doInBackground(Void... params) {
 		if (!db.isOpen()) {
 			Log.w(Utils.TAG, "SaveArtTask needs an open database connection!");
 			return null;
 		}
+
 		db.updateCache(arts);
 		return null;
 	}

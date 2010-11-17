@@ -17,9 +17,28 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:padding">4dp</item>
+			name="android:padding">6dp</item>
 		<item
-			name="android:background">@null</item>
+			name="android:background">@drawable/btn_background</item>
+	</style>
+	
+	<style
+		name="ActionBarLocationButton" 
+		parent="ActionBarButton">
+		<item 
+			name="android:src">@drawable/btn_location</item>
+	</style>
+	
+	<style
+		name="ActionBarSpinner" parent="@android:style/Widget.ProgressBar.Small">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item 
+			name="android:layout_gravity">center</item>
+		<item
+			name="android:padding">6dp</item>
 	</style>
 
 	<style

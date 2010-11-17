@@ -5,7 +5,6 @@ import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 public class ArtDetails extends Activity {
@@ -27,7 +26,6 @@ public class ArtDetails extends Activity {
 	}
 
 	private Art getArt(String artId) {
-		Log.e(Utils.TAG, "artId: " + artId);
 		if (artId == null) {
 			return null;
 		}

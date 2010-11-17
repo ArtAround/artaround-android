@@ -1,0 +1,9 @@
+<selector
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<item
+		android:state_enabled="true"
+		android:drawable="@drawable/ic_btn_location" />
+	<item
+		android:state_enabled="false"
+		android:drawable="@drawable/ic_btn_location_disabled" />
+</selector>

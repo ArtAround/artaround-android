@@ -6,23 +6,24 @@
 	<string
 		name="ok">OK</string>
 	<string
-		name="skip">Skip</string>
+		name="cancel">No, thanks</string>
 
 	<!-- Location -->
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest and most accurate location
-		detection please turn on GPS
-		and wireless network.</string>
+		the fastest and most accurate location detection please turn on GPS and wireless network.</string>
+	<string
+		name="location_update_failure">Could not update your current location. Please check to see if your GPS and wireless are turned on.</string>
+		
+	<string
+		name="connection_failure_title">Connection failure</string>
+	<string
+		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network connection to function properly.</string>
+	<string
+		name="connection_failure_ok">WiFi Options</string>
 
 	<string
 		name="search_hint">Search by zip code</string>
-	<string
-		name="connection_fail_message">Couldn\'t contact the server!</string>
-	<string
-		name="connection_fail_ok">WiFi Options</string>
-	<string
-		name="connection_fail_cancel">Cancel</string>
 </resources>
