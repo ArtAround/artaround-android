@@ -23,19 +23,19 @@ public class LoadArtTask extends AsyncTask<Void, Void, ParseResult> {
 	}
 
 	@Override
-	protected ParseResult doInBackground(Void... params) {
+	public ParseResult doInBackground(Void... params) {
 		try {
 			Log.d(Utils.TAG, "Running LoadArtTask with page= " + page + " and perPage= " + perPage);
 			return ArtService.getArt(page, perPage);
 		} catch (ArtAroundException e) {
-			Log.e(Utils.TAG, "LoadArtTask exception!", e);
+			Log.w(Utils.TAG, "LoadArtTask exception!", e);
 			exception = e;
 			return null;
 		}
 	}
 
 	@Override
-	protected void onPostExecute(ParseResult result) {
+	public void onPostExecute(ParseResult result) {
 		if (result != null)
 			callback.onLoadArt(result, this);
 		else
