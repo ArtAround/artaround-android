@@ -10,7 +10,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -20,13 +19,12 @@ public class LocationUpdater implements TimeoutCallback {
 	private final LocationManager manager;
 	private final Activity context;
 	private final LocationUpdaterCallback callback;
-	private final LocationListener listener;
+	private final LocationListener fineListener, coarseListener;
 
-	private List<String> providers, fineProviders;
-	private List<TimeoutTimer> timers;
+	private List<String> fineProviders, coarseProviders;
+	private final List<TimeoutTimer> timers;
 
-	private boolean firstTime = true;
-	private int counter = 0;
+	private int fineCounter = 0, coarseCounter = 0;
 
 	public LocationUpdater(Activity context, LocationUpdaterCallback callback) {
 		Log.d(TAG, "Instantiating a LocationUpdater for context " + context);
@@ -35,7 +33,8 @@ public class LocationUpdater implements TimeoutCallback {
 
 		timers = new ArrayList<TimeoutTimer>();
 		manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-		listener = getNewListener();
+		fineListener = getNewListener();
+		coarseListener = getNewListener();
 	}
 
 	private LocationListener getNewListener() {
@@ -43,14 +42,6 @@ public class LocationUpdater implements TimeoutCallback {
 			@Override
 			public void onStatusChanged(String provider, int status, Bundle extras) {
 				Log.d(TAG, "onStatusChanged(" + provider + ") with status " + status);
-				switch (status) {
-				case LocationProvider.OUT_OF_SERVICE:
-					endTimerForProvider(provider, this);
-					break;
-				case LocationProvider.TEMPORARILY_UNAVAILABLE:
-					endTimerForProvider(provider, this);
-					break;
-				}
 			}
 
 			@Override
@@ -61,14 +52,13 @@ public class LocationUpdater implements TimeoutCallback {
 			@Override
 			public void onProviderDisabled(String provider) {
 				Log.d(TAG, "onProviderDisabled(" + provider + ")");
-				endTimerForProvider(provider, this);
 			}
 
 			@Override
 			public void onLocationChanged(Location location) {
 				Log.d(TAG, "onLocationChanged(" + location + ")");
-				callback.onLocationUpdate(location);
 				endTimerForProvider(location.getProvider(), this);
+				callback.onLocationUpdate(location);
 			}
 		};
 	}
@@ -85,94 +75,104 @@ public class LocationUpdater implements TimeoutCallback {
 	}
 
 	private void startTimerForProvider(String provider, LocationListener listener) {
-		TimeoutTimer timer = getTimer(provider);
-		if (timer != null) {
-			Log.d(TAG, "There is another timed update from provider " + provider + " taking place.");
-			return;
-		}
-
-		Log.d(TAG, "Getting a timed update from provider " + provider);
-		timer = new TimeoutTimer(this, provider);
+		TimeoutTimer timer = new TimeoutTimer(this, provider);
+		timer.setTag(listener);
 		timers.add(timer);
 		manager.requestLocationUpdates(provider, 0, 0, listener);
 		timer.start();
+
+		Log.d(TAG, "Getting a timed update from provider " + provider);
 	}
 
 	private void endTimerForProvider(String provider, LocationListener listener) {
-		if (timers != null) {
-			TimeoutTimer timer = getTimer(provider);
-			if (timer != null) {
-				timer.cancel();
-				timers.remove(provider);
-				Log.d(TAG, "Ending a timed update from provider " + provider);
-			}
-		}
-		if (listener != null) {
-			manager.removeUpdates(listener);
-			Log.d(TAG, "Removing the listener for provider " + provider);
-		}
+		TimeoutTimer timer = getTimer(provider);
+		timer.cancel();
+		timers.remove(provider);
+		manager.removeUpdates(listener);
+		Log.d(TAG, "Ending a timed update from provider " + provider);
 	}
 
 	public void removeUpdates() {
-		if (providers == null || providers.isEmpty()) return;
-
-		int size = providers.size();
+		if (timers == null || timers.isEmpty()) return;
+		int size = timers.size();
 		for (int i = 0; i < size; i++) {
-			String provider = providers.get(i);
-			endTimerForProvider(provider, listener);
+			TimeoutTimer timer = timers.get(i);
+			endTimerForProvider(timer.getId(), (LocationListener) timer.getTag());
 		}
 	}
 
 	private void updateEnabledProviders() {
-		providers = manager.getProviders(true);
 		fineProviders = manager.getProviders(fineCriteria, true);
-		counter = providers.size() - 1;
-		Log.d(TAG, "Currently enabled providers " + providers);
+		coarseProviders = manager.getProviders(coarseCriteria, true);
+		fineCounter = fineProviders.size() - 1;
+		coarseCounter = coarseProviders.size() - 1;
+
+		Log.d(TAG, "Currently enabled providers: fine=" + fineProviders + ", coarse=" + coarseProviders);
 	}
 
 	public void updateLocation() {
 		updateEnabledProviders();
 
-		if (suggestBetterSettings()) {
+		if (providersNotEnabled()) {
 			callback.onSuggestLocationSettings();
 			return;
 		}
+
 		if (!updateFromStoredLocation()) {
 			updateFromLocationListener();
 		}
 	}
 
-	private boolean suggestBetterSettings() {
-		if (firstTime) {
-			firstTime = false;
-			if (fineProviders.isEmpty()) {
-				return true;
-			}
-		}
-		if (providers.isEmpty()) {
+	private boolean providersNotEnabled() {
+		if ((fineProviders == null || fineProviders.isEmpty())
+				&& (coarseProviders == null || coarseProviders.isEmpty())) {
 			return true;
 		}
 		return false;
 	}
 
 	private void updateFromLocationListener() {
-		// enabled providers size may change
-		if (counter >= 0 && providers.size() > counter) {
-			String provider = providers.get(counter);
-			startTimerForProvider(provider, listener);
-			counter--;
+		String provider;
+		if (fineCounter >= 0) {
+			provider = fineProviders.get(fineCounter);
+			fineCounter--;
+			startTimerForProvider(provider, fineListener);
+		}
+		else if (coarseCounter >= 0) {
+			provider = coarseProviders.get(coarseCounter);
+			coarseCounter--;
+			startTimerForProvider(provider, coarseListener);
 		}
 		else {
+			Log.d(TAG, "Location update error!");
 			callback.onLocationUpdateError();
 		}
 	}
 
 	private boolean updateFromStoredLocation() {
 		Location location = null;
-		int size = providers.size();
-		for (int i = 0; i < size; i++) {
-			location = manager.getLastKnownLocation(providers.get(i));
+		int i;
+		String provider;
+
+		int size = fineProviders.size();
+		for (i = 0; i < size; i++) {
+			provider = fineProviders.get(i);
+			location = manager.getLastKnownLocation(provider);
 			if (location != null) {
+				Log.d(TAG, "Last known location is " + location.getLatitude() + "-"
+						+ location.getLongitude() + " from provider " + provider);
+				callback.onLocationUpdate(location);
+				return true;
+			}
+		}
+
+		size = coarseProviders.size();
+		for (i = 0; i < size; i++) {
+			provider = coarseProviders.get(i);
+			location = manager.getLastKnownLocation(provider);
+			if (location != null) {
+				Log.d(TAG, "Last known location is " + location.getLatitude() + "-"
+						+ location.getLongitude() + " from provider " + provider);
 				callback.onLocationUpdate(location);
 				return true;
 			}
@@ -180,28 +180,19 @@ public class LocationUpdater implements TimeoutCallback {
 		return false;
 	}
 
-	private void updateFromNextProvider() {
-		if (counter >= 0) {
-			updateFromLocationListener();
-		}
-		else {
-			callback.onLocationUpdateError();
-		}
-	}
 
 	@Override
 	public void onTimeout(final TimeoutTimer timer) {
 		context.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				String provider = timer.getId();
-				endTimerForProvider(provider, listener);
-				updateFromNextProvider();
+				endTimerForProvider(timer.getId(), (LocationListener) timer.getTag());
+				updateFromLocationListener();
+
+				Log.d(TAG, "Timeout for provider " + timer.getId());
 			}
 		});
 	}
-
-	private static final Criteria fineCriteria = createCriteria(Criteria.ACCURACY_FINE);
 
 	public static Criteria createCriteria(int accuracy) {
 		Criteria c = new Criteria();
@@ -214,6 +205,9 @@ public class LocationUpdater implements TimeoutCallback {
 		return c;
 	}
 
+	public static final Criteria fineCriteria = createCriteria(Criteria.ACCURACY_FINE);
+	public static final Criteria coarseCriteria = createCriteria(Criteria.ACCURACY_COARSE);
+
 	public interface LocationUpdaterCallback {
 		void onSuggestLocationSettings();
 
@@ -221,5 +215,4 @@ public class LocationUpdater implements TimeoutCallback {
 
 		void onLocationUpdateError();
 	}
-
 }

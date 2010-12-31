@@ -7,7 +7,7 @@ import org.json.JSONObject;
 public class Parser {
 
 	public static String prop(JSONObject json, String prop) throws JSONException {
-		return json.isNull(prop) ? null : json.getString(prop);
+		return json.isNull(prop) ? "" : json.getString(prop);
 	}
 
 	public static JSONArray propA(JSONObject json, String prop) throws JSONException {

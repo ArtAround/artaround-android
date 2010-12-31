@@ -16,6 +16,7 @@
 			android:name=".android.ui.ArtMap"
 			android:label="@string/app_label"
 			android:theme="@android:style/Theme.NoTitleBar">
+			
 			<intent-filter>
 				<action
 					android:name="android.intent.action.MAIN" />
@@ -27,17 +28,26 @@
 				<action
 					android:name="android.intent.action.SEARCH" />
 			</intent-filter>
-
-			<meta-data
-				android:name="android.app.searchable"
-				android:resource="@xml/searchable" />
-
 		</activity>
 
 		<activity
 			android:name=".android.ui.ArtDetails"
 			android:theme="@android:style/Theme.NoTitleBar"
 			android:label="@string/app_label" />
+			
+		<activity
+			android:name=".android.ui.ArtGallery"
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
+			
+		<activity
+			android:name=".android.ui.Preferences"
+			android:label="@string/app_label"
+			android:theme="@android:style/Theme" />
+			
+		<provider
+			android:name=".android.database.ArtAroundProvider"
+			android:authorities="us.artaround" />
 
 		<uses-library
 			android:name="com.google.android.maps" />
@@ -52,7 +62,9 @@
 		android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<uses-permission
 		android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+	<uses-permission
+		android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+		
 	<uses-sdk
 		android:minSdkVersion="3"
 		android:targetSdkVersion="4" />

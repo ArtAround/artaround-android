@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<style
+		name="ActionBar">
+		<item
+			name="android:id">@+id/actionbar</item>
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:orientation">horizontal</item>
+		<item
+			name="android:background">@color/action_bar_bg</item>
+	</style>
+
+	<style
 		name="ActionBarSeparator">
 		<item
 			name="android:layout_width">1dp</item>
@@ -21,31 +35,100 @@
 		<item
 			name="android:background">@drawable/btn_background</item>
 	</style>
-	
+
+
 	<style
-		name="ActionBarLocationButton" 
-		parent="ActionBarButton">
-		<item 
-			name="android:src">@drawable/btn_location</item>
+		name="ActionBarTitle">
+		<item
+			name="android:layout_width">0dp</item>
+		<item
+			name="android:layout_weight">1</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:layout_gravity">center</item>
+		<item
+			name="android:paddingLeft">6dp</item>
+		<item
+			name="android:textStyle">bold</item>
+		<item
+			name="android:textColor">@color/action_bar_title</item>
+		<item
+			name="android:textSize">@dimen/action_bar_title</item>
+		<item
+			name="android:singleLine">true</item>
+		<item
+			name="android:ellipsize">marquee</item>
 	</style>
-	
+
 	<style
-		name="ActionBarSpinner" parent="@android:style/Widget.ProgressBar.Small">
+		parent="@android:style/Widget.ProgressBar.Small"
+		name="ActionBarProgress">
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
 			name="android:layout_height">wrap_content</item>
-		<item 
+		<item
 			name="android:layout_gravity">center</item>
 		<item
 			name="android:padding">6dp</item>
 	</style>
 
 	<style
-		name="InfoLabel">
+		parent="@android:style/Widget.ProgressBar"
+		name="LoadingProgress">
 		<item
-			name="android:textStyle">bold</item>
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:layout_gravity">center</item>
+		<item
+			name="android:padding">6dp</item>
+	</style>
+
+	<style
+		name="ArtInfoLabel">
+		<item
+			name="android:textSize">@dimen/art_label</item>
+		<item
+			name="android:textStyle">italic</item>
+		<item
+			name="android:textColor">@color/info_label</item>
+		<item
+			name="android:paddingRight">2dp</item>
+	</style>
+
+	<style
+		name="ArtInfoValue"
+		parent="@android:style/Widget.TextView">
+		<item
+			name="android:textSize">@dimen/art_value</item>
+		<item
+			name="android:textColor">@color/info_value</item>
+		<item
+			name="android:imeOptions">actionDone</item>
+		<item
+			name="android:inputType">text</item>
+		<item
+			name="android:cursorVisible">false</item>
+		<item
+			name="android:background">@android:color/transparent</item>
+		<item
+			name="android:paddingRight">2dp</item>
 	</style>
 	<style
-		name="InfoValue"></style>
+		name="CheckBox">
+		<item
+			name="android:button">@drawable/btn_check</item>
+		<item
+			name="android:background">@drawable/btn_check_background</item>
+	</style>
+
+	<style
+		name="CustomDialog"
+		parent="android:style/Theme.Dialog">
+		<item
+			name="android:windowBackground">@drawable/dialog_bg</item>
+	</style>
 </resources>

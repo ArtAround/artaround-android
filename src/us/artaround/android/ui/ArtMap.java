@@ -1,46 +1,69 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
-import us.artaround.android.commons.Database;
 import us.artaround.android.commons.LocationUpdater;
-import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.AsyncInsertListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.AsyncQueryListener;
+import us.artaround.android.commons.SharedPreferencesCompat;
+import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.tasks.LoadArtTask;
-import us.artaround.android.commons.tasks.SaveArtTask;
 import us.artaround.android.commons.tasks.LoadArtTask.LoadArtCallback;
+import us.artaround.android.commons.tasks.LoadDataTask;
+import us.artaround.android.commons.tasks.LoadDataTask.LoadDataCallback;
+import us.artaround.android.database.ArtAroundDb;
+import us.artaround.android.database.ArtAroundDb.Artists;
+import us.artaround.android.database.ArtAroundDb.Arts;
+import us.artaround.android.database.ArtAroundDb.Categories;
+import us.artaround.android.database.ArtAroundDb.Neighborhoods;
+import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.models.Art;
 import us.artaround.models.ArtDispersionComparator;
+import us.artaround.models.Artist;
 import us.artaround.services.ParseResult;
+import us.artaround.services.TempCache;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.app.SearchManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -48,21 +71,35 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
-public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapListener, ZoomListener,
-		LocationUpdaterCallback {
+public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
+		LoadArtCallback, AsyncQueryListener, AsyncInsertListener, LoadDataCallback {
+
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int MAX_CONCURRENT_TASKS = 1;
 	public static final int PER_PAGE = 100;
 	public static final int DEFAULT_ZOOM_LEVEL = 11;
 
+	private static final String[] FILTER_TYPES = { "category", "neighborhood", "artist" };
 	private static final int[] MAX_PINS_PER_LEVEL = { 3, 5, 10, 20, 30, 40, 60 };
 	private static final int MIN_LEVEL = 8;
 	private static final int MAX_LEVEL = 15;
 
-	public static final int DIALOG_ART_INFO = 0;
-	public static final int DIALOG_LOCATION_SETTINGS = 1;
-	public static final int DIALOG_WIFI_FAIL = 2;
-	public static final int DIALOG_LOADING = 3;
+	//--- dialog ids
+	private static final int DIALOG_ART_INFO = 0;
+	private static final int DIALOG_LOCATION_SETTINGS = 1;
+	private static final int DIALOG_WIFI_FAIL = 2;
+	private static final int DIALOG_LOADING = 3;
+	private static final int DIALOG_FILTER = 4;
+
+	//--- query tokens for async query handler
+	private static final int QUERY_ARTS = 0;
+	private static final int INSERT_ARTS = 1;
+	private static final int QUERY_CATEGORIES = 2;
+	private static final int INSERT_CATEGORIES = 3;
+	private static final int QUERY_NEIGHBORHOODS = 4;
+	private static final int INSERT_NEIGHBORHOODS = 5;
+	private static final int QUERY_ARTISTS = 6;
+	private static final int INSERT_ARTISTS = 7;
 
 	public static final GeoPoint DEFAULT_GEOPOINT = new GeoPoint(38895111, -77036365); // Washington 
 
@@ -74,61 +111,68 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private ImageButton btnLocation;
 	private MyLocationOverlay myLocationOverlay;
 
+	private NotifyingAsyncQueryHandler queryHandler;
+
 	private List<Art> allArt;
 	private List<Art> artFiltered;
 	private int nrDisplayedArt;
 
+	private List<String> categories;
+	private List<String> neighborhoods;
+	private List<String> artists;
+
+	private CheckBoxifiedListAdapter filterAdapter;
+	private Map<String, List<CheckBoxifiedText>> filters;
+
 	private int newZoom;
 	private boolean toBeRessurected;
 
-	private List<String> visibleCategories = new LinkedList<String>();
-	{
-		visibleCategories.add("Mural");
-	}
 	private ConnectivityManager connectivityManager;
 	private Location currentLocation;
 	private LocationUpdater locationUpdater;
 
 	private SharedPreferences prefs;
-	private Database database;
 
-	private Set<LoadArtTask> runningTasks;
+	private Set<LoadArtTask> runningArtTasks;
 	private AtomicInteger taskCount;
 	private AtomicInteger howManyMoreTasks;
-	private SaveArtTask saveArtTask;
+
+	private LoadDataTask loadDataTask;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_map);
 
-		initVars((Holder) getLastNonConfigurationInstance());
+		initVars();
 		setupUi();
-
-		Intent intent = getIntent();
-		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-			String query = intent.getStringExtra(SearchManager.QUERY);
-			doMySearch(query);
-		}
 	}
 
-	private void initVars(Holder holder) {
+	private void initVars() {
 		toBeRessurected = false;
 
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		locationUpdater = new LocationUpdater(this, this);
 		connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		database = Database.getInstance(this);
+		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
 
+		Holder holder = (Holder) getLastNonConfigurationInstance();
 		if (holder == null) {
 			newZoom = DEFAULT_ZOOM_LEVEL;
 
 			allArt = new ArrayList<Art>();
 			artFiltered = new ArrayList<Art>();
 
+			categories = new ArrayList<String>();
+			neighborhoods = new ArrayList<String>();
+			artists = new ArrayList<String>();
+
+			filters = new HashMap<String, List<CheckBoxifiedText>>();
+			filterAdapter = new CheckBoxifiedListAdapter(this);
+
 			howManyMoreTasks = new AtomicInteger(0);
 			taskCount = new AtomicInteger(0);
-			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+			runningArtTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
 
 			currentLocation = null;
 		}
@@ -139,10 +183,18 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			allArt = holder.allArt;
 			artFiltered = holder.artFiltered;
 
-			howManyMoreTasks = holder.howManyMoreTasks;
-			taskCount = holder.taskCount;
-			runningTasks = holder.runningTasks;
-			saveArtTask = holder.saveArtTask;
+			categories = holder.categories;
+			neighborhoods = holder.neighborhoods;
+			artists = holder.artists;
+
+			filters = holder.filters;
+			filterAdapter = holder.filterAdapter;
+
+			howManyMoreTasks = holder.howManyMoreArtTasks;
+			taskCount = holder.artTaskCount;
+			runningArtTasks = holder.runningArtTasks;
+
+			loadDataTask = holder.loadDataTask;
 
 			currentLocation = holder.currentLocation;
 		}
@@ -172,7 +224,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void setupActionBarUi() {
-		btnLocation = (ImageButton) findViewById(R.id.btn_location);
+		btnLocation = (ImageButton) findViewById(R.id.btn_1);
+		btnLocation.setImageResource(R.drawable.ic_btn_location);
 		btnLocation.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -180,7 +233,17 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			}
 		});
 
-		ImageButton btnSearch = (ImageButton) findViewById(R.id.btn_search);
+		final ImageButton btnFilter = (ImageButton) findViewById(R.id.btn_2);
+		btnFilter.setImageResource(R.drawable.ic_btn_filter);
+		btnFilter.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				showDialog(DIALOG_FILTER);
+			}
+		});
+
+		ImageButton btnSearch = (ImageButton) findViewById(R.id.btn_3);
+		btnSearch.setImageResource(R.drawable.ic_btn_search);
 		btnSearch.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -191,7 +254,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void showLoading() {
 		if (loading == null) {
-			loading = (ProgressBar) findViewById(R.id.spinner);
+			loading = (ProgressBar) findViewById(R.id.progress);
 		}
 		loading.setVisibility(View.VISIBLE);
 	}
@@ -210,13 +273,20 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void setupState() {
 		Log.d(Utils.TAG, "Setup state...");
 
+		boolean clearedCache = prefs.getBoolean(Utils.KEY_CLEARED_CACHE, false);
+		if (clearedCache) {
+			allArt.clear();
+			clearPins();
+		}
+
+		//--- load art ---
 		if (allArt.isEmpty()) {
 			if (!isLoadingArt()) { // first time in the app
 				loadArt();
 			}
 			else {
 				showLoading();
-				setTasksNewCallback(); // screen-flip while loading first page
+				attachTasksCallback(); // screen-flip while loading first page
 			}
 		}
 		else {
@@ -225,12 +295,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			}
 			else {
 				showLoading();
-				setTasksNewCallback(); // screen-flip while loading
+				attachTasksCallback(); // screen-flip while loading
 			}
-		}
-
-		if (isSavingArt()) {
-			saveArtTask.setDatabase(database);
 		}
 
 		// Google Maps needs WIFI enabled!!
@@ -242,11 +308,32 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		//}
 	}
 
-	private void setTasksNewCallback() {
-		for (LoadArtTask task : runningTasks) {
+	private void clearPins() {
+		artOverlay.doClear();
+		artOverlay.doPopulate();
+	}
+
+	private void attachTasksCallback() {
+		for (LoadArtTask task : runningArtTasks) {
 			if (task.getStatus() == AsyncTask.Status.RUNNING) {
-				task.setCallback(this); // pass the new context
+				task.attach(this); // pass the new context
 			}
+		}
+
+		if (loadDataTask != null) {
+			loadDataTask.attach(this);
+		}
+	}
+
+	private void detachTasksCallback() {
+		for (LoadArtTask task : runningArtTasks) {
+			if (task.getStatus() == AsyncTask.Status.RUNNING) {
+				task.detach();
+			}
+		}
+
+		if (loadDataTask != null) {
+			loadDataTask.detach();
 		}
 	}
 
@@ -256,13 +343,21 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		toBeRessurected = true;
 
 		Holder holder = new Holder();
-		holder.runningTasks = runningTasks;
-		holder.howManyMoreTasks = howManyMoreTasks;
-		holder.taskCount = taskCount;
+		holder.runningArtTasks = runningArtTasks;
+		holder.howManyMoreArtTasks = howManyMoreTasks;
+		holder.artTaskCount = taskCount;
 		holder.allArt = allArt;
 		holder.artFiltered = artFiltered;
 		holder.zoom = newZoom;
-		holder.saveArtTask = saveArtTask;
+		holder.loadDataTask = loadDataTask;
+		holder.categories = categories;
+		holder.neighborhoods = neighborhoods;
+		holder.artists = artists;
+		holder.filters = filters;
+		holder.filterAdapter = filterAdapter;
+
+		detachTasksCallback();
+
 		return holder;
 	}
 
@@ -283,13 +378,12 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void cleanup() {
 		endLocationUpdate();
-		database.close();
 	}
 
 	private void finalCleanup() {
 		Log.d(Utils.TAG, "Final cleanup before onDestroy(): stopping tasks...");
 
-		Iterator<LoadArtTask> it = runningTasks.iterator();
+		Iterator<LoadArtTask> it = runningArtTasks.iterator();
 		while (it.hasNext()) {
 			LoadArtTask task = it.next();
 			task.cancel(true);
@@ -297,10 +391,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		}
 		howManyMoreTasks.set(0);
 		taskCount.set(0);
-
-		if (isSavingArt()) {
-			saveArtTask.cancel(true);
-		}
 	}
 
 	@Override
@@ -349,17 +439,76 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			});
 			break;
 		case DIALOG_LOADING:
-			ProgressDialog dialog = new ProgressDialog(this);
-			dialog.setCancelable(false);
-			dialog.setMessage(getString(R.string.loading));
-			return dialog;
+			ProgressDialog progress = new ProgressDialog(this);
+			progress.setCancelable(false);
+			progress.setMessage(getString(R.string.loading));
+			return progress;
+		case DIALOG_FILTER:
+			Dialog filterDialog = new Dialog(this, R.style.CustomDialog);
+			filterDialog.setTitle(R.string.filter_art);
+			filterDialog.setContentView(R.layout.filter_dialog);
+			filterDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					filterAndDisplayAllArt();
+				}
+			});
+
+			int length = FILTER_TYPES.length;
+			String[] typeNames = new String[length];
+			for (int i = 0; i < length; i++) {
+				typeNames[i] = getString(R.string.by) + " " + FILTER_TYPES[i];
+			}
+
+			ListView list = (ListView) filterDialog.findViewById(android.R.id.list);
+			list.setEmptyView(filterDialog.findViewById(android.R.id.empty));
+			list.setAdapter(filterAdapter);
+
+			ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,
+					typeNames);
+			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			Spinner spinner = (Spinner) filterDialog.findViewById(R.id.spinner);
+			spinner.setAdapter(adapter);
+			spinner.setSelection(0);
+			spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+					filterAdapter.setListItems(filters.get(FILTER_TYPES[position]));
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {}
+			});
+
+			return filterDialog;
 		}
 		return builder.create();
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.art_map_menu, menu);
+		return true;
+	}
+
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.preferences:
+			startActivity(new Intent(this, Preferences.class));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+
+	}
+
+	@Override
 	public void onTap(Object item) {
-		Log.d(Utils.TAG, "Tapped!");
+		Log.d(Utils.TAG, "Tapped on " + item.getClass().getName());
 		if (item instanceof ArtOverlayItem) {
 			gotoArtDetails(((ArtOverlayItem) item).art);
 		}
@@ -370,7 +519,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 
 	private void gotoArtDetails(Art art) {
 		Intent intent = new Intent(this, ArtDetails.class);
-		intent.putExtra(Utils.KEY_ART_ID, art.slug);
+		intent.putExtra("art", art);
 		startActivity(intent);
 	}
 
@@ -395,7 +544,6 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	
 	@Override
 	public void onLoadArtError(Throwable e) {
-		Log.d(Utils.TAG, "Failed to load art!", e);
 		hideLoading();
 		showDialog(DIALOG_WIFI_FAIL);
 	}
@@ -403,10 +551,36 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void onFinishLoadArt() {
 		Log.d(Utils.TAG, "Finished loading all art from the server. Triggering onFinishLoadArt actions.");
 		recalculateMaximumDispersion();
-		// update database cache
-		saveArtTask = (SaveArtTask) new SaveArtTask(allArt, database).execute();
+
+		doSaveArt();
+
+		//--- save artists from cache ---
+		doSaveArtists();
+
 		setLastCacheUpdate();
 		hideLoading();
+	}
+
+	private void doSaveArt() {
+		int size = allArt.size();
+		Log.d(Utils.TAG, "There are " + size + " arts to be saved");
+		for (int i = 0; i < size; i++) {
+			Art art = allArt.get(i);
+			ContentValues vals = ArtAroundDb.artToValues(art);
+			queryHandler.startInsert(INSERT_ARTS, Arts.CONTENT_URI, vals);
+		}
+	}
+
+	private void doSaveArtists() {
+		Collection<Artist> artists = TempCache.artists.values();
+		if (artists != null && !artists.isEmpty()) {
+			int size = artists.size();
+			Log.d(Utils.TAG, "There are " + size + " artists to be saved");
+			for (Artist artist : artists) {
+				ContentValues vals = ArtAroundDb.artistToValues(artist);
+				queryHandler.startInsert(INSERT_ARTISTS, Artists.CONTENT_URI, vals);
+			}
+		}
 	}
 
 	private void loadArt() {
@@ -424,29 +598,32 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void loadArtFromDatabase() {
-		processLoadedArt(database.getArts());
-		hideLoading();
+		Log.d(Utils.TAG, "Starting querying for arts, categories and neighborhoods from db...");
+		queryHandler.startQuery(QUERY_ARTS, Arts.CONTENT_URI, ArtAroundDb.ARTS_PROJECTION);
+
+		// load categories and neighborhoods
+		loadExtraDataFromDatabase();
 	}
 
 	private boolean isLoadingArt() {
-		return !runningTasks.isEmpty();
-	}
-
-	private boolean isSavingArt() {
-		return saveArtTask != null;
+		return !runningArtTasks.isEmpty();
 	}
 
 	private void loadArtFromServer() {
-		Log.d(Utils.TAG, "Loading art from server...");
+		Log.d(Utils.TAG, "Loading art, categories and neighborhoods from server...");
+
 		if (isLoadingArt()) {
 			return;
 		}
 		taskCount.set(1);
 		startTask(1);
+
+		// load categories and neighborhoods
+		loadExtraDataFromServer();
 	}
 
 	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
-		runningTasks.remove(task);
+		runningArtTasks.remove(task);
 
 		if (result.page == 1) {
 			howManyMoreTasks.set((int)(Math.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
@@ -461,7 +638,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			if (result.count == result.perPage && howManyMoreTasks.get() > 0) {
 				Log.d(Utils.TAG, "There are " + howManyMoreTasks.get() + " more tasks to start.");
 
-				if (runningTasks.size() < MAX_CONCURRENT_TASKS) {
+				if (runningArtTasks.size() < MAX_CONCURRENT_TASKS) {
 					startTask(taskCount.incrementAndGet());
 				}
 			}
@@ -471,7 +648,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	private void startTask(int page) {
 		LoadArtTask task = new LoadArtTask(this, page, PER_PAGE);
 		task.execute();
-		runningTasks.add(task);
+		runningArtTasks.add(task);
 	}
 
 	private boolean isCacheOutdated(Date lastUpdate) {
@@ -491,7 +668,9 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	}
 
 	private void setLastCacheUpdate() {
-		prefs.edit().putLong(Utils.KEY_LAST_UPDATE, new Date().getTime()).commit();
+		Editor editor = prefs.edit();
+		editor.putLong(Utils.KEY_LAST_UPDATE, new Date().getTime());
+		SharedPreferencesCompat.apply(editor);
 	}
 
 	private void processLoadedArt(List<Art> art) {
@@ -574,7 +753,7 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 			return;
 		}
 
-		//find out max number of pins to display based on zoom
+		// find out max number of pins to display based on zoom
 		int allNrPins = art.size();
 		int newNrPins = 0;
 		if (newZoom <= MIN_LEVEL)
@@ -584,19 +763,68 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		else
 			newNrPins = MAX_PINS_PER_LEVEL[newZoom - MIN_LEVEL - 1];
 
+		Map<String, List<String>> onFilters = filterByAll();
+		Log.d(Utils.TAG, "===== FILTERS: " + onFilters + " ===== ");
+
 		//filter
-		boolean allCategories = visibleCategories.isEmpty();
 		for (int i = 0; i < allNrPins && nrDisplayedArt < newNrPins; ++i) {
 			Art a = art.get(i);
-			if (allCategories || visibleCategories.contains(a.category)) {
+
+			if (artMatchesFilter(onFilters, a)) {
 				artOverlay.addOverlay(ensureOverlay(a));
 				artFiltered.add(a);
 				++nrDisplayedArt;
 			}
 		}
 
+		Log.d(Utils.TAG, "~~~ Art filtered: " + artFiltered + " ~~~");
+
 		artOverlay.doPopulate();
 		mapView.invalidate();
+	}
+
+	boolean artMatchesFilter(Map<String, List<String>> onFilters, Art a) {
+		int match = 0;
+
+		for (String filter : FILTER_TYPES) {
+			List<String> byType = onFilters.get(filter);
+
+			if (byType.isEmpty() || ("category".equals(filter) && byType.contains(a.category))) {
+				++match;
+			}
+			else if (byType.isEmpty() || ("neighborhood".equals(filter) && byType.contains(a.neighborhood))) {
+				++match;
+			}
+			else if (byType.isEmpty() || ("artist".equals(filter) && byType.contains(a.artist.name))) {
+				++match;
+			}
+		}
+
+		return match == FILTER_TYPES.length;
+	}
+
+	private Map<String, List<String>> filterByAll() {
+		Map<String, List<String>> onFilters = new HashMap<String, List<String>>();
+
+		for (String filter : FILTER_TYPES) {
+			onFilters.put(filter, new ArrayList<String>());
+		}
+
+		for (String filter : FILTER_TYPES) {
+			List<CheckBoxifiedText> cf = filters.get(filter);
+			if (cf == null || cf.isEmpty()) {
+				continue;
+			}
+			int size = cf.size();
+			for (int i = 0; i < size; i++) {
+				CheckBoxifiedText ct = cf.get(i);
+				if (ct.isChecked()) {
+					onFilters.get(filter).add(ct.getText());
+				}
+			}
+		}
+
+		return onFilters;
 	}
 
 	private void displayArt(List<Art> art) {
@@ -650,23 +878,8 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 		Log.d(Utils.TAG, "Centered map on " + geo);
 	}
 
-	private void doMySearch(String query) {
-		// TODO Auto-generated method stub
-	}
-
 	private void showToast(int msgId) {
 		Toast.makeText(getApplicationContext(), msgId, Toast.LENGTH_LONG).show();
-	}
-
-	private static class Holder {
-		int zoom;
-		SaveArtTask saveArtTask;
-		Set<LoadArtTask> runningTasks;
-		AtomicInteger taskCount;
-		AtomicInteger howManyMoreTasks;
-		List<Art> allArt;
-		List<Art> artFiltered;
-		Location currentLocation;
 	}
 
 	@Override
@@ -690,5 +903,148 @@ public class ArtMap extends MapActivity implements LoadArtCallback, OverlayTapLi
 	public void onSuggestLocationSettings() {
 		Log.d(Utils.TAG, "Suggest location settings...");
 		showDialog(DIALOG_LOCATION_SETTINGS);
+	}
+
+	@Override
+	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
+		//Log.d(Utils.TAG, "Query " + QUERY_ARTS + " completed.");
+
+		if (cursor == null) {
+			Log.w(Utils.TAG, "Returned cursor is null!");
+			return;
+		}
+
+		switch (token) {
+		case QUERY_ARTS:
+			
+			List<Art> results = ArtAroundDb.artsFromCursor(cursor);
+			processLoadedArt(results);
+			hideLoading();
+			
+			Log.d(Utils.TAG, "Retrieved " + results.size() + " arts from the db.");
+			break;
+
+		case QUERY_CATEGORIES:
+			categories = ArtAroundDb.categoriesFromCursor(cursor);
+			
+			List<CheckBoxifiedText> cf = new ArrayList<CheckBoxifiedText>();
+			int size = categories.size();
+			for(int i = 0; i < size; i++) {
+				cf.add(new CheckBoxifiedText(categories.get(i)));
+			}
+			filters.put(FILTER_TYPES[0], cf);
+			filterAdapter.setListItems(cf);
+
+			//Log.d(Utils.TAG, "Retrieved categories " + categories + " from the db.");
+			break;
+		case QUERY_NEIGHBORHOODS:
+			neighborhoods = ArtAroundDb.neighborhoodsFromCursor(cursor);
+			
+			cf = new ArrayList<CheckBoxifiedText>();
+			size = neighborhoods.size();
+			for (int i = 0; i < size; i++) {
+				cf.add(new CheckBoxifiedText(neighborhoods.get(i)));
+			}
+			filters.put(FILTER_TYPES[1], cf);
+			filterAdapter.setListItems(cf);
+
+			//Log.d(Utils.TAG, "Retrieved neighborhoods " + neighborhoods + " from the db.");
+			break;
+		case QUERY_ARTISTS:
+			artists = ArtAroundDb.artistsFromCursor(cursor);
+			
+			cf = new ArrayList<CheckBoxifiedText>();
+			size = artists.size();
+			for (int i = 0; i < size; i++) {
+				cf.add(new CheckBoxifiedText(artists.get(i)));
+			}
+			filters.put(FILTER_TYPES[2], cf);
+			filterAdapter.setListItems(cf);
+
+			//Log.d(Utils.TAG, "Retrieved artists " + artists + " from the db.");
+			break;
+		}
+
+		cursor.close();
+	}
+
+	@Override
+	public void onInsertComplete(int token, Object cookie, Uri uri) {
+		// this is for debug only
+		switch (token) {
+		case INSERT_ARTS:
+		case INSERT_ARTISTS:
+		case INSERT_CATEGORIES:
+		case INSERT_NEIGHBORHOODS:
+			//Log.d(Utils.TAG, "Inserted " + uri + " into db");
+			break;
+		}
+	}
+
+	private void loadExtraDataFromServer() {
+		loadDataTask = (LoadDataTask) new LoadDataTask(this).execute();
+	}
+
+	private void loadExtraDataFromDatabase() {
+		queryHandler.startQuery(QUERY_CATEGORIES, Categories.CONTENT_URI, ArtAroundDb.CATEGORIES_PROJECTION);
+		queryHandler.startQuery(QUERY_NEIGHBORHOODS, Neighborhoods.CONTENT_URI, ArtAroundDb.NEIGHBORHOODS_PROJECTION);
+		queryHandler.startQuery(QUERY_ARTISTS, Artists.CONTENT_URI, ArtAroundDb.ARTISTS_PROJECTION);
+	}
+
+
+	@Override
+	public void onLoadData(Map<Integer, List<String>> data) {
+		loadDataTask = null;
+
+		if(data == null) {
+			Toast.makeText(this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
+			return;
+		}
+		
+		categories = data.get(LoadDataTask.TYPE_CATEGORIES);
+		neighborhoods = data.get(LoadDataTask.TYPE_NEIGHBORHOODS);
+		
+		//Log.d(Utils.TAG, "Retrieved categories: " + categories + ", neighborhoods: " + neighborhoods + " from server");
+
+		saveExtraData(LoadDataTask.TYPE_CATEGORIES, categories);
+		saveExtraData(LoadDataTask.TYPE_NEIGHBORHOODS, neighborhoods);
+	}
+
+	private void saveExtraData(int type, List<String> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+
+		switch (type) {
+		case LoadDataTask.TYPE_CATEGORIES:
+			int size = data.size();
+			for (int i = size - 1; i >= 0; i--) {
+				queryHandler.startInsert(INSERT_CATEGORIES, Categories.CONTENT_URI,
+						ArtAroundDb.categoryToValues(data.get(i)));
+			}
+			break;
+		case LoadDataTask.TYPE_NEIGHBORHOODS:
+			size = data.size();
+			for (int i = size - 1; i >= 0; i--) {
+				queryHandler.startInsert(INSERT_NEIGHBORHOODS, Neighborhoods.CONTENT_URI,
+						ArtAroundDb.neighborhoodToValues(data.get(i)));
+			}
+			break;
+		}
+	}
+
+	private static class Holder {
+		int zoom;
+		Set<LoadArtTask> runningArtTasks;
+		LoadDataTask loadDataTask;
+
+		AtomicInteger artTaskCount, howManyMoreArtTasks;
+		List<Art> allArt, artFiltered;
+
+		List<String> categories, neighborhoods, artists;
+		Map<String, List<CheckBoxifiedText>> filters;
+		CheckBoxifiedListAdapter filterAdapter;
+
+		Location currentLocation;
 	}
 }

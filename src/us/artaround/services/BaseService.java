@@ -10,19 +10,20 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 
+import us.artaround.android.commons.Utils;
 import us.artaround.models.ArtAroundException;
+import android.text.TextUtils;
 
 public abstract class BaseService {
 	public static final String FORMAT = "json";
 	public static final String BASE_URL = "http://theartaround.us/api/v1/";
-	public static final String USER_AGENT = "us.artaround";
 
 	public static String extraHeaderKey = null;
 	public static String extraHeaderValue = null;
 
 	protected static String formUrl(String method, String query) {
 		StringBuilder builder = new StringBuilder(BASE_URL).append(method).append(".").append(FORMAT);
-		if (query != null && query.length() > 0) {
+		if (!TextUtils.isEmpty(query)) {
 			builder.append("?").append(query);
 		}
 		return builder.toString();
@@ -30,7 +31,7 @@ public abstract class BaseService {
 
 	protected static String getMethod(String url) throws ArtAroundException {
 		HttpGet request = new HttpGet(url);
-		request.addHeader("User-Agent", USER_AGENT);
+		request.addHeader("User-Agent", Utils.USER_AGENT);
 
 		if (extraHeaderKey != null && extraHeaderValue != null) {
 			request.addHeader(extraHeaderKey, extraHeaderValue);

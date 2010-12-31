@@ -4,57 +4,9 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 
-	<LinearLayout
-		android:id="@+id/actionbar"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal">
+	<include
+		layout="@layout/action_bar" />
 
-		<TextView
-			android:id="@+id/txt_logo"
-			android:layout_width="0dp"
-			android:layout_weight="1"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center"
-			android:text="@string/app_label" />
-
-		<LinearLayout
-			android:id="@+id/wrapper_buttons"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:gravity="right">
-
-			<ProgressBar
-				android:id="@+id/spinner"
-				style="@style/ActionBarSpinner"
-				android:visibility="gone" />
-
-			<ImageView
-				style="@style/ActionBarSeparator" />
-
-			<ImageButton
-				android:id="@+id/btn_location"
-				style="@style/ActionBarLocationButton" />
-
-			<ImageView
-				style="@style/ActionBarSeparator" />
-
-			<ImageButton
-				android:id="@+id/btn_filter"
-				android:src="@drawable/ic_btn_filter"
-				style="@style/ActionBarButton" />
-
-			<ImageView
-				style="@style/ActionBarSeparator" />
-
-			<ImageButton
-				android:id="@+id/btn_search"
-				android:src="@drawable/ic_btn_search"
-				style="@style/ActionBarButton" />
-
-		</LinearLayout>
-	</LinearLayout>
-	
 	<us.artaround.android.ui.ArtMapView
 		android:id="@+id/map_view"
 		android:layout_width="fill_parent"
@@ -62,5 +14,5 @@
 		android:layout_below="@+id/actionbar"
 		android:clickable="true"
 		android:apiKey="@string/maps_api" />
-               
+
 </RelativeLayout>

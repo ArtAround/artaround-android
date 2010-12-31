@@ -11,6 +11,7 @@ public class TimeoutTimer extends Timer {
 	private final Timeout task;
 	private final String id;
 	private final int delay;
+	private Object tag;
 
 	public TimeoutTimer(TimeoutCallback callback, String id) {
 		this(callback, id, TIMEOUT);
@@ -24,6 +25,14 @@ public class TimeoutTimer extends Timer {
 
 	public String getId() {
 		return id;
+	}
+
+	public Object getTag() {
+		return tag;
+	}
+
+	public void setTag(Object tag) {
+		this.tag = tag;
 	}
 
 	public void start() {

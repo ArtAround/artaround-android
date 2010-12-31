@@ -7,28 +7,76 @@
 		name="ok">OK</string>
 	<string
 		name="cancel">No, thanks</string>
-		
-	<string 
+	<string
 		name="loading">Loading...</string>
+	<string
+		name="empty">Empty</string>
+	<string
+		name="by">By</string>
+	<string
+		name="load_data_failure">Could not retrieve data from server.</string>
 
-	<!-- Location -->
+	<!-- Location & connectivity -->
 	<string
 		name="current_location">You are here</string>
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest and most accurate location detection please turn on GPS and wireless network.</string>
+		the fastest and most accurate location
+		detection please turn on
+		GPS and wireless network.</string>
 	<string
-		name="location_update_failure">Could not update your current location. Please check to see if your GPS and wireless are turned on.</string>
-		
+		name="location_update_failure">Could not update your current location. Please check to see if your GPS and
+		wireless are
+		turned on.</string>
+
 	<string
 		name="connection_failure_title">Connection failure</string>
 	<string
-		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network connection to function properly.</string>
+		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network connection to
+		function properly.</string>
 	<string
 		name="connection_failure_ok">WiFi Options</string>
 
+	<!-- Search -->
 	<string
 		name="search_hint">Search by zip code</string>
+
+	<!-- Art info -->
+	<string
+		name="label_art">Title</string>
+	<string
+		name="label_artist">Artist(s)</string>
+	<string
+		name="label_year">Year</string>
+	<string
+		name="label_location">Location</string>
+	<string
+		name="value_unknown">Unknown</string>
+	<string
+		name="no_photo">No art photos</string>
+
+	<!-- Preferences -->
+	<string
+		name="preferences">Preferences</string>
+	<string
+		name="preferences_general_title">General</string>
+	<string
+		name="preferences_clear_cache_title">Clear cache</string>
+	<string
+		name="preferences_clear_cache_summary">Clear cached data.</string>
+	<string
+		name="preferences_change_city_title">Change city</string>
+	<string
+		name="preferences_change_city_summary">Change the current city for which to display the art around.</string>
+	<string
+		name="clear_cache_progress">Clearing cache...</string>
+	<string
+		name="clear_cache_success">Cleared cache successfully.</string>
+
+	<!-- Art Map Filters -->
+	<string
+		name="filter_art">Filter Art</string>
+
 </resources>

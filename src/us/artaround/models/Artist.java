@@ -1,22 +1,30 @@
 package us.artaround.models;
 
-public class Artist {
-	public String slug;
+import java.io.Serializable;
+
+public class Artist implements Serializable {
+	private static final long serialVersionUID = 8990284057002777646L;
+
 	public String name;
 
-	public Artist() {}
-
-	public Artist(String slug, String name) {
-		this.slug = slug;
+	public Artist(String name) {
 		this.name = name;
 	}
 
-	public Artist(String slug) {
-		this(slug, slug);
+ 	@Override
+	public String toString() {
+		return "Artist [name=" + name + "]";
 	}
 
 	@Override
-	public String toString() {
-		return "Artist [name=" + name + ", slug=" + slug + "]";
+	public boolean equals(Object o) {
+		if (!(o instanceof Artist)) return false;
+		Artist a = (Artist) o;
+		return name.equals(a.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 }

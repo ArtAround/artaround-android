@@ -1,7 +1,11 @@
 package us.artaround.android.commons;
 
-import android.location.Criteria;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.location.Location;
+import android.text.TextUtils;
 
 import com.google.android.maps.GeoPoint;
 
@@ -9,12 +13,16 @@ public class Utils {
 	public static final String TAG = "ARTAROUND";
 	public static final String STR_SEP = "|";
 
+	public static final String USER_AGENT = "us.artaround";
+
 	public static final String KEY_LAST_UPDATE = "lastUpdate";
 	public static final String KEY_UPDATE_INTERVAL = "updateInterval";
 	public static final String KEY_CATEGORIES = "categories";
-	public static final String KEY_ART_ID = "artId";
+	public static final String KEY_CLEARED_CACHE = "cleared_cache";
 
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
+	public static final SimpleDateFormat df = new SimpleDateFormat(Utils.DATE_FORMAT);
+
 	public static final int TIMEOUT = 30000; // 30 seconds
 
 	public static float E6 = 1000000;
@@ -31,27 +39,14 @@ public class Utils {
 		return geo((float) latitude, (float) longitude);
 	}
 
-	/** this criteria will settle for less accuracy, high power, and cost */
-	public static Criteria createCoarseCriteria() {
-		Criteria c = new Criteria();
-		c.setAccuracy(Criteria.ACCURACY_COARSE);
-		c.setAltitudeRequired(false);
-		c.setBearingRequired(false);
-		c.setSpeedRequired(false);
-		c.setCostAllowed(true);
-		c.setPowerRequirement(Criteria.NO_REQUIREMENT);
-		return c;
+	public static String formatDate(Date date) {
+		return df.format(date);
 	}
 
-	/** this criteria needs high accuracy, high power, and cost */
-	public static Criteria createFineCriteria() {
-		Criteria c = new Criteria();
-		c.setAccuracy(Criteria.ACCURACY_FINE);
-		c.setAltitudeRequired(false);
-		c.setBearingRequired(false);
-		c.setSpeedRequired(false);
-		c.setCostAllowed(true);
-		c.setPowerRequirement(Criteria.NO_REQUIREMENT);
-		return c;
+	public static Date parseDate(String date) throws ParseException {
+		if (TextUtils.isEmpty(date)) {
+			return new Date();
+		}
+		return df.parse(date);
 	}
 }

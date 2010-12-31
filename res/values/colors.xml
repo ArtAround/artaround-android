@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="btn_selected">#333333</color>
-	<color name="btn_pressed">#666666</color>
+	<color
+		name="btn_selected">#483E3F</color>
+	<color
+		name="btn_pressed">#6B6666</color>
+
+	<color
+		name="action_bar_bg">#423839</color>
+	<color
+		name="action_bar_title">#FFFFFF</color>
+		
+	<color
+		name="dialog_bg">#DD423839</color>
+
+	<color
+		name="info_bg">#6F6E6B</color>
+	<color
+		name="info_label">#EEEEEE</color>
+	<color
+		name="info_value">#FFFFFF</color>
+	<color
+		name="info_value_editing_bg">#E0DED3</color>
+	<color
+		name="info_value_editing_txt">#3C3B37</color>
+	<color
+		name="dialog_text">#FFFFFF</color>
 </resources>

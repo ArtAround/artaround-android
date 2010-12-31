@@ -18,15 +18,19 @@ public class LoadArtTask extends AsyncTask<Void, Void, ParseResult> {
 		this.page = page;
 	}
 
-	public void setCallback(LoadArtCallback callback) {
+	public void attach(LoadArtCallback callback) {
 		this.callback = callback;
+	}
+
+	public void detach() {
+		this.callback = null;
 	}
 
 	@Override
 	public ParseResult doInBackground(Void... params) {
 		try {
 			Log.d(Utils.TAG, "Running LoadArtTask with page= " + page + " and perPage= " + perPage);
-			return ArtService.getArt(page, perPage);
+			return ArtService.getArts(page, perPage);
 		} catch (ArtAroundException e) {
 			Log.w(Utils.TAG, "LoadArtTask exception!", e);
 			exception = e;

@@ -46,12 +46,11 @@ public class MyLocationOverlay extends Overlay {
 
 		// Converts latitude /longitude to coordinates on the screen.
         Point myScreenCoords = new Point();
-
 		mapView.getProjection().toPixels(geoPoint, myScreenCoords);
 
         Bitmap bmp = BitmapFactory.decodeResource(context.getResources(), drawableId);
-
 		canvas.drawBitmap(bmp, myScreenCoords.x, myScreenCoords.y, paint);
+
         return true;
     }
 
@@ -59,7 +58,7 @@ public class MyLocationOverlay extends Overlay {
 	public boolean onTap(GeoPoint p, MapView mapView) {
 		if (callback != null) {
 			callback.onTap(this);
-			return true;
+			return false;
 		}
 		return super.onTap(p, mapView);
 	}

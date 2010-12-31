@@ -1,12 +1,17 @@
 package us.artaround.models;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 
-public class Art {
-	public String slug;
+public class Art implements Serializable
+{
+	private static final long serialVersionUID = 7782974469872721623L;
+
+	public String id;
 	public String category;
 	public String title;
+	public String city;
 
 	public Date createdAt;
 	public Date updatedAt;
@@ -25,10 +30,10 @@ public class Art {
 
 	@Override
 	public String toString() {
-		return "Art [artist=" + artist + ", category=" + category + ", createdAt=" + createdAt + ", latitude="
-				+ latitude + ", locationDesc=" + locationDesc + ", longitude=" + longitude + ", neighborhood="
-				+ neighborhood + ", photoIds=" + Arrays.toString(photoIds) + ", slug=" + slug + ", title=" + title
-				+ ", updatedAt=" + updatedAt + ", ward=" + ward + "]";
+		return "Art [artist=" + artist + ", city=" + city + ", category=" + category + ", createdAt=" + createdAt
+				+ ", latitude=" + latitude + ", locationDesc=" + locationDesc + ", longitude=" + longitude
+				+ ", neighborhood=" + neighborhood + ", photoIds=" + Arrays.toString(photoIds) + ", id=" + id
+				+ ", title=" + title + ", updatedAt=" + updatedAt + ", ward=" + ward + "]";
 	}
 
 	@Override
