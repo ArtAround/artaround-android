@@ -32,6 +32,9 @@ public class Art implements Serializable
 	public List<String> photoIds;
 	public List<Comment> comments;
 
+	public transient float _distanceFromCurrentPosition;
+	public transient double _directionVectorAngle;
+
 	public Art(long uuid) {
 		this.uuid = uuid;
 	}

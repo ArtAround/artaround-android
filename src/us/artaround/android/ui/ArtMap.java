@@ -87,8 +87,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private LoadingButton btnFavs, btnAdd, btnLoading;
 	private Button btnNearby;
 
-	private List<Art> allArt;
-	private List<Art> filteredArt;
+	protected static List<Art> allArt;
+	protected static List<Art> filteredArt;
 	private int displayedArtCount;
 	private HashMap<Integer, HashSet<String>> filters;
 
@@ -311,7 +311,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		btnNearby.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startLocationUpdate();
+				//startLocationUpdate();
+				startActivity(new Intent(ArtMap.this, ArtNearby.class));
 			}
 		});
 

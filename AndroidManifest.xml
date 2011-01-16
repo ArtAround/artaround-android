@@ -55,6 +55,11 @@
 			android:name=".android.ui.ArtGallery"
 			android:theme="@android:style/Theme.NoTitleBar"
 			android:label="@string/app_label" />
+			
+		<activity
+			android:name=".android.ui.ArtNearby"
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
 
 		<activity
 			android:name=".android.ui.Preferences"
