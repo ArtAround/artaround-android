@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<dimen
-		name="action_bar_title">16sp</dimen>
+		name="text_small">12dp</dimen>
 	<dimen
-		name="art_label">16sp</dimen>
+		name="text_medium">14dp</dimen>
 	<dimen
-		name="art_value">16sp</dimen>
+		name="text_mlarge">16dp</dimen>
 	<dimen
-		name="action_bar_popup_width">300dp</dimen>
-	<dimen
-		name="action_bar_popup_height">300dp</dimen>
-	<dimen
-		name="thumb_width">128dp</dimen>
-	<dimen
-		name="thumb_height">128dp</dimen>
+		name="text_large">18dp</dimen>
 </resources>

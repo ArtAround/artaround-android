@@ -10,6 +10,9 @@
   	android:layout_width="wrap_content"
   	android:layout_height="wrap_content"
   	android:layout_marginRight="2dp"
+  	android:focusable="false"
+  	android:focusableInTouchMode="false"
+  	android:clickable="false"
   	style="@style/CheckBox" />
   	
   <TextView

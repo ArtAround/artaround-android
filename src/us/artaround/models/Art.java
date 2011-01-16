@@ -1,39 +1,48 @@
 package us.artaround.models;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class Art implements Serializable
 {
 	private static final long serialVersionUID = 7782974469872721623L;
 
-	public String id;
+	public long uuid;
+	public String slug;
 	public String category;
 	public String title;
 	public String city;
+	public String url;
 
 	public Date createdAt;
 	public Date updatedAt;
 
-	public int ward;
+	public int year, ward;
 
 	public float latitude;
 	public float longitude;
 	public float mediumDistance;
 
 	public String locationDesc;
+	public String description;
 	public String neighborhood;
 
 	public Artist artist;
-	public String[] photoIds;
+	public List<String> photoIds;
+	public List<Comment> comments;
+
+	public Art(long uuid) {
+		this.uuid = uuid;
+	}
 
 	@Override
 	public String toString() {
-		return "Art [artist=" + artist + ", city=" + city + ", category=" + category + ", createdAt=" + createdAt
-				+ ", latitude=" + latitude + ", locationDesc=" + locationDesc + ", longitude=" + longitude
-				+ ", neighborhood=" + neighborhood + ", photoIds=" + Arrays.toString(photoIds) + ", id=" + id
-				+ ", title=" + title + ", updatedAt=" + updatedAt + ", ward=" + ward + "]";
+		return "Art [slug=" + slug + ", category=" + category + ", title=" + title + ", city=" + city + ", url=" + url
+				+ ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", year=" + year + ", ward=" + ward
+				+ ", latitude=" + latitude + ", longitude=" + longitude + ", mediumDistance=" + mediumDistance
+				+ ", locationDesc=" + locationDesc + ", neighborhood=" + neighborhood + ", artist=" + artist
+				+ ", photoIds=" + photoIds + "]";
 	}
 
 	@Override
@@ -47,5 +56,4 @@ public class Art implements Serializable
 	public int hashCode() {
 		return (int) (latitude * 101 + latitude);
 	}
-
 }

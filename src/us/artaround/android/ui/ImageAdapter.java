@@ -3,7 +3,7 @@ package us.artaround.android.ui;
 import java.util.List;
 
 import us.artaround.R;
-import us.artaround.services.Flickr;
+import us.artaround.android.services.FlickrService;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.net.Uri;
@@ -45,9 +45,14 @@ public class ImageAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ImageView imageView = new ImageView(context);
-		imageView.setImageURI(photoUris.get(position));
+
+		Uri realUri = photoUris.get(position);
+		if (null != realUri) {
+			imageView.setImageURI(realUri);
+		}
+
 		imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-		imageView.setLayoutParams(new Gallery.LayoutParams(Flickr.THUMB_WIDTH, Flickr.THUMB_HEIGHT));
+		imageView.setLayoutParams(new Gallery.LayoutParams(FlickrService.THUMB_WIDTH, FlickrService.THUMB_HEIGHT));
 		imageView.setBackgroundResource(itemBackground);
 		return imageView;
 	}

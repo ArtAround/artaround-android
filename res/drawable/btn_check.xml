@@ -6,12 +6,12 @@
 		android:state_checked="true"
 		android:state_window_focused="false"
 		android:state_enabled="true"
-		android:drawable="@drawable/btn_check_on" />
+		android:drawable="@drawable/check_on" />
 	<item
 		android:state_checked="false"
 		android:state_window_focused="false"
 		android:state_enabled="true"
-		android:drawable="@drawable/btn_check_off" />
+		android:drawable="@drawable/check_off" />
 <!--	<item-->
 <!--		android:state_checked="true"-->
 <!--		android:state_pressed="true"-->
@@ -35,11 +35,11 @@
 	<item
 		android:state_checked="false"
 		android:state_enabled="true"
-		android:drawable="@drawable/btn_check_off" />
+		android:drawable="@drawable/check_off" />
 	<item
 		android:state_checked="true"
 		android:state_enabled="true"
-		android:drawable="@drawable/btn_check_on" />
+		android:drawable="@drawable/check_on" />
 
 <!--	<item-->
 <!--		android:state_checked="true"-->

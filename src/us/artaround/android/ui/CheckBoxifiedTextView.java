@@ -27,15 +27,15 @@ public class CheckBoxifiedTextView extends LinearLayout {
 		textView.setText(text);
 	}
 
+	public String getText() {
+		return (String) textView.getText();
+	}
+
 	public void setCheckBoxState(boolean checked) {
 		checkBox.setChecked(checked);
 	}
 
-	public TextView getTextView() {
-		return textView;
-	}
-
-	public CheckBox getCheckBox() {
-		return checkBox;
+	public boolean getCheckBoxState() {
+		return checkBox.isChecked();
 	}
 }

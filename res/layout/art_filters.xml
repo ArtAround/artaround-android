@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="15dp">
+
+	<Spinner
+		android:id="@+id/spinner"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="5dp" />
+
+	<EditText
+		android:id="@+id/autocomplete"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:drawableLeft="@drawable/ic_search"
+		android:drawablePadding="6dp"
+		android:imeOptions="actionSearch"
+		android:hint="@string/search_hint" />
+
+	<include
+		android:id="@+id/loading"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		layout="@layout/loading"
+		android:visibility="gone" />
+
+	<LinearLayout
+		android:id="@+id/content"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+
+		<TextView
+			android:id="@android:id/android:empty"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:layout_gravity="center"
+			android:gravity="center"
+			android:textSize="@dimen/text_mlarge"
+			android:textStyle="bold"
+			android:text="@string/empty" />
+
+		<ListView
+			android:id="@android:id/android:list"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+
+			android:scrollbarStyle="outsideOverlay"
+			android:scrollingCache="false"
+
+			android:cacheColorHint="@color/dialog_bg"
+			android:divider="@drawable/divider"
+			android:dividerHeight="1px"
+			android:descendantFocusability="blocksDescendants" />
+			
+	</LinearLayout>
+
+</LinearLayout>

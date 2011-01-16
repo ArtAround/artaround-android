@@ -3,19 +3,20 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
-  android:orientation="vertical"
+  android:orientation="horizontal"
+  android:background="@null"
   android:gravity="center">
   
+  <ProgressBar
+		android:id="@+id/progress"
+		style="@style/LoadingProgress" />
+		
   <TextView
-		android:id="@+id/loading"
+		android:id="@+id/loading_txt"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center"
 		android:text="@string/loading"
 		android:gravity="center" />
-		
-	<ProgressBar
-		android:id="@+id/progress"
-		style="@style/LoadingProgress" />
-		
+				
 </LinearLayout>

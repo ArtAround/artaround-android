@@ -14,7 +14,6 @@ import org.apache.http.util.ByteArrayBuffer;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
 
 public class ImageDownloader {
 	public static final String SDCARD_CACHE = "Android/data/us.artaround/cache/";
@@ -22,7 +21,7 @@ public class ImageDownloader {
 	private static File getFile(String name, String size) {
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
 				|| Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-			Log.w(Utils.TAG, "Could not cache the image on the sdcard! Check sdcard status.");
+			Utils.w(Utils.TAG, "Could not cache the image on the sdcard! Check sdcard status.");
 			return null;
 		}
 
@@ -40,7 +39,7 @@ public class ImageDownloader {
 			cacheImage(context, url, name, size);
 			uri = quickGetImage(context, name, size);
 		}
-		Log.i(Utils.TAG, "Fetched image " + name + " from cache.");
+		Utils.i(Utils.TAG, "Fetched image " + name + " from cache.");
 		return uri;
 	}
 
@@ -60,17 +59,17 @@ public class ImageDownloader {
 	public static void downloadFile(String url, File file) {
 		try {
 			if (file == null) {
-				Log.e(Utils.TAG, "Cannot download image: the file is null!");
+				Utils.w(Utils.TAG, "Cannot download image: the file is null!");
 				return;
 			}
-			Log.d(Utils.TAG, "Downloading photo with url " + url);
+			Utils.d(Utils.TAG, "Downloading photo with url " + url);
 
 			URL u = new URL(url);
 			URLConnection conn = u.openConnection();
 			int contentLength = conn.getContentLength();
 
 			if (contentLength < 0) {
-				Log.w(Utils.TAG, "Could not download file, probably bad connection.");
+				Utils.w(Utils.TAG, "Could not download file, probably bad connection.");
 				return;
 			}
 
@@ -96,11 +95,11 @@ public class ImageDownloader {
 			is.close();
 		}
 		catch (FileNotFoundException e) {
-			Log.w(Utils.TAG, "Could not download and/or cache image!", e);
+			Utils.w(Utils.TAG, "Could not download and/or cache image!", e);
 			return; // swallow a 404
 		}
 		catch (IOException e) {
-			Log.w(Utils.TAG, "Could not download and/or cache image!", e);
+			Utils.w(Utils.TAG, "Could not download and/or cache image!", e);
 			return; // swallow a 404
 		}
 	}

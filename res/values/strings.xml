@@ -10,15 +10,17 @@
 	<string
 		name="loading">Loading...</string>
 	<string
-		name="empty">Empty</string>
+		name="empty">No items yet.</string>
 	<string
 		name="by">By</string>
+	<string
+		name="all">All</string>
 	<string
 		name="load_data_failure">Could not retrieve data from server.</string>
 
 	<!-- Location & connectivity -->
 	<string
-		name="current_location">You are here</string>
+		name="current_location">You are here :)</string>
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
@@ -27,9 +29,9 @@
 		detection please turn on
 		GPS and wireless network.</string>
 	<string
-		name="location_update_failure">Could not update your current location. Please check to see if your GPS and
-		wireless are
-		turned on.</string>
+		name="location_update_failure">Your current location is temporary unavailable.</string>
+	<string
+		name="waiting_location">Waiting for location.</string>
 
 	<string
 		name="connection_failure_title">Connection failure</string>
@@ -41,19 +43,27 @@
 
 	<!-- Search -->
 	<string
-		name="search_hint">Search by zip code</string>
+		name="search_hint">Enter search here...</string>
 
 	<!-- Art info -->
 	<string
-		name="label_art">Title</string>
+		name="label_title">Title</string>
 	<string
 		name="label_artist">Artist(s)</string>
 	<string
 		name="label_year">Year</string>
 	<string
-		name="label_location">Location</string>
+		name="label_location_desc">Location Description</string>
 	<string
-		name="value_unknown">Unknown</string>
+		name="label_description">Art Description</string>
+	<string
+		name="label_ward">Ward</string>
+	<string
+		name="label_neighborhood">Neighborhood</string>
+	<string
+		name="label_category">Category</string>
+	<string
+		name="value_unset">Not Set</string>
 	<string
 		name="no_photo">No art photos</string>
 
@@ -74,9 +84,28 @@
 		name="clear_cache_progress">Clearing cache...</string>
 	<string
 		name="clear_cache_success">Cleared cache successfully.</string>
+	<string
+		name="clear_cache_failure">Cannot clear the cache.</string>
+	<string
+		name="choose_city">Choose city</string>
 
 	<!-- Art Map Filters -->
 	<string
-		name="filter_art">Filter Art</string>
+		name="filter">Filter</string>
+	<string
+		name="nearby_art">Art Nearby</string>
+
+	<!-- Art Page Tabs -->
+	<string
+		name="tab_details">Details</string>
+	<string
+		name="tab_gallery">Gallery</string>
+	<string
+		name="tab_comments">Comments</string>
+
+	<string
+		name="share_art_title">Share art via:</string>
+	<string
+		name="share_art_header">Help us find more info about this urban art!</string>
 
 </resources>

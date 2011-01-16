@@ -1,6 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ArtGallery">
-        <attr name="android:galleryItemBackground" />
-    </declare-styleable>
+	<declare-styleable
+		name="ArtGallery">
+		<attr
+			name="android:galleryItemBackground" />
+	</declare-styleable>
+
+	<declare-styleable
+		name="ArtField">
+		<attr 
+			name="label_left"
+			format="boolean" />
+		<attr
+			name="multiline"
+			format="boolean" />
+		<attr
+			name="color_bg_normal"
+			format="reference" />
+		<attr
+			name="color_bg_editing"
+			format="reference" />
+		<attr
+			name="color_txt_normal"
+			format="reference" />
+		<attr
+			name="color_txt_editing"
+			format="reference" />
+	</declare-styleable>
 </resources>

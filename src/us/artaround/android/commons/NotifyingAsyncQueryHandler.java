@@ -111,39 +111,16 @@ public class NotifyingAsyncQueryHandler extends AsyncQueryHandler {
 	 * {@link AsyncQueryListener#onQueryComplete(int, Object, Cursor)} is called
 	 * if a valid {@link AsyncQueryListener} is present.
 	 */
-	public void startQuery(Uri uri, String[] projection) {
-		startQuery(-1, null, uri, projection, null, null, null);
+	public void startQuery(int token, Uri uri, String[] projection, String selection, String[] selectionArgs) {
+		super.startQuery(token, null, uri, projection, selection, selectionArgs, null);
 	}
 
-	/**
-	 * Begin an asynchronous query with the given arguments. When finished,
-	 * {@link AsyncQueryListener#onQueryComplete(int, Object, Cursor)} is called
-	 * if a valid {@link AsyncQueryListener} is present.
-	 * 
-	 * @param token
-	 *            Unique identifier passed through to
-	 *            {@link AsyncQueryListener#onQueryComplete(int, Object, Cursor)}
-	 */
-	public void startQuery(int token, Uri uri, String[] projection) {
-		startQuery(token, null, uri, projection, null, null, null);
+	public void startQuery(int token, Uri uri, String[] proj) {
+		super.startQuery(token, null, uri, proj, null, null, null);
 	}
 
-	/**
-	 * Begin an asynchronous query with the given arguments. When finished,
-	 * {@link AsyncQueryListener#onQueryComplete(int, Object, Cursor)} is called
-	 * if a valid {@link AsyncQueryListener} is present.
-	 */
-	public void startQuery(Uri uri, String[] projection, String sortOrder) {
-		startQuery(-1, null, uri, projection, null, null, sortOrder);
-	}
-
-	/**
-	 * Begin an asynchronous query with the given arguments. When finished,
-	 * {@link AsyncQueryListener#onQueryComplete(int, Object, Cursor)} is called
-	 * if a valid {@link AsyncQueryListener} is present.
-	 */
-	public void startQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String orderBy) {
-		startQuery(-1, null, uri, projection, selection, selectionArgs, orderBy);
+	public void startQuery(int token, Object cookie, Uri uri, String[] proj) {
+		super.startQuery(token, cookie, uri, proj, null, null, null);
 	}
 
 	/**
@@ -165,7 +142,11 @@ public class NotifyingAsyncQueryHandler extends AsyncQueryHandler {
 		startDelete(-1, null, uri, null, null);
 	}
 
-    /** {@inheritDoc} */
+	public void startDelete(Uri uri, Object cookie) {
+		startDelete(-1, cookie, uri, null, null);
+	}
+
+	/** {@inheritDoc} */
 	@Override
 	protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
 		final AsyncQueryListener listener = queryListener == null ? null : queryListener.get();

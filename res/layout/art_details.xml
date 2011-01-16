@@ -1,82 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"	
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:artfield="http://schemas.android.com/apk/res/us.artaround"
 	android:orientation="vertical"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:background="@color/info_bg">
+	android:padding="6dp"
+	android:background="@color/art_details_bg">
 
-	<include
-		layout="@layout/action_bar" />
-	
-	<LinearLayout
+	<ScrollView
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:orientation="vertical"
-		android:padding="6dp">
+		android:layout_height="0dp"
+		android:layout_weight="1.5"
+		android:layout_marginBottom="6dp">
 
-		<TextView
-			android:id="@+id/label_art"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/label_art"
-			style="@style/ArtInfoLabel" />
-			
-		<EditText
-			android:id="@+id/value_art"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/value_unknown"
-			style="@style/ArtInfoValue" />
-			
-		<TextView
-			android:id="@+id/label_artist"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/label_artist"
-			style="@style/ArtInfoLabel" />
-			
-		<EditText
-			android:id="@+id/value_artist"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/value_unknown"
-			style="@style/ArtInfoValue" />
-			
-		<TextView
-			android:id="@+id/label_year"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/label_year"
-			style="@style/ArtInfoLabel" />
-			
-		<EditText
-			android:id="@+id/value_year"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/value_unknown"
-			style="@style/ArtInfoValue" />
-			
-		<TextView
-			android:id="@+id/label_location"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/label_location"
-			style="@style/ArtInfoLabel" />
-			
-		<EditText
-			android:id="@+id/value_location"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:inputType="textMultiLine"
-			android:text="@string/value_unknown"
-			style="@style/ArtInfoValue" />			
-			
-		<Gallery
-			android:id="@+id/mini_gallery"
+		<LinearLayout
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="10dp" />
-	</LinearLayout>
+			android:layout_height="fill_parent"
+			android:orientation="vertical">
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/title"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/artist"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/year"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/ward"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/location_desc"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp"
+				artfield:multiline="true"
+				artfield:label_left="false" />
+		</LinearLayout>
+	</ScrollView>
+
+	<com.google.android.maps.MapView
+		android:id="@+id/mini_map"
+		android:layout_width="wrap_content"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		android:clickable="true"
+		android:apiKey="@string/maps_api" />
 
 </LinearLayout>

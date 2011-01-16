@@ -1,18 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+	android:layout_height="fill_parent"
+	android:orientation="vertical">
 
 	<include
-		layout="@layout/action_bar" />
-
+		layout="@layout/actionbar"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content" />
+	
 	<us.artaround.android.ui.ArtMapView
 		android:id="@+id/map_view"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:layout_below="@+id/actionbar"
+		android:layout_height="0dp"
+		android:layout_weight="1"
 		android:clickable="true"
 		android:apiKey="@string/maps_api" />
 
-</RelativeLayout>
+	<LinearLayout
+		android:id="@+id/footerbar"
+		style="@style/ActionBar">
+
+		<Button
+			android:id="@+id/btn_filter"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:layout_marginRight="6dp"
+			android:drawableLeft="@drawable/ic_filter"
+			android:text="@string/filter"
+			android:gravity="center"
+			style="@style/Button" />
+
+		<Button
+			android:id="@+id/btn_nearby"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:drawableLeft="@drawable/ic_pin_small"
+			android:text="@string/nearby_art"
+			style="@style/Button" />
+	</LinearLayout>
+
+</LinearLayout>

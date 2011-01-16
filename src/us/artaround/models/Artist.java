@@ -5,9 +5,11 @@ import java.io.Serializable;
 public class Artist implements Serializable {
 	private static final long serialVersionUID = 8990284057002777646L;
 
+	public long uuid;
 	public String name;
 
-	public Artist(String name) {
+	public Artist(long uuid, String name) {
+		this.uuid = uuid;
 		this.name = name;
 	}
 

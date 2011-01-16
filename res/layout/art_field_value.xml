@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EditText
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:text="@string/value_unset"
+	android:linksClickable="true"
+	android:autoLink="web|email"
+	style="@style/ArtInfoValue" />

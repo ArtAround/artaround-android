@@ -1,28 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<color
-		name="btn_selected">#483E3F</color>
+		name="btn_bg_enabled">#2F2A27</color>
 	<color
-		name="btn_pressed">#6B6666</color>
+		name="btn_bg_selected">#483E3F</color>
+	<color
+		name="btn_bg_pressed">#A59B50</color>
+	<color
+		name="btn_text_color">#FFFFFF</color>
+	<color
+		name="btn_stroke">#4A4644</color>
 
 	<color
-		name="action_bar_bg">#423839</color>
-	<color
-		name="action_bar_title">#FFFFFF</color>
-		
-	<color
-		name="dialog_bg">#DD423839</color>
+		name="action_bar_bg">#36312E</color>
 
 	<color
-		name="info_bg">#6F6E6B</color>
-	<color
-		name="info_label">#EEEEEE</color>
-	<color
-		name="info_value">#FFFFFF</color>
-	<color
-		name="info_value_editing_bg">#E0DED3</color>
-	<color
-		name="info_value_editing_txt">#3C3B37</color>
+		name="dialog_bg">#DD36312E</color>
 	<color
 		name="dialog_text">#FFFFFF</color>
+
+	<color
+		name="art_details_bg">#EBE7DE</color>
+	<color
+		name="art_field_label_txt">#665C4F</color>
+	<color
+		name="art_field_value_txt">#665C4F</color>
+	<color
+		name="art_field_value_bg">#EBE7DE</color>
+	<color
+		name="art_field_value_editing_bg">#FFFFFF</color>
+	<color
+		name="art_field_value_editing_txt">#696969</color>
+
+	<color
+		name="tab_selected_top">#7B686A</color>
+	<color
+		name="tab_selected_bottom">#514446</color>
+	<color
+		name="tab_pressed_top">#A59B50</color>
+	<color
+		name="tab_pressed_bottom">#7B733B</color>
+	<color
+		name="tab_dim_top">#585858</color>
+	<color
+		name="tab_dim_bottom">#808080</color>
+	<color
+		name="tab_text_deselected">#AAAAAA</color>
+	<color
+		name="tab_text_selected">#f5f5f5</color>
+	<color
+		name="tab_edges">#04081a</color>
+	<color
+		name="tab_top">#04081a</color>
+	<color
+		name="tab_indicator">#FFFF00</color>
+		
+	<color
+		name="text_dimmed">#666666</color>
+		
+	<color 
+		name="footer_bg">#AA000000</color>
+
 </resources>

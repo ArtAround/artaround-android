@@ -5,73 +5,39 @@
 		<item
 			name="android:id">@+id/actionbar</item>
 		<item
+			name="android:padding">6dp</item>
+		<item
 			name="android:layout_width">fill_parent</item>
 		<item
-			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:orientation">horizontal</item>
+			name="android:layout_height">wrap_content</item>	
 		<item
 			name="android:background">@color/action_bar_bg</item>
 	</style>
 
 	<style
-		name="ActionBarSeparator">
+		name="ActionBarButton"
+		parent="@android:style/Widget.ImageButton">
 		<item
-			name="android:layout_width">1dp</item>
+			name="android:paddingLeft">15dp</item>
 		<item
-			name="android:layout_height">fill_parent</item>
+			name="android:paddingRight">15dp</item>
 		<item
-			name="android:background">#66FFFFFF</item>
+			name="android:background">@drawable/btn_bg</item>
 	</style>
 
 	<style
-		name="ActionBarButton">
-		<item
-			name="android:layout_width">wrap_content</item>
-		<item
-			name="android:layout_height">wrap_content</item>
+		name="Button"
+		parent="@android:style/Widget.Button">
 		<item
 			name="android:padding">6dp</item>
 		<item
-			name="android:background">@drawable/btn_background</item>
-	</style>
-
-
-	<style
-		name="ActionBarTitle">
+			name="android:textColor">@color/btn_text_color</item>
 		<item
-			name="android:layout_width">0dp</item>
-		<item
-			name="android:layout_weight">1</item>
-		<item
-			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:layout_gravity">center</item>
-		<item
-			name="android:paddingLeft">6dp</item>
+			name="android:textSize">@dimen/text_mlarge</item>
 		<item
 			name="android:textStyle">bold</item>
 		<item
-			name="android:textColor">@color/action_bar_title</item>
-		<item
-			name="android:textSize">@dimen/action_bar_title</item>
-		<item
-			name="android:singleLine">true</item>
-		<item
-			name="android:ellipsize">marquee</item>
-	</style>
-
-	<style
-		parent="@android:style/Widget.ProgressBar.Small"
-		name="ActionBarProgress">
-		<item
-			name="android:layout_width">wrap_content</item>
-		<item
-			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:layout_gravity">center</item>
-		<item
-			name="android:padding">6dp</item>
+			name="android:background">@drawable/btn_bg</item>
 	</style>
 
 	<style
@@ -81,31 +47,27 @@
 			name="android:layout_width">wrap_content</item>
 		<item
 			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:layout_gravity">center</item>
-		<item
-			name="android:padding">6dp</item>
 	</style>
 
 	<style
 		name="ArtInfoLabel">
 		<item
-			name="android:textSize">@dimen/art_label</item>
+			name="android:textSize">@dimen/text_mlarge</item>
 		<item
-			name="android:textStyle">italic</item>
+			name="android:textStyle">bold</item>
 		<item
-			name="android:textColor">@color/info_label</item>
-		<item
-			name="android:paddingRight">2dp</item>
+			name="android:textColor">@color/art_field_label_txt</item>
 	</style>
 
 	<style
 		name="ArtInfoValue"
 		parent="@android:style/Widget.TextView">
 		<item
-			name="android:textSize">@dimen/art_value</item>
+			name="android:textSize">@dimen/text_mlarge</item>
 		<item
-			name="android:textColor">@color/info_value</item>
+			name="android:textColor">@color/art_field_value_txt</item>
+		<item
+			name="android:textStyle">normal</item>
 		<item
 			name="android:imeOptions">actionDone</item>
 		<item
@@ -113,22 +75,51 @@
 		<item
 			name="android:cursorVisible">false</item>
 		<item
-			name="android:background">@android:color/transparent</item>
+			name="android:background">@color/art_field_value_bg</item>
 		<item
-			name="android:paddingRight">2dp</item>
+			name="android:paddingRight">5dp</item>
 	</style>
 	<style
 		name="CheckBox">
 		<item
 			name="android:button">@drawable/btn_check</item>
 		<item
-			name="android:background">@drawable/btn_check_background</item>
+			name="android:background">@drawable/btn_check_label</item>
 	</style>
 
 	<style
 		name="CustomDialog"
 		parent="android:style/Theme.Dialog">
 		<item
+			name="android:windowNoTitle">true</item>
+		<item
 			name="android:windowBackground">@drawable/dialog_bg</item>
+	</style>
+
+	<style
+		name="TextMLarge">
+		<item
+			name="android:textSize">@dimen/text_mlarge</item>
+	</style>
+
+	<style
+		name="TextSmall">
+		<item
+			name="android:textSize">@dimen/text_small</item>
+		<item
+			name="android:textColor">@color/text_dimmed</item>
+	</style>
+
+	<style
+		name="TextMedium">
+		<item
+			name="android:textSize">@dimen/text_medium</item>
+	</style>
+
+	<style
+		name="FooterBar">
+		<item
+			name="android:background">@color/footer_bg</item>
+
 	</style>
 </resources>
