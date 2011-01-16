@@ -3,7 +3,8 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	android:background="@color/art_details_bg">
 	
 	<TextView
 		android:id="@+id/app_label"
@@ -34,7 +35,7 @@
 		android:gravity="center"
 		android:textSize="@dimen/text_mlarge"
 		android:textStyle="bold"
-		android:textColor="@android:color/darker_gray"
+		android:textColor="@color/art_field_label_txt"
 		android:text="@string/empty" />
 
 	<ListView
@@ -47,7 +48,7 @@
 		android:scrollingCache="false"
 
 		android:cacheColorHint="@color/dialog_bg"
-		android:divider="@drawable/divider"
+		android:divider="@drawable/divider_dark"
 		android:dividerHeight="1px"
 		android:descendantFocusability="blocksDescendants" />
 </LinearLayout>

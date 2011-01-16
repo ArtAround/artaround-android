@@ -15,7 +15,7 @@
 		android:textSize="@dimen/text_large"
 		android:textStyle="bold"
 		android:singleLine="false"
-		android:textColor="@android:color/white"
+		android:textColor="@color/art_field_label_txt"
 		android:text="Art Title Here" />
 		
 	<ImageView
@@ -35,7 +35,7 @@
 		android:layout_alignParentLeft="true"
 		android:layout_toLeftOf="@+id/distance"
 		android:textSize="@dimen/text_mlarge"
-		android:textColor="#FFDFC3"
+		android:textColor="#5E5E5E"
 		android:text="Art Location Description Here" />
 		
 	<TextView
@@ -47,7 +47,7 @@
 		android:layout_alignTop="@+id/description"
 		android:textSize="@dimen/text_mlarge"
 		android:textStyle="bold"
-		android:textColor="#FFDFC3"
+		android:textColor="@color/art_nearby_distance"
 		android:text="550 m" />
 
 </RelativeLayout>
