@@ -175,10 +175,12 @@ public class LocationUpdater implements TimeoutCallback
 			@Override
 			public void onStatusChanged(String provider, int status, Bundle extras)
 			{
-				Utils.d(TAG, "onStatusChanged(" + provider + ") with status " + status);
-				if (status == LocationProvider.OUT_OF_SERVICE || status == LocationProvider.TEMPORARILY_UNAVAILABLE)
-				{
+				boolean notOk = (status == LocationProvider.OUT_OF_SERVICE || status == LocationProvider.TEMPORARILY_UNAVAILABLE);
+				Utils.d(TAG, "onStatusChanged(" + provider + ") with status " + status + " meaning "
+						+ (notOk ? " unavailable " : " ok"));
+				if (notOk) {
 					endTimerForProvider(provider, this);
+					locationCallback.onLocationUpdateError();
 				}
 			}
 			
@@ -197,10 +199,10 @@ public class LocationUpdater implements TimeoutCallback
 			@Override
 			public void onLocationChanged(Location location)
 			{
-				foundLocation = true;
-				endTimerForProvider(location.getProvider(), this);
-				locationCallback.onLocationUpdate(location);
 				Utils.d(TAG, "Location update success: " + location);
+				foundLocation = true;
+				locationCallback.onLocationUpdate(location);
+				endTimerForProvider(location.getProvider(), this);
 			}
 		};
 	}
@@ -223,9 +225,9 @@ public class LocationUpdater implements TimeoutCallback
 	{
 		TimeoutTimer timer = new TimeoutTimer(this, handler, provider);
 		timer.setTag(listener);
+		timers.add(timer);
 		timer.start();
 
-		timers.add(timer);
 		manager.requestLocationUpdates(provider, MIN_TIME, MIN_DISTANCE, listener);
 		
 		Utils.d(TAG, "Getting a timed update from " + provider);
@@ -240,6 +242,7 @@ public class LocationUpdater implements TimeoutCallback
 	
 	private void endTimer(TimeoutTimer timer)
 	{
+		if (timer == null) return;
 		Utils.d(TAG, "Ending a timed update from " + timer.getId());
 		
 		timer.stop(); // this will NOT stop the already running thread

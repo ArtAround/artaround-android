@@ -107,5 +107,8 @@
 		name="share_art_title">Share art via:</string>
 	<string
 		name="share_art_header">Help us find more info about this urban art!</string>
+		
+	<string
+		name="arts_nearby">Arts nearby</string>
 
 </resources>

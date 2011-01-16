@@ -14,7 +14,9 @@ import java.util.Date;
 import us.artaround.R;
 import us.artaround.android.ui.ArtMap;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -219,5 +221,25 @@ public class Utils {
 		Editor editor = prefs.edit();
 		editor.putLong(Utils.KEY_LAST_UPDATE, new Date().getTime());
 		SharedPreferencesCompat.apply(editor);
+	}
+
+	public static AlertDialog getLocationSettingsDialog(final Activity context) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		builder.setTitle(context.getString(R.string.location_suggest_settings_title));
+		builder.setMessage(context.getString(R.string.location_suggest_settings_msg));
+		builder.setPositiveButton(context.getString(R.string.ok), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+				context.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+			}
+		});
+		builder.setNegativeButton(context.getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		return builder.create();
 	}
 }

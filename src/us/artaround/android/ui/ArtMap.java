@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
@@ -94,6 +95,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private int newZoom;
 	private boolean toBeRessurected;
+	private AtomicBoolean isLoadingArt;
 
 	private City city;
 
@@ -138,7 +140,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		handleIntent(getIntent());
 
 		// Google Maps needs WIFI enabled!!
-		checkWifiStatus();
+		//checkWifiStatus();
 	}
 
 	@Override
@@ -175,7 +177,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		//--- load art from db or server
 		if (allArt.isEmpty()) {
-			if (!isLoadingArt()) { // first time in the app
+			if (!isLoadingFromServer()) { // first time in the app
 				loadArt();
 			}
 			else {
@@ -184,7 +186,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			}
 		}
 		else {
-			if (!isLoadingArt()) {
+			if (!isLoadingFromServer()) {
 				displayLastArt(); // screen-flip after loading all art
 			}
 			else {
@@ -270,6 +272,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			tasksLeft = new AtomicInteger(0);
 			tasksCount = new AtomicInteger(0);
 			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+			isLoadingArt = new AtomicBoolean(false);
 		}
 		else {
 			newZoom = holder.zoom;
@@ -280,6 +283,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			tasksCount = holder.tasksCount;
 			runningTasks = holder.runningArtTasks;
 			location = holder.location;
+			isLoadingArt = holder.isLoadingArt;
 		}
 	}
 
@@ -311,7 +315,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		btnNearby.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				//startLocationUpdate();
 				startActivity(new Intent(ArtMap.this, ArtNearby.class));
 			}
 		});
@@ -345,7 +348,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void showLoading(boolean loading) {
+		Utils.d(Utils.TAG, "show loading?" + loading);
 		btnLoading.showLoading(loading);
+		btnNearby.setEnabled(!loading);
 	}
 
 	private void clearPins() {
@@ -382,6 +387,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		holder.zoom = newZoom;
 		holder.filters = filters;
 		holder.location = location;
+		holder.isLoadingArt = isLoadingArt;
 
 		detachTasksCallback();
 
@@ -494,6 +500,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		if (result == null) {
 			showDialog(DIALOG_WIFI_FAIL);
+			showLoading(false);
 			return;
 		}
 
@@ -510,6 +517,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	@Override
 	public void onLoadArtError(Throwable e) {
 		showLoading(false);
+		isLoadingArt.set(false);
 		Utils.showToast(this, R.string.load_data_failure);
 	}
 
@@ -519,7 +527,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		doSaveArt();
 		Utils.setLastCacheUpdate(this);
+
 		showLoading(false);
+		isLoadingArt.set(false);
 	}
 
 	private void doSaveArt() {
@@ -536,8 +546,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void loadArt() {
-		resetDisplayedArt();
 		showLoading(true);
+		isLoadingArt.set(true);
+
+		resetDisplayedArt();
 		loadArtFromDatabase();
 	}
 
@@ -547,14 +559,14 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 				new String[] { city.name });
 	}
 
-	private boolean isLoadingArt() {
+	private boolean isLoadingFromServer() {
 		return !runningTasks.isEmpty();
 	}
 
 	private void loadArtFromServer() {
 		Utils.d(Utils.TAG, "Loading art from server...");
 
-		if (isLoadingArt()) {
+		if (isLoadingFromServer()) {
 			return;
 		}
 		tasksCount.set(1);
@@ -656,6 +668,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void filterAndDisplayAllArt() {
+		if (isLoadingArt.get()) {
+			return;
+		}
 		resetDisplayedArt();
 		artOverlay.doClear();
 		filterAndDisplayArt(allArt);
@@ -777,7 +792,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void endLocationUpdate() {
 		Utils.d(Utils.TAG, "Removing location listeners.");
-		showLoading(false);
+		//showLoading(false);
 		btnNearby.setEnabled(true);
 		locationUpdater.removeUpdates();
 	}
@@ -823,9 +838,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	@Override
 	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
-		showLoading(false);
-
 		if (cursor == null) {
+			showLoading(false);
+			isLoadingArt.set(false);
 			Log.w(Utils.TAG, "Returned cursor is null!");
 			return;
 		}
@@ -839,10 +854,13 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		}
 		else {
 			processLoadedArt(results);
+			showLoading(false);
+			isLoadingArt.set(false);
 		}
 	}
 
 	private static class Holder {
+		public AtomicBoolean isLoadingArt;
 		public Location location;
 		int zoom;
 		Set<LoadArtTask> runningArtTasks;

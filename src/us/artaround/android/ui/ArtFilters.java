@@ -102,7 +102,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 	private void initVars() {
 		filters = (HashMap<Integer, HashSet<String>>) getIntent().getSerializableExtra("filters");
 
-		if (filters == null || filters.isEmpty()) {
+		if (filters.isEmpty()) {
 			filters = new HashMap<Integer, HashSet<String>>();
 
 			for (int i = FILTER_NAMES.length - 1; i >= 0; i--) {
@@ -117,7 +117,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 	}
 
 	private void setupState() {
-		Utils.d(Utils.TAG, "setup state---");
+		Utils.d(Utils.TAG, "---setup state---");
 		setFilterUri();
 
 		showLoading(true);
@@ -147,9 +147,8 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			uri = Artists.CONTENT_URI;
 			break;
 		}
-		Utils.d(Utils.TAG, "Current uri=" + uri);
+		Utils.d(Utils.TAG, "---current uri---" + uri);
 	}
-
 
 	private void setupUi() {
 		ListView listView = getListView();
@@ -174,42 +173,27 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 
 		spinner = (Spinner) findViewById(R.id.spinner);
 		spinner.setAdapter(spinnerAdapter);
-		spinner.setSelection(0);
 		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
 				if (position != filterPos) {
 					filterPos = position; // remember which filter was selected
-
 					setFilterUri();
-
 					showLoading(true);
 					queryHandler.startQuery(position, uri, proj);
-
 					editText.setText("");
 				}
-
 			}
-
 			@Override
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
 
 		editText = (EditText) findViewById(R.id.autocomplete);
 		editText.addTextChangedListener(new TextWatcher() {
-
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-				if (s.length() > 0) {
-					showLoading(true);
-
-					String where = FROM[0] + " LIKE ?";
-					String[] args = new String[] { s.toString().toLowerCase() + "%" };
-
-					queryHandler.startQuery(filterPos, uri, proj, where, args);
-				}
+				((CheckboxifiedCursorAdapter) getListAdapter()).runQueryOnBackgroundThread(s);
 			}
 
 			@Override
@@ -262,7 +246,6 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 	}
 
 	class CheckboxifiedCursorAdapter extends SimpleCursorAdapter implements Filterable {
-
 		private LayoutInflater inflater;
 		private String[] from;
 		private Cursor cursor;
@@ -277,6 +260,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		@Override
 		public void changeCursor(Cursor c) {
 			super.changeCursor(c);
+			Utils.d(Utils.TAG, "changed cursor");
 			cursor = c;
 			getListView().clearChoices();
 		}
@@ -298,7 +282,6 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			HashSet<String> f = filters.get(filterPos);
 			boolean hasFilter = f.contains(txt);
 
-
 			if (hasFilter) {
 				listView.setItemChecked(position, true);
 				view.setCheckBoxState(true);
@@ -313,23 +296,35 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			view.setText(txt);
 			return view;
 		}
+
+		@Override
+		public Cursor runQueryOnBackgroundThread(CharSequence s) {
+			// this is how you query for suggestions
+			// notice it is just a StringBuilder building the WHERE clause of a cursor which is the used to query for results
+			if (getFilterQueryProvider() != null) {
+				return getFilterQueryProvider().runQuery(s);
+			}
+			String where = FROM[0] + " LIKE ?";
+			String[] args = new String[] { s.toString().toLowerCase() + "%" };
+
+			Utils.d(Utils.TAG, "s=" + s);
+
+			return ArtAroundProvider.contentResolver.query(uri, proj, where, args, null);
+		}
 	}
 
 	@Override
 	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
 		showLoading(false);
 
-		startManagingCursor(cursor);
+		//Utils.d(Utils.TAG, "--- first query ---");
+		if (cookie != null && (cursor == null || !cursor.moveToFirst())) {
+			loadFromServer(token);
+			if (cursor != null) cursor.close();
+			return;
+		}
 
-		// first query
 		if (cookie != null) {
-			//Utils.d(Utils.TAG, "--- first query ---");
-			if (cursor == null || !cursor.moveToFirst()) {
-				loadFromServer(token);
-				if (cursor != null) cursor.close();
-				return;
-			}
-
 			setListAdapter(new CheckboxifiedCursorAdapter(this, R.layout.checkboxified_text, cursor, FROM, TO));
 		}
 		else {
@@ -342,6 +337,8 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			adapter.changeCursor(cursor);
 			//Utils.d(Utils.TAG, "--- changed cursor ---");
 		}
+
+		startManagingCursor(cursor);
 	}
 
 	private void loadFromServer(int token) {

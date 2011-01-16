@@ -9,7 +9,9 @@
   
   <ProgressBar
 		android:id="@+id/progress"
-		style="@style/LoadingProgress" />
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		style="@android:style/Widget.ProgressBar" />
 		
   <TextView
 		android:id="@+id/loading_txt"

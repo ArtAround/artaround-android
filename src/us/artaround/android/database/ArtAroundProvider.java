@@ -333,7 +333,7 @@ public class ArtAroundProvider extends ContentProvider {
 		db.endTransaction();
 
 		// notify all CursorAdapters
-		//contentResolver.notifyChange(uri, null);
+		contentResolver.notifyChange(uri, null);
 
 		return count;
 	}
@@ -395,7 +395,7 @@ public class ArtAroundProvider extends ContentProvider {
 		db.endTransaction();
 
 		// notify all CursorAdapters
-		//contentResolver.notifyChange(uri, null);
+		contentResolver.notifyChange(uri, null);
 
 		return count;
 	}

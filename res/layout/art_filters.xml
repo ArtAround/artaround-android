@@ -25,7 +25,7 @@
 		android:id="@+id/loading"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
-		layout="@layout/loading"
+		layout="@layout/show_loading"
 		android:visibility="gone" />
 
 	<LinearLayout
