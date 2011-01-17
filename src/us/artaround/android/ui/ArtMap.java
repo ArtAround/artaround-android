@@ -66,9 +66,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	//--- zoom constants ---
 	public static final int ZOOM_DEFAULT_LEVEL = 11;
-	private static final int[] MAX_PINS_PER_ZOOM = { 3, 5, 10, 20, 30, 40, 60 };
+	private static final int[] MAX_PINS_PER_ZOOM = { 3, 5, 10, 30, 40, 60 };
 	private static final int ZOOM_MIN_LEVEL = 8;
-	private static final int ZOOM_MAX_LEVEL = 15;
+	private static final int ZOOM_MAX_LEVEL = ZOOM_MIN_LEVEL + MAX_PINS_PER_ZOOM.length;
 
 	//--- activity requests ids ---
 	public static final int REQUEST_FILTER = 0;
@@ -89,7 +89,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private ArrayList<Art> allArt;
 	private ArrayList<Art> filteredArt;
-	private int displayedArtCount;
+	private int nrPinsToDisplayAtThisZoomLevel;
 	private HashMap<Integer, HashSet<String>> filters;
 
 	private int newZoom;
@@ -186,7 +186,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		}
 		else {
 			if (!isLoadingFromServer()) {
-				displayLastArt(); // screen-flip after loading all art
+				displayArt(filteredArt); // screen-flip after loading all art
 			}
 			else {
 				showLoading(true);
@@ -446,7 +446,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		switch (requestCode) {
 		case REQUEST_FILTER:
 			filters = (HashMap<Integer, HashSet<String>>) data.getSerializableExtra("filters");
-			filterAndDisplayAllArt();
+
+			filterArt(allArt);
+			displayArt(filteredArt);
+
 			break;
 		}
 	}
@@ -515,7 +518,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void onFinishLoadArt() {
 		Utils.d(Utils.TAG, "Finished loading all art from the server.");
-		recalculateMaximumDispersion();
 
 		doSaveArt();
 		Utils.setLastCacheUpdate(this);
@@ -539,7 +541,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		showLoading(true);
 		isLoadingArt.set(true);
 
-		resetDisplayedArt();
 		loadArtFromDatabase();
 	}
 
@@ -596,8 +597,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private void processLoadedArt(List<Art> art) {
 		if (art != null && !art.isEmpty()) {
 			allArt.addAll(art);
-			calculateMaximumDispersion(art);
-			filterAndDisplayArt(art);
+			calculateMaximumDispersion(allArt);
+			filterArt(allArt);
+			displayArt(filteredArt);
 		}
 	}
 
@@ -628,13 +630,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			art.get(i).mediumDistance /= allS;
 		}
 		Collections.sort(art, new ArtDispersionComparator());
-		Collections.reverse(art);
-	}
-
-	private void recalculateMaximumDispersion() {
-		if (allArt.size() > ARTS_PER_PAGE) { //only need to do this if we have more than one page
-			calculateMaximumDispersion(allArt);
-		}
+		//Collections.reverse(art);
 	}
 
 	private float distance(Art a, Art b) {
@@ -652,58 +648,54 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		}
 	}
 
-	private void resetDisplayedArt() {
-		displayedArtCount = 0;
-		filteredArt.clear();
-	}
-
-	private void filterAndDisplayAllArt() {
-		if (isLoadingArt.get()) {
-			return;
-		}
-		resetDisplayedArt();
-		artOverlay.doClear();
-		filterAndDisplayArt(allArt);
-	}
-
-	private void displayLastArt() {
-		displayedArtCount = 0;
-		displayArt(filteredArt);
-	}
-
-	private void filterAndDisplayArt(List<Art> art) {
+	private void filterArt(List<Art> art) {
 		if (art == null || art.size() == 0) {
 			return;
 		}
 
-		// find out max number of pins to display based on zoom
 		int allNrPins = art.size();
-		int newNrPins = 0;
-		if (newZoom <= ZOOM_MIN_LEVEL)
-			newNrPins = 1;
-		else if (newZoom > ZOOM_MAX_LEVEL)
-			newNrPins = allNrPins;
-		else
-			newNrPins = MAX_PINS_PER_ZOOM[newZoom - ZOOM_MIN_LEVEL - 1];
 
 		HashMap<Integer, List<String>> onFilters = filterByAll();
 		Utils.d(Utils.TAG, "===== FILTERS: " + onFilters + " ===== ");
 
-		//filter
-		for (int i = 0; i < allNrPins && displayedArtCount < newNrPins; ++i) {
-			Art a = art.get(i);
+		filteredArt.clear();
 
+		//filter
+		for (int i = 0; i < allNrPins; ++i) {
+			Art a = art.get(i);
 			if (artMatchesFilter(onFilters, a)) {
-				artOverlay.addOverlay(ensureOverlay(a));
 				filteredArt.add(a);
-				++displayedArtCount;
 			}
 		}
+		Utils.d(Utils.TAG, "~~~ " + filteredArt.size() + " arts match the filters ~~~");
+	}
 
-		Utils.d(Utils.TAG, "~~~  Filtered " + filteredArt.size() + " arts ~~~");
-
+	private void displayArt(List<Art> art) {
+		calculateHowManyPinsToDisplay(art);
+		artOverlay.doClear();
+		int nrPins = Math.min(art.size(), this.nrPinsToDisplayAtThisZoomLevel);
+		Utils.d(Utils.TAG, "Displaying " + nrPins + " arts");
+		for (int i = 0; i < nrPins; ++i) {
+			Art a = art.get(i);
+			artOverlay.addOverlay(ensureOverlay(a));
+		}
 		artOverlay.doPopulate();
 		mapView.invalidate();
+	}
+
+	private void calculateHowManyPinsToDisplay(List<Art> art) {
+		if (art == null || art.size() == 0) {
+			return;
+		}
+		// find out max number of pins to display based on zoom
+		int allNrPins = art.size();
+
+		if (newZoom <= ZOOM_MIN_LEVEL)
+			nrPinsToDisplayAtThisZoomLevel = 1;
+		else if (newZoom > ZOOM_MAX_LEVEL)
+			nrPinsToDisplayAtThisZoomLevel = allNrPins;
+		else
+			nrPinsToDisplayAtThisZoomLevel = MAX_PINS_PER_ZOOM[newZoom - ZOOM_MIN_LEVEL - 1];
 	}
 
 	private boolean matchesFilter(List<String> byType, String prop) {
@@ -756,21 +748,11 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		return onFilters;
 	}
 
-	private void displayArt(List<Art> art) {
-		artOverlay.doClear();
-		int nrPins = art.size();
-		for (int i = 0; i < nrPins; ++i) {
-			Art a = art.get(i);
-			artOverlay.addOverlay(ensureOverlay(a));
-		}
-		artOverlay.doPopulate();
-		mapView.invalidate();
-	}
-
 	@Override
 	public void onZoom(int oldZoom, int newZoom) {
 		this.newZoom = newZoom;
-		filterAndDisplayAllArt();
+		Utils.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
+		displayArt(filteredArt);
 	}
 
 	private void startLocationUpdate() {
