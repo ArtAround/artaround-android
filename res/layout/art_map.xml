@@ -39,7 +39,7 @@
 			android:layout_weight="1"
 			android:layout_height="wrap_content"
 			android:drawableLeft="@drawable/ic_pin_small"
-			android:text="@string/nearby_art"
+			android:text="@string/art_nearby"
 			style="@style/Button" />
 	</LinearLayout>
 

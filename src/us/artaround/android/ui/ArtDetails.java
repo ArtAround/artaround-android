@@ -3,11 +3,17 @@ package us.artaround.android.ui;
 import us.artaround.R;
 import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.maps.MapActivity;
@@ -17,8 +23,10 @@ import com.google.android.maps.MapView;
 public class ArtDetails extends MapActivity implements OverlayTapListener {
 	private Art art;
 	private boolean isEditing;
-	private LoadingButton btnEdit;
+
 	private ArtField[] fields;
+	private View miniMapWrap;
+	private Button btnSubmit;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +42,27 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 		return false;
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.art_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.share_art:
+			doShareArt();
+			return true;
+		case R.id.favorite_art:
+			doFavoriteArt();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
 	private void setupVars() {
 		Intent i = getIntent();
 		art = (Art) i.getSerializableExtra("art");
@@ -43,18 +72,18 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 		TextView titlebar = (TextView) getParent().findViewById(R.id.app_label);
 		titlebar.setText(art.title);
 
-		LoadingButton btnShare = (LoadingButton) getParent().findViewById(R.id.btn_0);
-		btnShare.setImageResource(R.drawable.ic_btn_share);
-		btnShare.setOnClickListener(new View.OnClickListener() {
+		getParent().findViewById(R.id.btn_0).setVisibility(View.GONE);
+
+		LoadingButton btnHome = (LoadingButton) getParent().findViewById(R.id.btn_1);
+		btnHome.setImageResource(R.drawable.ic_btn_home);
+		btnHome.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT,
-						getShareText());
-				startActivity(Intent.createChooser(intent, getString(R.string.share_art_title)));
+				doFinish();
 			}
 		});
 
-		btnEdit = (LoadingButton) getParent().findViewById(R.id.btn_1);
+		LoadingButton btnEdit = (LoadingButton) getParent().findViewById(R.id.btn_2);
 		btnEdit.setImageResource(R.drawable.ic_btn_edit);
 		btnEdit.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -63,8 +92,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 			}
 		});
 
-		LoadingButton btnFav = (LoadingButton) getParent().findViewById(R.id.btn_2);
-		btnFav.setImageResource(R.drawable.ic_btn_love);
+		btnSubmit = (Button) findViewById(R.id.btn_submit);
 	}
 
 	private void setupUi() {
@@ -72,15 +100,11 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 		setupFields();
 		setupMiniMap();
 	}
-	
 
 	private void setupMiniMap() {
+		miniMapWrap = findViewById(R.id.mini_map_wrap);
 		MapView miniMap = (MapView) findViewById(R.id.mini_map);
 		miniMap.setBuiltInZoomControls(false);
-
-		MapController controller = miniMap.getController();
-		controller.setZoom(miniMap.getMaxZoomLevel());
-		controller.animateTo(Utils.geo(art.latitude, art.longitude));
 
 		ArtOverlay artOverlay = new ArtOverlay(getResources().getDrawable(R.drawable.ic_pin), this);
 		artOverlay.addOverlay(new ArtOverlayItem(art));
@@ -88,6 +112,10 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 
 		artOverlay.doPopulate();
 		miniMap.invalidate();
+
+		MapController controller = miniMap.getController();
+		controller.setZoom(miniMap.getMaxZoomLevel());
+		controller.animateTo(Utils.geo(art.latitude, art.longitude));
 	}
 
 	private void setupFields() {
@@ -112,6 +140,9 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 		locationDesc.setLabelText(getString(R.string.label_location_desc));
 		if (!TextUtils.isEmpty(art.locationDesc)) locationDesc.setValueText(art.locationDesc);
 
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(title.getWindowToken(), 0);
+
 		fields = new ArtField[] { title, artist, year, ward, locationDesc };
 	}
 
@@ -132,12 +163,24 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 
 	private void doEditArt() {
 		isEditing = !isEditing;
-		btnEdit.setImageResource(isEditing ? R.drawable.ic_btn_save : R.drawable.ic_btn_edit);
 
 		int size = fields.length;
 		for (int i = 0; i < size; i++) {
 			fields[i].setEditing(isEditing);
 		}
+
+		miniMapWrap.setVisibility(isEditing ? View.GONE : View.VISIBLE);
+		btnSubmit.setVisibility(isEditing ? View.VISIBLE : View.GONE);
+	}
+
+	private void doShareArt() {
+		Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain")
+				.putExtra(Intent.EXTRA_TEXT, getShareText());
+		startActivity(Intent.createChooser(intent, getString(R.string.share_art_title)));
+	}
+
+	private void doFavoriteArt() {
+		//TODO
 	}
 
 	@Override
@@ -157,7 +200,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener {
 
 	@Override
 	public void onBackPressed() {
-		doFinish();
+		finish();
 		return;
 	}
 

@@ -34,7 +34,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -85,11 +84,11 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private ArtBalloonsOverlay artOverlay;
 	private HashMap<Art, OverlayItem> items;
 
-	private LoadingButton btnFavs, btnAdd, btnLoading;
-	private Button btnNearby;
+	private LoadingButton btnAdd, btnLoading;
+	private Button btnNearby, btnFilter;
 
-	protected static List<Art> allArt;
-	protected static List<Art> filteredArt;
+	private ArrayList<Art> allArt;
+	private ArrayList<Art> filteredArt;
 	private int displayedArtCount;
 	private HashMap<Integer, HashSet<String>> filters;
 
@@ -294,20 +293,13 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void setupActionBarUi() {
-		btnLoading = (LoadingButton) findViewById(R.id.btn_0);
+		findViewById(R.id.btn_0).setVisibility(View.GONE);
+
+		btnLoading = (LoadingButton) findViewById(R.id.btn_1);
 		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
 
-		btnAdd = (LoadingButton) findViewById(R.id.btn_1);
+		btnAdd = (LoadingButton) findViewById(R.id.btn_2);
 		btnAdd.setImageResource(R.drawable.ic_btn_add);
-
-		btnFavs = (LoadingButton) findViewById(R.id.btn_2);
-		btnFavs.setImageResource(R.drawable.ic_btn_love);
-		btnFavs.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-
-			}
-		});
 	}
 
 	private void setupFooterBarUi() {
@@ -315,11 +307,11 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		btnNearby.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startActivity(new Intent(ArtMap.this, ArtNearby.class));
+				startActivity(new Intent(ArtMap.this, ArtNearby.class).putExtra("arts", filteredArt));
 			}
 		});
 
-		Button btnFilter = (Button) findViewById(R.id.btn_filter);
+		btnFilter = (Button) findViewById(R.id.btn_filter);
 		btnFilter.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -348,9 +340,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void showLoading(boolean loading) {
-		Utils.d(Utils.TAG, "show loading?" + loading);
 		btnLoading.showLoading(loading);
 		btnNearby.setEnabled(!loading);
+		btnFilter.setEnabled(!loading);
 	}
 
 	private void clearPins() {
@@ -534,15 +526,13 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void doSaveArt() {
 		int size = allArt.size();
-		int ok = 0;
+		Utils.d(Utils.TAG, "Updating dispersion for " + size + " arts in the db.");
 
 		for (int i = 0; i < size; i++) {
 			Art art = allArt.get(i);
-			ContentValues vals = ArtAroundDatabase.artToValues(art);
-			ok += ArtAroundProvider.contentResolver.update(ContentUris.withAppendedId(Arts.CONTENT_URI, art.uuid),
-					vals, Arts.SLUG + "=?", new String[] { art.slug });
+			queryHandler.startUpdate(ContentUris.withAppendedId(Arts.CONTENT_URI, art.uuid),
+					ArtAroundDatabase.artToValues(art), Arts.SLUG + "=?", new String[] { art.slug });
 		}
-		Utils.d(Utils.TAG, ok + " arts were updated.");
 	}
 
 	private void loadArt() {
@@ -620,7 +610,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void calculateMaximumDispersion(List<Art> art) {
-		//Utils.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
+		Utils.d(Utils.TAG, "Computing maxium dispersion for " + art.size() + " art objects.");
 		final int allS = art.size();
 		for (int i = 0; i < allS; ++i) {
 			art.get(i).mediumDistance = 0;
@@ -791,8 +781,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void endLocationUpdate() {
-		Utils.d(Utils.TAG, "Removing location listeners.");
-		//showLoading(false);
+		showLoading(false);
 		btnNearby.setEnabled(true);
 		locationUpdater.removeUpdates();
 	}
@@ -816,7 +805,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	@Override
 	public void onLocationUpdate(Location location) {
-		Utils.d(Utils.TAG, "New location available from listener " + location);
 		this.location = location;
 		endLocationUpdate();
 		centerMapOnCurrentLocation();
@@ -841,7 +829,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		if (cursor == null) {
 			showLoading(false);
 			isLoadingArt.set(false);
-			Log.w(Utils.TAG, "Returned cursor is null!");
+			Log.w(Utils.TAG, "Something is wrong, returned art cursor is null!");
 			return;
 		}
 
@@ -866,7 +854,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		Set<LoadArtTask> runningArtTasks;
 
 		AtomicInteger tasksCount, tasksLeft;
-		List<Art> allArt, artFiltered;
+		ArrayList<Art> allArt;
+		ArrayList<Art> artFiltered;
 		HashMap<Integer, HashSet<String>> filters;
 	}
 }

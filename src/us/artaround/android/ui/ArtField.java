@@ -23,6 +23,7 @@ public class ArtField extends LinearLayout {
 	private int orientation;
 	private int colorBgNormal, colorBgEditing;
 	private int colorTxtNormal, colorTxtEditing;
+	private int minlines;
 	private boolean multiline;
 	private boolean labelLeft;
 
@@ -35,6 +36,7 @@ public class ArtField extends LinearLayout {
 
 		labelLeft = a.getBoolean(R.styleable.ArtField_label_left, true);
 		multiline = a.getBoolean(R.styleable.ArtField_multiline, false);
+		minlines = a.getInt(R.styleable.ArtField_minlines, 1);
 
 		colorBgNormal = res.getColor(a.getResourceId(R.styleable.ArtField_color_bg_normal, R.color.art_field_value_bg));
 		colorBgEditing = res.getColor(a.getResourceId(R.styleable.ArtField_color_bg_editing,
@@ -58,30 +60,31 @@ public class ArtField extends LinearLayout {
 		label = (TextView) inflater.inflate(R.layout.art_field_label, null);
 		value = (EditText) inflater.inflate(R.layout.art_field_value, null);
 
-		LinearLayout.LayoutParams params = new LayoutParams(context, attrs);
-		LinearLayout.LayoutParams params2 = new LayoutParams(context, attrs);
+		LinearLayout.LayoutParams lparams = new LayoutParams(context, attrs);
+		LinearLayout.LayoutParams vparams = new LayoutParams(context, attrs);
 
 		if (VERTICAL == orientation) {
-			params.width = LayoutParams.FILL_PARENT;
-			params2.width = LayoutParams.FILL_PARENT;
+			lparams.width = LayoutParams.FILL_PARENT;
+			vparams.width = LayoutParams.FILL_PARENT;
 
 		}
 		else {
-			params.width = 0;
-			params.weight = 1;
+			lparams.width = 0;
+			lparams.weight = 1;
 
-			params2.width = 0;
-			params2.weight = 3;
+			vparams.width = 0;
+			vparams.weight = 3;
 		}
 
-		params.height = LayoutParams.WRAP_CONTENT;
-		label.setLayoutParams(params);
+		lparams.height = LayoutParams.WRAP_CONTENT;
+		label.setLayoutParams(lparams);
 
-		params2.height = LayoutParams.WRAP_CONTENT;
-		value.setLayoutParams(params2);
+		vparams.height = LayoutParams.FILL_PARENT;
+		value.setLayoutParams(vparams);
 
 		value.setSingleLine(!multiline);
 		value.setFocusable(false); // default
+		value.setMinLines(minlines);
 
 		addView(label);
 		addView(value);

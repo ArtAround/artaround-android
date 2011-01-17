@@ -59,9 +59,11 @@
 		name="text_dimmed">#666666</color>
 		
 	<color 
-		name="footer_bg">#AA000000</color>
+		name="border">#C9C0BD</color>
 		
 	<color
 		name="art_nearby_distance">#3B7E42</color>
+		
+	
 
 </resources>

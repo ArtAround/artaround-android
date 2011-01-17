@@ -126,7 +126,7 @@ public class NotifyingAsyncQueryHandler extends AsyncQueryHandler {
 	/**
 	 * Begin an asynchronous update with the given arguments.
 	 */
-	public void startUpdate(Uri uri, ContentValues values) {
+	public void startUpdate(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		startUpdate(-1, null, uri, values, null, null);
 	}
 

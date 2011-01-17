@@ -6,18 +6,10 @@
 	android:orientation="vertical"
 	android:background="@color/art_details_bg">
 	
-	<TextView
-		android:id="@+id/app_label"
+	<include
+		layout="@layout/actionbar"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="center"
-		android:textColor="@android:color/white"
-		android:textStyle="bold"
-		android:textSize="@dimen/text_large"
-		android:text="@string/app_label"
-		android:singleLine="true"
-		android:ellipsize="marquee"
-		style="@style/ActionBar" />
+		android:layout_height="wrap_content" />
 	
 	<include
 		layout="@layout/show_loading"

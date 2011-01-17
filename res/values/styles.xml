@@ -69,6 +69,8 @@
 			name="android:background">@color/art_field_value_bg</item>
 		<item
 			name="android:paddingRight">5dp</item>
+		<item
+			name="android:gravity">top|left</item>
 	</style>
 	<style
 		name="CheckBox">
@@ -107,10 +109,4 @@
 			name="android:textSize">@dimen/text_medium</item>
 	</style>
 
-	<style
-		name="FooterBar">
-		<item
-			name="android:background">@color/footer_bg</item>
-
-	</style>
 </resources>

@@ -15,6 +15,9 @@
 			name="multiline"
 			format="boolean" />
 		<attr
+			name="minlines"
+			format="integer" />
+		<attr
 			name="color_bg_normal"
 			format="reference" />
 		<attr

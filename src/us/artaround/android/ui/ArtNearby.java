@@ -3,7 +3,6 @@ package us.artaround.android.ui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 
 import us.artaround.R;
@@ -13,16 +12,20 @@ import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
-	public final int MAX_TO_DISPLAY = 20;
+	public final int MAX_TO_DISPLAY = 100;
 
 	private static final float RAD_TO_DEG = 57.29f;
 
@@ -31,7 +34,9 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 	private List<Art> arts;
 
 	private View loading;
+	private LoadingButton btnLoading;
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -39,13 +44,32 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 
 		setupUi();
 		locationUpdater = new LocationUpdater(this);
-		arts = new LinkedList<Art>(ArtMap.filteredArt); //create new list so when we sort we don't mess with the filter order
+		arts = (List<Art>) getIntent().getSerializableExtra("arts"); //create new list so when we sort we don't mess with the filter order
 		startLocationUpdate();
 	}
 
 	private void setupUi() {
 		TextView title = (TextView) findViewById(R.id.app_label);
-		title.setText(R.string.arts_nearby);
+		title.setText(R.string.art_nearby);
+		
+		findViewById(R.id.btn_0).setVisibility(View.GONE);
+		btnLoading = (LoadingButton) findViewById(R.id.btn_1);
+		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
+		btnLoading.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startLocationUpdate();
+			}
+		});
+
+		LoadingButton btnHome = (LoadingButton) findViewById(R.id.btn_2);
+		btnHome.setImageResource(R.drawable.ic_btn_home);
+		btnHome.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startActivity(Utils.getHomeIntent(ArtNearby.this));
+			}
+		});
 	}
 
 	private void startLocationUpdate() {
@@ -97,12 +121,15 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 			loading = findViewById(R.id.stub_loading);
 		}
 		loading.setVisibility(View.VISIBLE);
+		btnLoading.showLoading(true);
+
 	}
 	
 	private void hideLoading() {
 		if (loading != null) {
 			loading.setVisibility(View.GONE);
 		}
+		btnLoading.showLoading(false);
 	}
 
 	private void displayItems() {
@@ -112,7 +139,16 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 		for (int i = 0; i < n; i++) {
 			data.add(arts.get(i));
 		}
-		getListView().setAdapter(new CustomArtAdapter(this, data));
+
+		ListView listView = getListView();
+		listView.setAdapter(new CustomArtAdapter(this, data));
+		listView.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				Art a = arts.get(position);
+				startActivity(new Intent(ArtNearby.this, ArtPage.class).putExtra("slug", a.slug));
+			}
+		});
 	}
 
 	@Override
@@ -124,7 +160,6 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 	@Override
 	public void onLocationUpdateError() {
 		hideLoading();
-
 	}
 
 	public static class DistanceFromCurrentPositionComparator implements Comparator<Art> {

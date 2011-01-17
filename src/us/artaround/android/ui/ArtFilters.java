@@ -33,12 +33,13 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
 public class ArtFilters extends ListActivity implements OnItemClickListener, AsyncQueryListener {
+	private static final String TAG = "ArtAround.ArtFilters";
+
 	public static final String[] FILTER_NAMES = { "category", "neighborhood", "artist" };
 
 	public static final int FILTER_CATEGORY = 0;
@@ -117,7 +118,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 	}
 
 	private void setupState() {
-		Utils.d(Utils.TAG, "---setup state---");
+		Utils.d(TAG, "---setup state---");
 		setFilterUri();
 
 		showLoading(true);
@@ -147,7 +148,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			uri = Artists.CONTENT_URI;
 			break;
 		}
-		Utils.d(Utils.TAG, "---current uri---" + uri);
+		Utils.d(TAG, "---current uri---" + uri);
 	}
 
 	private void setupUi() {
@@ -180,8 +181,9 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 				if (position != filterPos) {
 					filterPos = position; // remember which filter was selected
 					setFilterUri();
+
 					showLoading(true);
-					queryHandler.startQuery(position, uri, proj);
+					queryHandler.startQuery(filterPos, uri, proj);
 					editText.setText("");
 				}
 			}
@@ -193,7 +195,12 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		editText.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				((CheckboxifiedCursorAdapter) getListAdapter()).runQueryOnBackgroundThread(s);
+				showLoading(true);
+
+				String where = FROM[0] + " LIKE ?";
+				String[] args = new String[] { s.toString().toLowerCase() + "%" };
+
+				queryHandler.startQuery(filterPos, uri, proj, where, args);
 			}
 
 			@Override
@@ -219,7 +226,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			f.add(txt);
 		}
 
-		Utils.d(Utils.TAG, "f=" + filters);
+		Utils.d(TAG, "f=" + filters);
 	}
 
 	@Override
@@ -241,11 +248,11 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		Intent intent = new Intent();
 		intent.putExtra("filters", filters);
 		setResult(Activity.RESULT_OK, intent);
-		Utils.d(Utils.TAG, "Filters are " + filters);
+		Utils.d(TAG, "Filters are " + filters);
 		finish();
 	}
 
-	class CheckboxifiedCursorAdapter extends SimpleCursorAdapter implements Filterable {
+	class CheckboxifiedCursorAdapter extends SimpleCursorAdapter {
 		private LayoutInflater inflater;
 		private String[] from;
 		private Cursor cursor;
@@ -260,7 +267,6 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		@Override
 		public void changeCursor(Cursor c) {
 			super.changeCursor(c);
-			Utils.d(Utils.TAG, "changed cursor");
 			cursor = c;
 			getListView().clearChoices();
 		}
@@ -296,46 +302,32 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			view.setText(txt);
 			return view;
 		}
-
-		@Override
-		public Cursor runQueryOnBackgroundThread(CharSequence s) {
-			// this is how you query for suggestions
-			// notice it is just a StringBuilder building the WHERE clause of a cursor which is the used to query for results
-			if (getFilterQueryProvider() != null) {
-				return getFilterQueryProvider().runQuery(s);
-			}
-			String where = FROM[0] + " LIKE ?";
-			String[] args = new String[] { s.toString().toLowerCase() + "%" };
-
-			Utils.d(Utils.TAG, "s=" + s);
-
-			return ArtAroundProvider.contentResolver.query(uri, proj, where, args, null);
-		}
 	}
 
 	@Override
 	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
 		showLoading(false);
 
-		//Utils.d(Utils.TAG, "--- first query ---");
 		if (cookie != null && (cursor == null || !cursor.moveToFirst())) {
+			Utils.d(TAG, "--- first query returned nothing, load from server ---");
 			loadFromServer(token);
 			if (cursor != null) cursor.close();
 			return;
 		}
 
 		if (cookie != null) {
+			Utils.d(TAG, "--- first query returned from db, setup adapter ---");
 			setListAdapter(new CheckboxifiedCursorAdapter(this, R.layout.checkboxified_text, cursor, FROM, TO));
 		}
 		else {
 			if (cursor == null || !cursor.moveToFirst()) {
-				Utils.w(Utils.TAG, "Could not change cursor!");
+				Utils.w(TAG, "Could not change cursor, is empty!");
 				if (cursor != null) cursor.close();
 				return;
 			}
 			CheckboxifiedCursorAdapter adapter = (CheckboxifiedCursorAdapter) getListAdapter();
 			adapter.changeCursor(cursor);
-			//Utils.d(Utils.TAG, "--- changed cursor ---");
+			Utils.d(TAG, "--- changed cursor ---");
 		}
 
 		startManagingCursor(cursor);
@@ -363,7 +355,6 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		@Override
 		protected Boolean doInBackground(Void... params) {
 			try {
-				Utils.d(Utils.TAG, "Loading filters from server.");
 				ServiceFactory.getArtService().getCategories();
 				ServiceFactory.getArtService().getNeighborhoods();
 				return true;
