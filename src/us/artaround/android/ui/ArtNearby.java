@@ -1,5 +1,6 @@
 package us.artaround.android.ui;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +36,11 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 
 	private View loading;
 	private LoadingButton btnLoading;
+	private NumberFormat distanceFormat = NumberFormat.getInstance();
+	{
+		distanceFormat.setMaximumFractionDigits(2);
+		distanceFormat.setMinimumFractionDigits(2);
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -88,32 +94,22 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 		this.location = location;
 		hideLoading();
 		computeDistances();
-		computeDirections();
+		//computeDirections();
 		displayItems();
 	}
 
 	private void computeDistances() {
 		double currentLatitude = location.getLatitude();
 		double currentLongitude = location.getLongitude();
-		float[] buf = new float[1];
+		float[] buf = new float[2];
 		int n = arts.size();
 		for (int i = 0; i < n; ++i) {
 			Art art = arts.get(i);
 			Location.distanceBetween(currentLatitude, currentLongitude, art.latitude, art.longitude, buf);
 			art._distanceFromCurrentPosition = buf[0]; //distance is in meters
+			art._bearingFromCurrentPosition = buf[1];
 		}
 		Collections.sort(arts, new DistanceFromCurrentPositionComparator());
-	}
-
-	private void computeDirections() {
-		double currentLatitude = location.getLatitude();
-		double currentLongitude = location.getLongitude();
-		int n = Math.min(MAX_TO_DISPLAY, arts.size());
-		for (int i = 0; i < n; ++i) {
-			Art art = arts.get(i);
-			art._directionVectorAngle = RAD_TO_DEG
-					* Math.atan((art.latitude - currentLatitude) / (art.longitude - currentLongitude));
-		}
 	}
 
 	private void showLoading() {
@@ -199,31 +195,40 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 			holder.tvDescription.setText(a.locationDesc);
 			
 			String measurement = a._distanceFromCurrentPosition >= 1000 ? " km" : " m";
-			float dist = a._distanceFromCurrentPosition < 1000 ? (int) a._distanceFromCurrentPosition : Math
-					.round(a._distanceFromCurrentPosition) / 1000;
+			String tvDist = null;
+			if (a._distanceFromCurrentPosition < 1000)
+				tvDist = (int) a._distanceFromCurrentPosition + measurement;
+			else
+				tvDist = distanceFormat.format(((float) Math.round(a._distanceFromCurrentPosition)) / 1000)
+						+ measurement;
 
-			holder.tvDistance.setText(dist + measurement);
+			holder.tvDistance.setText(tvDist);
 
-			double ang = a._directionVectorAngle;
-			if (between(0, 30, ang) || between(330, 360, ang)) {
+			//EAST is +90deg
+			//WEST is -90deg
+			//SOUTH is +/-180deg
+			//NORTH is 0deg
+
+			double ang = a._bearingFromCurrentPosition;
+			if (between(-22.5, 22.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_n);
 			}
-			else if (between(31, 60, ang)) {
+			else if (between(22.5, 67.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_ne);
 			}
-			else if (between(61, 120, ang)) {
+			else if (between(67.5, 112.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_e);
 			}
-			else if (between(121, 150, ang)) {
+			else if (between(112.5, 157.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_se);
 			}
-			else if (between(151, 210, ang)) {
+			else if (between(157.5, 180, ang) || between(-180, -157.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_s);
 			}
-			else if (between(211, 240, ang)) {
+			else if (between(-157.5, -112.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_sw);
 			}
-			else if (between(241, 300, ang)) {
+			else if (between(-112.5, -67.5, ang)) {
 				holder.imgDirection.setImageResource(R.drawable.ic_w);
 			}
 			else {

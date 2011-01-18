@@ -33,7 +33,7 @@ public class Art implements Serializable
 	public List<Comment> comments;
 
 	public transient float _distanceFromCurrentPosition;
-	public transient double _directionVectorAngle;
+	public transient double _bearingFromCurrentPosition;
 
 	public Art(long uuid) {
 		this.uuid = uuid;
