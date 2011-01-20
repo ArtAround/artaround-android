@@ -8,7 +8,7 @@
 	<string
 		name="cancel">No, thanks</string>
 	<string
-		name="loading">Loading...Please Wait.</string>
+		name="loading">Loading...</string>
 	<string
 		name="empty">No items yet.</string>
 	<string
@@ -19,6 +19,8 @@
 		name="submit">Submit</string>
 	<string
 		name="load_data_failure">Could not retrieve data from server.</string>
+	<string
+		name="art_gallery">Art Around Gallery</string>
 
 	<!-- Location & connectivity -->
 	<string
@@ -117,5 +119,8 @@
 		
 	<string
 		name="art_nearby">Art Nearby</string>
+		
+	<string
+		name="write_comment_hint">Write a Comment</string>
 
 </resources>

@@ -8,6 +8,7 @@ import java.util.List;
 
 import us.artaround.R;
 import us.artaround.android.commons.LocationUpdater;
+import us.artaround.android.commons.LocationUpdater.AddressUpdaterCallback;
 import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.commons.Utils;
 import us.artaround.models.Art;
@@ -25,15 +26,14 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
-	public final int MAX_TO_DISPLAY = 100;
-
-	private static final float RAD_TO_DEG = 57.29f;
+public class ArtNearby extends ListActivity implements LocationUpdaterCallback, AddressUpdaterCallback {
+	public final int MAX_TO_DISPLAY = 50;
 
 	private LocationUpdater locationUpdater;
 	private Location location;
 	private List<Art> arts;
 
+	private TextView title;
 	private View loading;
 	private LoadingButton btnLoading;
 	private NumberFormat distanceFormat = NumberFormat.getInstance();
@@ -49,17 +49,37 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 		setContentView(R.layout.art_nearby);
 
 		setupUi();
+
 		locationUpdater = new LocationUpdater(this);
-		arts = (List<Art>) getIntent().getSerializableExtra("arts"); //create new list so when we sort we don't mess with the filter order
-		startLocationUpdate();
+		arts = (List<Art>) getIntent().getSerializableExtra("arts");
+
+		location = (Location) getLastNonConfigurationInstance();
+		if (location == null) {
+			startLocationUpdate();
+		}
+		else {
+			//TODO save these properly
+			onLocationUpdate(location);
+		}
+	}
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return location;
 	}
 
 	private void setupUi() {
-		TextView title = (TextView) findViewById(R.id.app_label);
+		title = (TextView) findViewById(R.id.app_label);
 		title.setText(R.string.art_nearby);
+		title.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				scrollUpList();
+			}
+		});
 		
-		findViewById(R.id.btn_0).setVisibility(View.GONE);
-		btnLoading = (LoadingButton) findViewById(R.id.btn_1);
+		btnLoading = (LoadingButton) findViewById(R.id.btn_refresh);
 		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
 		btnLoading.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -67,19 +87,11 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 				startLocationUpdate();
 			}
 		});
-
-		LoadingButton btnHome = (LoadingButton) findViewById(R.id.btn_2);
-		btnHome.setImageResource(R.drawable.ic_btn_home);
-		btnHome.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivity(Utils.getHomeIntent(ArtNearby.this));
-			}
-		});
 	}
 
 	private void startLocationUpdate() {
 		showLoading();
+		title.setText(getString(R.string.art_nearby));
 		locationUpdater.updateLocation();
 	}
 
@@ -92,11 +104,31 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 	@Override
 	public void onLocationUpdate(Location location) {
 		this.location = location;
-		hideLoading();
+		locationUpdater.updateAddress(location);
+
 		computeDistances();
 		//computeDirections();
 		displayItems();
 	}
+
+	private void scrollUpList() {
+		ListView listView = getListView();
+		if (listView.getFirstVisiblePosition() > 1) {
+			listView.getHandler().post(runScrollUp);
+		}
+	}
+
+	private final Runnable runScrollUp = new Runnable() {
+		@Override
+		public void run() {
+			ListView listView = getListView();
+			int firstPos = listView.getFirstVisiblePosition();
+			int skipCount = firstPos >> 2;
+
+			listView.setSelection(skipCount < 1 ? 0 : firstPos - skipCount);
+			scrollUpList();
+		}
+	};
 
 	private void computeDistances() {
 		double currentLatitude = location.getLatitude();
@@ -246,5 +278,16 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback {
 	private class ViewHolder {
 		TextView tvTitle, tvDescription, tvDistance;
 		ImageView imgDirection;
+	}
+
+	@Override
+	public void onAddressUpdate(String address) {
+		hideLoading();
+		title.setText(title.getText() + " " + address);
+	}
+
+	@Override
+	public void onAddressUpdateError() {
+		hideLoading();
 	}
 }

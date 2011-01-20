@@ -8,6 +8,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -15,7 +17,7 @@ import android.widget.TextView;
 public class ArtField extends LinearLayout {
 
 	private TextView label;
-	private EditText value;
+	private AutoCompleteTextView value;
 
 	private String savedLabel;
 	private String savedValue;
@@ -27,8 +29,11 @@ public class ArtField extends LinearLayout {
 	private boolean multiline;
 	private boolean labelLeft;
 
+	private Context context;
+
 	public ArtField(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.context = context;
 
 		Resources res = context.getResources();
 
@@ -58,7 +63,7 @@ public class ArtField extends LinearLayout {
 		LayoutInflater inflater = LayoutInflater.from(context);
 
 		label = (TextView) inflater.inflate(R.layout.art_field_label, null);
-		value = (EditText) inflater.inflate(R.layout.art_field_value, null);
+		value = (AutoCompleteTextView) inflater.inflate(R.layout.art_field_value, null);
 
 		LinearLayout.LayoutParams lparams = new LayoutParams(context, attrs);
 		LinearLayout.LayoutParams vparams = new LayoutParams(context, attrs);
@@ -73,7 +78,7 @@ public class ArtField extends LinearLayout {
 			lparams.weight = 1;
 
 			vparams.width = 0;
-			vparams.weight = 3;
+			vparams.weight = 1.5F;
 		}
 
 		lparams.height = LayoutParams.WRAP_CONTENT;
@@ -182,5 +187,10 @@ public class ArtField extends LinearLayout {
 		value.setCursorVisible(isEditing);
 		value.setBackgroundColor(isEditing ? colorBgEditing : colorBgNormal);
 		value.setTextColor(isEditing ? colorTxtEditing : colorTxtNormal);
+	}
+
+	public void setAdapterItems(String[] items) {
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.autocomplete_item, items);
+		value.setAdapter(adapter);
 	}
 }

@@ -3,6 +3,8 @@
 	<color
 		name="btn_bg_enabled">#2F2A27</color>
 	<color
+		name="btn_bg_disabled">#808080</color>
+	<color
 		name="btn_bg_selected">#483E3F</color>
 	<color
 		name="btn_bg_pressed">#A59B50</color>
@@ -33,7 +35,7 @@
 		name="art_field_value_editing_txt">#696969</color>
 
 	<color
-		name="tab_selected_top">#7B686A</color>
+		name="tab_selected_top">#514446</color>
 	<color
 		name="tab_selected_bottom">#514446</color>
 	<color
@@ -41,7 +43,7 @@
 	<color
 		name="tab_pressed_bottom">#7B733B</color>
 	<color
-		name="tab_dim_top">#585858</color>
+		name="tab_dim_top">#808080</color>
 	<color
 		name="tab_dim_bottom">#808080</color>
 	<color

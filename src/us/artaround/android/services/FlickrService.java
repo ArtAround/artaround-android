@@ -36,8 +36,8 @@ public class FlickrService {
 	public final static String SIZE_SMALL = "Small";
 	public final static String SIZE_LARGE = "Large";
 
-	public final static int THUMB_WIDTH = 240;
-	public final static int THUMB_HEIGHT = 180;
+	public final static int THUMB_WIDTH = 320;
+	public final static int THUMB_HEIGHT = 250;
 
 	// these needs to be set before calling any methods
 	public String apiKey;

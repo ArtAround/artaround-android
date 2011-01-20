@@ -42,7 +42,7 @@ public class ServiceFactory {
 
 		artService = new ArtService(cities[Utils.DEFAULT_CITY_CODE]);
 
-		//Flickr.setup(context);
+		FlickrService.init(context);
 	}
 
 	/**

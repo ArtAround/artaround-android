@@ -23,7 +23,7 @@ import android.text.TextUtils;
 
 public class LocationUpdater implements TimeoutCallback
 {
-	public final static String TAG = "LOCATION";
+	public final static String TAG = "ArtAround.Location";
 	
 	private static final int MIN_TIME = 5000;
 	private static final int MIN_DISTANCE = 100;

@@ -8,59 +8,99 @@
 	android:padding="6dp"
 	android:background="@color/art_details_bg">
 
-	<LinearLayout
+	<ScrollView
 		android:layout_width="0dp"
-		android:layout_weight="2"
 		android:layout_height="fill_parent"
-		android:layout_marginRight="5dp"
-		android:orientation="vertical">
+		android:layout_weight="1.8"
+		android:fadingEdge="none"
+		android:fillViewport="true">
 
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/title"
+		<LinearLayout
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="2dp" />
-			
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/artist"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="2dp" />
-			
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/year"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="2dp" />
-			
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/ward"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="2dp" />
+			android:layout_height="fill_parent"
+			android:orientation="vertical">
 
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/location_desc"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="2dp"
-			artfield:multiline="true"
-			artfield:label_left="false" />
-			
-		<us.artaround.android.ui.ArtField
-			android:id="@+id/description"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			artfield:multiline="true"
-			artfield:label_left="false" />
-	</LinearLayout>
+			<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:orientation="vertical">
 
-	<com.google.android.maps.MapView
-		android:id="@+id/mini_map"
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/title"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/artist"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+					
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/category"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+					
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/neighborhood"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/year"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/ward"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="2dp" />
+
+				<us.artaround.android.ui.ArtField
+					android:id="@+id/location_desc"
+					android:layout_width="fill_parent"
+					android:layout_height="fill_parent"
+					android:layout_marginBottom="2dp"
+					artfield:minlines="6"
+					artfield:multiline="true"
+					artfield:label_left="false" />
+			</LinearLayout>
+
+			<Button
+				android:id="@+id/btn_submit"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="bottom"
+				android:drawableLeft="@drawable/ic_submit"
+				android:text="@string/submit"
+				android:visibility="gone"
+				style="@style/Button" />
+		</LinearLayout>
+
+	</ScrollView>
+
+	<LinearLayout
+		android:id="@+id/mini_map_wrap"
 		android:layout_width="0dp"
+		android:layout_height="fill_parent"
 		android:layout_weight="1"
-		android:layout_height="wrap_content"
-		android:clickable="true"
-		android:apiKey="@string/maps_api" />
+		android:layout_marginLeft="10dp"
+		android:background="@drawable/border"
+		android:padding="6dp"
+		android:gravity="center">
+
+		<com.google.android.maps.MapView
+			android:id="@+id/mini_map"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:clickable="true"
+			android:apiKey="@string/maps_api" />
+	</LinearLayout>
 
 </LinearLayout>

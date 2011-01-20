@@ -8,4 +8,9 @@
 		name="text_mlarge">16dp</dimen>
 	<dimen
 		name="text_large">18dp</dimen>
+		
+	<dimen
+		name="photo_width">320dp</dimen>
+	<dimen
+		name="photo_height">250dp</dimen>
 </resources>

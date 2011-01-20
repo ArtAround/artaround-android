@@ -4,15 +4,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import us.artaround.R;
+import us.artaround.android.commons.LoadCategoriesCommand;
+import us.artaround.android.commons.LoadNeighborhoodsCommand;
+import us.artaround.android.commons.LoadingTask;
+import us.artaround.android.commons.LoadingTask.LoadingTaskCallback;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.AsyncQueryListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
 import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
-import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.ArtAroundException;
 import android.app.Activity;
 import android.app.ListActivity;
@@ -20,7 +23,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -37,7 +39,8 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-public class ArtFilters extends ListActivity implements OnItemClickListener, AsyncQueryListener {
+public class ArtFilters extends ListActivity implements OnItemClickListener, NotifyingAsyncQueryListener,
+		LoadingTaskCallback<Void> {
 	private static final String TAG = "ArtAround.ArtFilters";
 
 	public static final String[] FILTER_NAMES = { "category", "neighborhood", "artist" };
@@ -56,13 +59,15 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 
 	private String[] proj;
 	private Uri uri;
-	private int filterPos;
 
 	private View loading, content;
 	private EditText editText;
 	private Spinner spinner;
 
-	private LoadTask loadTask;
+	private int currentToken;
+	private int currentInputLength;
+
+	private LoadingTask<Void> loadCTask, loadNTask;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +77,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 
 		initVars();
 		setupUi();
+		restoreState();
 		setupState();
 	}
 
@@ -90,19 +96,22 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 
 	@Override
 	public Object onRetainNonConfigurationInstance() {
-		return loadTask;
+		Holder holder = new Holder();
+		holder.loadCTask = loadCTask;
+		holder.loadNTask = loadNTask;
+		return holder;
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if (loadTask != null) loadTask.detach();
+		if (loadCTask != null) loadCTask.detachCallback();
+		if (loadNTask != null) loadNTask.detachCallback();
 	}
 
 	@SuppressWarnings("unchecked")
 	private void initVars() {
 		filters = (HashMap<Integer, HashSet<String>>) getIntent().getSerializableExtra("filters");
-
 		if (filters.isEmpty()) {
 			filters = new HashMap<Integer, HashSet<String>>();
 
@@ -110,30 +119,94 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 				filters.put(i, new HashSet<String>());
 			}
 		}
-
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
+	}
 
-		loadTask = (LoadTask) getLastNonConfigurationInstance();
-		if (loadTask != null) loadTask.attach(this);
+	private void restoreState() {
+		Holder holder = (Holder) getLastNonConfigurationInstance();
+		if (holder != null) {
+			loadCTask = holder.loadCTask;
+			loadNTask = holder.loadNTask;
+
+			if (loadCTask != null) loadCTask.attachCallback(this);
+			if (loadNTask != null) loadNTask.attachCallback(this);
+		}
 	}
 
 	private void setupState() {
-		Utils.d(TAG, "---setup state---");
-		setFilterUri();
-
-		showLoading(true);
-		queryHandler.startQuery(FILTER_CATEGORY, true, uri, proj);
+		currentToken = 0;
+		startDatabaseQuery(currentToken, true, null, null);
 	}
 
-	private void showLoading(boolean isLoading) {
-		loading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-		content.setVisibility(isLoading ? View.GONE : View.VISIBLE);
-		editText.setEnabled(!isLoading);
-		spinner.setEnabled(!isLoading);
+	private void startDatabaseQuery(int token, boolean first, String where, String[] args) {
+		Utils.d(TAG, "startDatabaseQuery() with token " + token);
+		//showLoading(true);
+		getCurrentUri(token);
+		queryHandler.startQuery(token, first, uri, proj, where, args, null);
 	}
 
-	private void setFilterUri() {
-		switch (filterPos) {
+	private void afterDatabaseQuery(int token, Object cookie, Cursor cursor) {
+		Utils.d(TAG, "afterDatabaseQuery() with token " + token);
+
+		if (cursor == null) {
+			Utils.d(TAG, "---> unexpected null cursor!");
+			//showLoading(false);
+			return;
+		}
+
+		startManagingCursor(cursor);
+		boolean hasData = cursor.moveToFirst();
+		
+		if ((Boolean) cookie == true) {
+			Utils.d(TAG, "---> first activity run");
+			createListAdapter(cursor);
+		}
+		else {
+			Utils.d(TAG, "---> not first activity run");
+			changeAdapterCursor(cursor);
+		}
+
+		if (!hasData) {
+			Utils.d(TAG, "--> no data in the database");
+			startServerLoad(token);
+		}
+		else {
+			//showLoading(false);
+		}
+	}
+
+	@Override
+	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
+		afterDatabaseQuery(token, cookie, cursor);
+	}
+
+	private void createListAdapter(Cursor cursor) {
+		Utils.d(TAG, "createListAdapter()");
+		setListAdapter(new CheckboxifiedCursorAdapter(this, R.layout.checkboxified_text, cursor, FROM, TO));
+	}
+
+	private void changeAdapterCursor(Cursor cursor) {
+		Utils.d(TAG, "changeAdapterCursor()");
+		((CheckboxifiedCursorAdapter) getListAdapter()).changeCursor(cursor);
+	}
+
+	private void startServerLoad(int token) {
+		Utils.d(TAG, "startServerLoad() for token " + token);
+		switch (token) {
+		case FILTER_CATEGORY:
+			loadCTask = (LoadingTask<Void>) new LoadingTask<Void>(this,
+					new LoadCategoriesCommand()).execute();
+			break;
+
+		case FILTER_NEIGHBORHOOD:
+			loadNTask = (LoadingTask<Void>) new LoadingTask<Void>(this,
+					new LoadNeighborhoodsCommand()).execute();
+			break;
+		}
+	}
+
+	private void getCurrentUri(int token) {
+		switch (token) {
 		default:
 		case FILTER_CATEGORY:
 			proj = ArtAroundDatabase.CATEGORIES_PROJECTION;
@@ -148,7 +221,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			uri = Artists.CONTENT_URI;
 			break;
 		}
-		Utils.d(TAG, "---current uri---" + uri);
+		Utils.d(TAG, "getCurrentUri() " + uri);
 	}
 
 	private void setupUi() {
@@ -177,16 +250,13 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-				if (position != filterPos) {
-					filterPos = position; // remember which filter was selected
-					setFilterUri();
-
-					showLoading(true);
-					queryHandler.startQuery(filterPos, uri, proj);
+				if (position != currentToken) {
+					currentToken = position;
+					startDatabaseQuery(currentToken, false, null, null);
 					editText.setText("");
 				}
 			}
+
 			@Override
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
@@ -195,12 +265,14 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		editText.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				showLoading(true);
+				if (s.length() > 0 || (currentInputLength > 0 && s.length() == 0)) {
+					currentInputLength = s.length();
 
-				String where = FROM[0] + " LIKE ?";
-				String[] args = new String[] { s.toString().toLowerCase() + "%" };
+					String where = FROM[0] + " LIKE ?";
+					String[] args = new String[] { s.toString().toLowerCase() + "%" };
 
-				queryHandler.startQuery(filterPos, uri, proj, where, args);
+					startDatabaseQuery(currentToken, false, where, args);
+				}
 			}
 
 			@Override
@@ -216,7 +288,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		CheckBoxifiedTextView tView = (CheckBoxifiedTextView) view;
 		String txt = tView.getText();
 
-		HashSet<String> f = filters.get(filterPos);
+		HashSet<String> f = filters.get(currentToken);
 
 		boolean hasFilter = f.contains(txt);
 		if (hasFilter) {
@@ -226,7 +298,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			f.add(txt);
 		}
 
-		Utils.d(TAG, "f=" + filters);
+		Utils.d(TAG, "onItemClick() checked filters " + filters);
 	}
 
 	@Override
@@ -265,9 +337,9 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		}
 
 		@Override
-		public void changeCursor(Cursor c) {
-			super.changeCursor(c);
-			cursor = c;
+		public void changeCursor(Cursor cursor) {
+			super.changeCursor(cursor);
+			this.cursor = cursor;
 			getListView().clearChoices();
 		}
 
@@ -285,7 +357,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 			ListView listView = getListView();
 			boolean checked = listView.isItemChecked(position);
 
-			HashSet<String> f = filters.get(filterPos);
+			HashSet<String> f = filters.get(currentToken);
 			boolean hasFilter = f.contains(txt);
 
 			if (hasFilter) {
@@ -304,79 +376,42 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Asy
 		}
 	}
 
+	private void showLoading(boolean isLoading) {
+		loading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+		content.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+		editText.setEnabled(!isLoading);
+		spinner.setEnabled(!isLoading);
+	}
+
 	@Override
-	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
+	public void beforeLoadingTask(int token) {
+		showLoading(true);
+	}
+
+	@Override
+	public void afterLoadingTask(int token, Void result) {
+		finishTask(token);
+	}
+
+	@Override
+	public void onLoadingTaskError(int token, ArtAroundException exception) {
+		finishTask(token);
+	}
+
+	private void finishTask(int token) {
+		Utils.d(TAG, "finishTask() " + token);
+
+		if (token == LoadCategoriesCommand.token) {
+			loadCTask = null;
+		}
+		if (token == LoadNeighborhoodsCommand.token) {
+			loadNTask = null;
+		}
+
 		showLoading(false);
-
-		if (cookie != null && (cursor == null || !cursor.moveToFirst())) {
-			Utils.d(TAG, "--- first query returned nothing, load from server ---");
-			loadFromServer(token);
-			if (cursor != null) cursor.close();
-			return;
-		}
-
-		if (cookie != null) {
-			Utils.d(TAG, "--- first query returned from db, setup adapter ---");
-			setListAdapter(new CheckboxifiedCursorAdapter(this, R.layout.checkboxified_text, cursor, FROM, TO));
-		}
-		else {
-			if (cursor == null || !cursor.moveToFirst()) {
-				Utils.w(TAG, "Could not change cursor, is empty!");
-				if (cursor != null) cursor.close();
-				return;
-			}
-			CheckboxifiedCursorAdapter adapter = (CheckboxifiedCursorAdapter) getListAdapter();
-			adapter.changeCursor(cursor);
-			Utils.d(TAG, "--- changed cursor ---");
-		}
-
-		startManagingCursor(cursor);
 	}
 
-	private void loadFromServer(int token) {
-		loadTask = (LoadTask) new LoadTask(this).execute();
-	}
-
-	private static class LoadTask extends AsyncTask<Void, Void, Boolean> {
-		private ArtFilters context;
-
-		public LoadTask(ArtFilters context) {
-			this.context = context;
-		}
-
-		public void attach(ArtFilters context) {
-			this.context = context;
-		}
-
-		public void detach() {
-			this.context = null;
-		}
-
-		@Override
-		protected Boolean doInBackground(Void... params) {
-			try {
-				ServiceFactory.getArtService().getCategories();
-				ServiceFactory.getArtService().getNeighborhoods();
-				return true;
-			}
-			catch (ArtAroundException e) {
-				return false;
-			}
-		}
-
-		@Override
-		protected void onPreExecute() {
-			context.showLoading(true);
-		}
-
-		@Override
-		protected void onPostExecute(Boolean result) {
-			context.showLoading(false);
-			context.loadTask = null;
-
-			if (result) {
-				context.setupState();
-			}
-		}
+	private static class Holder {
+		LoadingTask<Void> loadCTask, loadNTask;
 	}
 }

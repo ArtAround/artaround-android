@@ -5,12 +5,32 @@
 	android:layout_height="fill_parent"
 	android:orientation="vertical"
 	android:background="@color/art_details_bg">
-	
-	<include
-		layout="@layout/actionbar"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content" />
-	
+
+	<LinearLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="horizontal"
+		style="@style/ActionBar">
+
+		<TextView
+			android:id="@+id/app_label"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			android:textColor="@android:color/white"
+			android:textStyle="bold"
+			android:textSize="@dimen/text_small"
+			android:singleLine="true"
+			android:ellipsize="marquee" />
+
+		<us.artaround.android.ui.LoadingButton
+			android:id="@+id/btn_refresh"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center|right"
+			android:layout_marginRight="6dp" />
+	</LinearLayout>
+
 	<include
 		layout="@layout/show_loading"
 		android:id="@+id/stub_loading"
@@ -22,7 +42,7 @@
 		android:id="@android:id/android:empty"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
-		
+
 		android:layout_gravity="center"
 		android:gravity="center"
 		android:textSize="@dimen/text_mlarge"
@@ -39,7 +59,7 @@
 		android:scrollbarStyle="outsideOverlay"
 		android:scrollingCache="false"
 
-		android:cacheColorHint="@color/dialog_bg"
+		android:cacheColorHint="@color/art_details_bg"
 		android:divider="@drawable/divider_dark"
 		android:dividerHeight="1px"
 		android:descendantFocusability="blocksDescendants" />

@@ -4,9 +4,8 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:orientation="vertical"
-	android:padding="6dp"
 	android:background="@color/art_details_bg">
-	
+
 	<TextView
 		android:id="@android:id/android:empty"
 		android:layout_width="fill_parent"
@@ -14,11 +13,42 @@
 		android:layout_weight="1"
 		android:gravity="center"
 		android:text="@string/empty"
-		style="@style/TextMLarge" />
+		android:textStyle="bold"
+		android:textSize="@dimen/text_large"
+		android:textColor="@color/art_field_label_txt" />
 
 	<ListView
 		android:id="@android:id/android:list"
 		android:layout_width="fill_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1" />
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center|bottom"
+		android:background="@drawable/border"
+		android:padding="6dp">
+
+		<EditText
+			android:id="@+id/edit_comment"
+			android:layout_width="0dp"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:minLines="1"
+			android:maxLines="2"
+			android:textSize="@dimen/text_mlarge"
+			android:hint="@string/write_comment_hint"
+			android:inputType="textShortMessage" />
+		<Button
+			android:id="@+id/btn_comment"
+			style="@style/Button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="8dp"
+			android:layout_marginBottom="1px"
+			android:textStyle="bold"
+			android:text="@string/submit" />
+	</LinearLayout>
 </LinearLayout>

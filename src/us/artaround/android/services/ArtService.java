@@ -43,7 +43,7 @@ public class ArtService extends BaseService {
 
 	public ParseResult getArts(int page, int perPage) throws ArtAroundException {
 		StreamData data = new StreamData(BaseParser.TYPE_ARTS);
-		data.setAuxData(false);
+		data.setAuxData(true);
 		String uri = addParams(ENDPOINT_ARTS, PARAM_PAGE + page, PARAM_PER_PAGE + perPage);
 		getMethod(data, uri);
 		return (ParseResult) data.getAuxData()[0];
@@ -51,14 +51,14 @@ public class ArtService extends BaseService {
 
 	public void getCategories() throws ArtAroundException {
 		StreamData data = new StreamData(BaseParser.TYPE_CATEGORIES);
-		data.setAuxData(false);
+		data.setAuxData(true);
 		String uri = addParams(ENDPOINT_CATEGORIES);
 		getMethod(data, uri);
 	}
 
 	public void getNeighborhoods() throws ArtAroundException {
 		StreamData data = new StreamData(BaseParser.TYPE_NEIGHBORHOODS);
-		data.setAuxData(false);
+		data.setAuxData(true);
 		String uri = addParams(ENDPOINT_NEIGHBORHOODS);
 		getMethod(data, uri);
 	}

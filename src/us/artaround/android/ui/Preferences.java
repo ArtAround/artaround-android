@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.AsyncDeleteListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncDeleteListener;
 import us.artaround.android.commons.SharedPreferencesCompat;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -23,7 +23,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -31,7 +30,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-public class Preferences extends PreferenceActivity implements AsyncDeleteListener {
+public class Preferences extends PreferenceActivity implements NotifyingAsyncDeleteListener {
 	private final static String CLEAR_CACHE_KEY = "clear_cache";
 	private final static String CHANGE_CITY_KEY = "change_city";
 
@@ -124,16 +123,14 @@ public class Preferences extends PreferenceActivity implements AsyncDeleteListen
 
 		leftToClear = new AtomicInteger(4);
 
-		queryHandler.startDelete(Arts.CONTENT_URI, Arts.CONTENT_URI);
-		queryHandler.startDelete(Artists.CONTENT_URI, Artists.CONTENT_URI);
-		queryHandler.startDelete(Categories.CONTENT_URI, Categories.CONTENT_URI);
-		queryHandler.startDelete(Neighborhoods.CONTENT_URI, Neighborhoods.CONTENT_URI);
+		queryHandler.startDelete(Arts.CONTENT_URI, null, null);
+		queryHandler.startDelete(Artists.CONTENT_URI, null, null);
+		queryHandler.startDelete(Categories.CONTENT_URI, null, null);
+		queryHandler.startDelete(Neighborhoods.CONTENT_URI, null, null);
 	}
 
 	@Override
 	public void onDeleteComplete(int token, Object cookie, int result) {
-		Log.d(Utils.TAG, "Deleted " + result + " from " + cookie);
-
 		int left = leftToClear.decrementAndGet();
 
 		if (left == 0) {

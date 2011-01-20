@@ -8,17 +8,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
-import us.artaround.android.commons.LoadArtTask;
-import us.artaround.android.commons.LoadArtTask.LoadArtCallback;
+import us.artaround.android.commons.LoadArtCommand;
+import us.artaround.android.commons.LoadingTask;
+import us.artaround.android.commons.LoadingTask.LoadingTaskCallback;
 import us.artaround.android.commons.LocationUpdater;
 import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.AsyncQueryListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.navigation.Road;
 import us.artaround.android.commons.navigation.RoadProvider;
@@ -28,6 +29,7 @@ import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.parsers.ParseResult;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
+import us.artaround.models.ArtAroundException;
 import us.artaround.models.ArtDispersionComparator;
 import us.artaround.models.City;
 import android.app.AlertDialog;
@@ -58,7 +60,7 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
-		LoadArtCallback, AsyncQueryListener {
+		LoadingTaskCallback<ParseResult>, NotifyingAsyncQueryListener {
 
 	//--- loading tasks constants ---
 	public static final int MAX_CONCURRENT_TASKS = 1;
@@ -102,7 +104,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private LocationUpdater locationUpdater;
 	private Location location;
 
-	private Set<LoadArtTask> runningTasks;
+	private Map<Integer, LoadingTask<ParseResult>> runningTasks;
 	private AtomicInteger tasksCount;
 	private AtomicInteger tasksLeft;
 
@@ -174,23 +176,17 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			clearPins();
 		}
 
-		//--- load art from db or server
-		if (allArt.isEmpty()) {
-			if (!isLoadingFromServer()) { // first time in the app
+		if (isLoadingFromServer()) {
+			showLoading(true);
+			attachTasksCallback();
+		}
+		else {
+			if (allArt.isEmpty()) {
 				loadArt();
 			}
 			else {
-				showLoading(true);
-				attachTasksCallback(); // screen-flip while loading first page
-			}
-		}
-		else {
-			if (!isLoadingFromServer()) {
-				displayArt(filteredArt); // screen-flip after loading all art
-			}
-			else {
-				showLoading(true);
-				attachTasksCallback(); // screen-flip while loading
+				showLoading(false);
+				displayArt(filteredArt);
 			}
 		}
 	}
@@ -213,9 +209,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private void taskCleanup() {
 		Utils.d(Utils.TAG, "Stopping all current tasks.");
 
-		Iterator<LoadArtTask> it = runningTasks.iterator();
+		Iterator<LoadingTask<ParseResult>> it = runningTasks.values().iterator();
 		while (it.hasNext()) {
-			LoadArtTask task = it.next();
+			LoadingTask<ParseResult> task = it.next();
 			task.cancel(true);
 			it.remove();
 		}
@@ -270,7 +266,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			filters = new HashMap<Integer, HashSet<String>>();
 			tasksLeft = new AtomicInteger(0);
 			tasksCount = new AtomicInteger(0);
-			runningTasks = Collections.synchronizedSet(new HashSet<LoadArtTask>());
+			runningTasks = Collections.synchronizedMap(new HashMap<Integer, LoadingTask<ParseResult>>());
 			isLoadingArt = new AtomicBoolean(false);
 		}
 		else {
@@ -284,6 +280,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			location = holder.location;
 			isLoadingArt = holder.isLoadingArt;
 		}
+
+		if (holder == null) {
+			checkWifiStatus(); // only once
+		}
 	}
 
 	private void setupUi() {
@@ -293,10 +293,15 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void setupActionBarUi() {
-		findViewById(R.id.btn_0).setVisibility(View.GONE);
-
 		btnLoading = (LoadingButton) findViewById(R.id.btn_1);
 		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
+		btnLoading.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setupState();
+				startLocationUpdate();
+			}
+		});
 
 		btnAdd = (LoadingButton) findViewById(R.id.btn_2);
 		btnAdd.setImageResource(R.drawable.ic_btn_add);
@@ -351,17 +356,17 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void attachTasksCallback() {
-		for (LoadArtTask task : runningTasks) {
+		for (LoadingTask<ParseResult> task : runningTasks.values()) {
 			if (task.getStatus() == AsyncTask.Status.RUNNING) {
-				task.attach(this); // pass the new context
+				task.attachCallback(this); // pass the new context
 			}
 		}
 	}
 
 	private void detachTasksCallback() {
-		for (LoadArtTask task : runningTasks) {
+		for (LoadingTask<ParseResult> task : runningTasks.values()) {
 			if (task.getStatus() == AsyncTask.Status.RUNNING) {
-				task.detach();
+				task.detachCallback();
 			}
 		}
 	}
@@ -489,33 +494,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		finish(); // call finish to save memory because of the 2 map views
 	}
 
-	@Override
-	public void onLoadArt(ParseResult result, LoadArtTask task) {
-		Utils.d(Utils.TAG, "Result of task is: " + result);
-
-		if (result == null) {
-			showDialog(DIALOG_WIFI_FAIL);
-			showLoading(false);
-			return;
-		}
-
-		processLoadedArt(result.art);
-
-		if (result.totalCount == allArt.size()) {
-			// finished to load all arts 
-			onFinishLoadArt();
-		}
-
-		loadMoreArtFromServer(result, task);
-	}
-
-	@Override
-	public void onLoadArtError(Throwable e) {
-		showLoading(false);
-		isLoadingArt.set(false);
-		Utils.showToast(this, R.string.load_data_failure);
-	}
-
 	private void onFinishLoadArt() {
 		Utils.d(Utils.TAG, "Finished loading all art from the server.");
 
@@ -546,8 +524,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void loadArtFromDatabase() {
 		Utils.d(Utils.TAG, "Starting querying for arts from db...");
-		queryHandler.startQuery(-1, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, ArtAroundDatabase.ARTS_WHERE,
-				new String[] { city.name });
+		queryHandler.startQuery(-1, null, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
+				ArtAroundDatabase.ARTS_WHERE, new String[] { city.name }, null);
 	}
 
 	private boolean isLoadingFromServer() {
@@ -564,8 +542,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		startTask(1);
 	}
 
-	private void loadMoreArtFromServer(ParseResult result, LoadArtTask task) {
-		runningTasks.remove(task);
+	private void loadMoreArtFromServer(ParseResult result, Integer token) {
+		runningTasks.remove(token);
 
 		if (result.page == 1) {
 			tasksLeft.set((int) (Math.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
@@ -589,9 +567,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void startTask(int page) {
-		LoadArtTask task = new LoadArtTask(this, page, ARTS_PER_PAGE);
+		LoadArtCommand comm = new LoadArtCommand(page, ARTS_PER_PAGE);
+		LoadingTask<ParseResult> task = new LoadingTask<ParseResult>(this, comm);
 		task.execute();
-		runningTasks.add(task);
+		runningTasks.put(comm.getToken(), task);
 	}
 
 	private void processLoadedArt(List<Art> art) {
@@ -663,7 +642,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		//filter
 		for (int i = 0; i < allNrPins; ++i) {
 			Art a = art.get(i);
-			if (artMatchesFilter(onFilters, a)) {
+			// FIXME create an ui property to change matching type to "all" or "at least one"
+			if (artMatchesFilter(onFilters, a, false)) {
 				filteredArt.add(a);
 			}
 		}
@@ -703,7 +683,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		return byType.contains(prop);
 	}
 
-	boolean artMatchesFilter(HashMap<Integer, List<String>> onFilters, Art a) {
+	boolean artMatchesFilter(HashMap<Integer, List<String>> onFilters, Art a, boolean matchAll) {
 		int match = 0;
 		int length = ArtFilters.FILTER_NAMES.length;
 
@@ -722,7 +702,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			}
 		}
 
-		return match == ArtFilters.FILTER_NAMES.length;
+		return matchAll ? match == ArtFilters.FILTER_NAMES.length : match > 0;
 	}
 
 	private HashMap<Integer, List<String>> filterByAll() {
@@ -768,7 +748,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		locationUpdater.removeUpdates();
 	}
 
-	//TODO show this only once
 	private void checkWifiStatus() {
 		ConnectivityManager mngr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = mngr.getActiveNetworkInfo();
@@ -833,11 +812,41 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		public AtomicBoolean isLoadingArt;
 		public Location location;
 		int zoom;
-		Set<LoadArtTask> runningArtTasks;
-
+		Map<Integer, LoadingTask<ParseResult>> runningArtTasks;
 		AtomicInteger tasksCount, tasksLeft;
 		ArrayList<Art> allArt;
 		ArrayList<Art> artFiltered;
 		HashMap<Integer, HashSet<String>> filters;
+	}
+
+	@Override
+	public void beforeLoadingTask(int token) {}
+
+	@Override
+	public void afterLoadingTask(int token, ParseResult result) {
+		Utils.d(Utils.TAG, "Result of task is: " + result);
+
+		if (result == null) {
+			showDialog(DIALOG_WIFI_FAIL);
+			showLoading(false);
+			return;
+		}
+
+		processLoadedArt(result.art);
+
+		if (result.totalCount == allArt.size()) {
+			// finished to load all arts 
+			onFinishLoadArt();
+		}
+
+		loadMoreArtFromServer(result, token);
+	}
+
+	@Override
+	public void onLoadingTaskError(int token, ArtAroundException exception) {
+		showLoading(false);
+		isLoadingArt.set(false);
+		taskCleanup();
+		Utils.showToast(this, R.string.load_data_failure);
 	}
 }
