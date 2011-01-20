@@ -171,16 +171,17 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		changeCity();
 
-		if (Utils.isCacheOutdated(this)) {
-			allArt.clear();
-			clearPins();
-		}
 
 		if (isLoadingFromServer()) {
 			showLoading(true);
 			attachTasksCallback();
 		}
 		else {
+			if (Utils.isCacheOutdated(this)) {
+				allArt.clear();
+				clearPins();
+			}
+
 			if (allArt.isEmpty()) {
 				loadArt();
 			}

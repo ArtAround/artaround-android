@@ -51,6 +51,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	private NotifyingAsyncQueryHandler queryHandler;
 
 	private LoadingTask<Void> loadCTask, loadNTask;
+	private String[] categories, neighborhoods;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +67,16 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	protected void onResume() {
 		super.onResume();
 		setupActionBarUi();
+	}
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		Holder holder = new Holder();
+		holder.loadCTask = loadCTask;
+		holder.loadNTask = loadNTask;
+		holder.categories = categories;
+		holder.neighborhoods = neighborhoods;
+		return holder;
 	}
 
 	@Override
@@ -193,10 +204,44 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	}
 
 	private void setupState() {
-		queryHandler.startQuery(QUERY_CATEGORY, null, Categories.CONTENT_URI, ArtAroundDatabase.CATEGORIES_PROJECTION,
-				null, null, null);
-		queryHandler.startQuery(QUERY_NEIGHBORHOOD, null, Neighborhoods.CONTENT_URI,
-				ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null, null, null);
+		Holder holder = (Holder) getLastNonConfigurationInstance();
+		boolean isLoadingC = false, isLoadingN = false;
+
+		if (holder != null) {
+			loadCTask = holder.loadCTask;
+			loadNTask = holder.loadNTask;
+
+			if (loadCTask != null) {
+				loadCTask.attachCallback(this);
+				isLoadingC = true;
+			}
+			if (loadNTask != null) {
+				loadNTask.attachCallback(this);
+				isLoadingN = true;
+			}
+
+			categories = holder.categories;
+			neighborhoods = holder.neighborhoods;
+		}
+		if (!isLoadingC) {
+			if (categories == null || categories.length == 0) {
+				queryHandler.startQuery(QUERY_CATEGORY, null, Categories.CONTENT_URI,
+						ArtAroundDatabase.CATEGORIES_PROJECTION, null, null, null);
+			}
+			else {
+				fields[2].setAdapterItems(categories);
+			}
+		}
+
+		if (!isLoadingN) {
+			if (neighborhoods == null || neighborhoods.length == 0) {
+				queryHandler.startQuery(QUERY_NEIGHBORHOOD, null, Neighborhoods.CONTENT_URI,
+						ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null, null, null);
+			}
+			else {
+				fields[3].setAdapterItems(neighborhoods);
+			}
+		}
 	}
 
 	private String getShareText() {
@@ -265,21 +310,23 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
 		switch (token) {
 		case QUERY_CATEGORY:
-			List<String> categories = ArtAroundDatabase.categoriesFromCursor(cursor);
-			if (categories.isEmpty()) {
+			List<String> result = ArtAroundDatabase.categoriesFromCursor(cursor);
+			if (result.isEmpty()) {
 				loadCTask = (LoadingTask<Void>) new LoadingTask<Void>(this, new LoadCategoriesCommand()).execute();
 			}
 			else {
-				fields[2].setAdapterItems(categories.toArray(new String[categories.size()]));
+				categories = result.toArray(new String[result.size()]);
+				fields[2].setAdapterItems(categories);
 			}
 			break;
 		case QUERY_NEIGHBORHOOD:
-			List<String> neighborhoods = ArtAroundDatabase.neighborhoodsFromCursor(cursor);
-			if (neighborhoods.isEmpty()) {
+			result = ArtAroundDatabase.neighborhoodsFromCursor(cursor);
+			if (result.isEmpty()) {
 				loadNTask = (LoadingTask<Void>) new LoadingTask<Void>(this, new LoadNeighborhoodsCommand()).execute();
 			}
 			else {
-				fields[3].setAdapterItems(neighborhoods.toArray(new String[neighborhoods.size()]));
+				neighborhoods = result.toArray(new String[result.size()]);
+				fields[3].setAdapterItems(neighborhoods);
 			}
 			break;
 		}
@@ -289,23 +336,32 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	}
 
 	@Override
-	public void beforeLoadingTask(int token) {}
+	public void beforeLoadingTask(int token) {
+		//FIXME show some kind of indication that the autocomplete is loading
+	}
 
 	@Override
 	public void afterLoadingTask(int token, Void result) {
-		if (token == QUERY_CATEGORY) {
+		if (token == LoadCategoriesCommand.token) {
 			queryHandler.startQuery(QUERY_CATEGORY, null, Categories.CONTENT_URI,
 					ArtAroundDatabase.CATEGORIES_PROJECTION, null, null, null);
 			return;
 		}
 
-		if (token == QUERY_NEIGHBORHOOD) {
+		if (token == LoadNeighborhoodsCommand.token) {
 			queryHandler.startQuery(QUERY_NEIGHBORHOOD, null, Neighborhoods.CONTENT_URI,
 					ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null, null, null);
 			return;
 		}
+		loadCTask = null;
+		loadNTask = null;
 	}
 
 	@Override
 	public void onLoadingTaskError(int token, ArtAroundException exception) {}
+
+	private static class Holder {
+		LoadingTask<Void> loadCTask, loadNTask;
+		String[] categories, neighborhoods;
+	}
 }
