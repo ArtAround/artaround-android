@@ -28,7 +28,7 @@
 			android:layout_weight="1"
 			android:layout_height="wrap_content"
 			android:layout_marginRight="6dp"
-			android:drawableLeft="@drawable/ic_filter"
+			android:drawableLeft="@drawable/ic_filter_state"
 			android:text="@string/filter"
 			android:gravity="center"
 			style="@style/Button" />
@@ -38,7 +38,7 @@
 			android:layout_width="0dp"
 			android:layout_weight="1"
 			android:layout_height="wrap_content"
-			android:drawableLeft="@drawable/ic_pin_small"
+			android:drawableLeft="@drawable/ic_pin_small_state"
 			android:text="@string/art_nearby"
 			style="@style/Button" />
 	</LinearLayout>

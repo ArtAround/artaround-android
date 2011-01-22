@@ -75,6 +75,10 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		setContentView(R.layout.art_filters);
 		getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
 
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
+
 		initVars();
 		setupUi();
 		restoreState();

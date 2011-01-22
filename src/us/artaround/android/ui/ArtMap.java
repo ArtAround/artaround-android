@@ -135,6 +135,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_map);
 
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
+
 		initVars();
 		restoreState();
 		setupUi();
@@ -644,7 +648,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		for (int i = 0; i < allNrPins; ++i) {
 			Art a = art.get(i);
 			// FIXME create an ui property to change matching type to "all" or "at least one"
-			if (artMatchesFilter(onFilters, a, false)) {
+			if (artMatchesFilter(onFilters, a, true)) {
 				filteredArt.add(a);
 			}
 		}

@@ -35,7 +35,8 @@ public class ArtBalloonsOverlay extends ItemizedOverlay<OverlayItem> {
 		super(boundCenterBottom(defaultMarker));
 
 		this.mapView = mapView;
-		viewOffset = 0;
+		//viewOffset = 0;
+		setBalloonBottomOffset(defaultMarker.getIntrinsicHeight());
 		mc = mapView.getController();
 
 		this.doPopulate(); //do populate after constructor so it doen't crash when empty

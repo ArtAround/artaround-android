@@ -11,6 +11,8 @@
 	<color
 		name="btn_text_color">#FFFFFF</color>
 	<color
+		name="btn_text_color_disabled">#333333</color>
+	<color
 		name="btn_stroke">#4A4644</color>
 
 	<color

@@ -29,6 +29,10 @@ public class ArtPage extends TabActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_page);
 
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
+
 		String slug = getIntent().getStringExtra("slug");
 		Cursor c = ArtAroundProvider.contentResolver.query(Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, WHERE,
 				new String[] { slug }, null);

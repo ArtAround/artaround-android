@@ -48,6 +48,10 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_nearby);
 
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
+
 		setupUi();
 
 		locationUpdater = new LocationUpdater(this);

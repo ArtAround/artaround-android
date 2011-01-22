@@ -11,6 +11,7 @@ import us.artaround.android.commons.NotifyingAsyncQueryHandler;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
+import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
 import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
@@ -40,6 +41,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 
 	public static final int QUERY_CATEGORY = 0;
 	public static final int QUERY_NEIGHBORHOOD = 1;
+	public static final int QUERY_ARTIST = 2;
 
 	private Art art;
 	private boolean isEditing;
@@ -51,12 +53,16 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 	private NotifyingAsyncQueryHandler queryHandler;
 
 	private LoadingTask<Void> loadCTask, loadNTask;
-	private String[] categories, neighborhoods;
+	private String[] categories, neighborhoods, artists;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_details);
+
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
 
 		setupVars();
 		setupUi();
@@ -76,6 +82,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 		holder.loadNTask = loadNTask;
 		holder.categories = categories;
 		holder.neighborhoods = neighborhoods;
+		holder.artists = artists;
 		return holder;
 	}
 
@@ -222,6 +229,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 
 			categories = holder.categories;
 			neighborhoods = holder.neighborhoods;
+			artists = holder.artists;
 		}
 		if (!isLoadingC) {
 			if (categories == null || categories.length == 0) {
@@ -242,6 +250,9 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 				fields[3].setAdapterItems(neighborhoods);
 			}
 		}
+
+		queryHandler.startQuery(QUERY_ARTIST, null, Artists.CONTENT_URI, ArtAroundDatabase.ARTISTS_PROJECTION, null,
+				null, null);
 	}
 
 	private String getShareText() {
@@ -329,6 +340,11 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 				fields[3].setAdapterItems(neighborhoods);
 			}
 			break;
+		case QUERY_ARTIST:
+			result = ArtAroundDatabase.artistsFromCursor(cursor);
+			artists = result.toArray(new String[result.size()]);
+			fields[1].setAdapterItems(artists);
+			break;
 		}
 		if (cursor != null) {
 			cursor.close();
@@ -362,6 +378,6 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 
 	private static class Holder {
 		LoadingTask<Void> loadCTask, loadNTask;
-		String[] categories, neighborhoods;
+		String[] categories, neighborhoods, artists;
 	}
 }

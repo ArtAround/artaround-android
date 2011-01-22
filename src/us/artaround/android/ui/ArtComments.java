@@ -24,6 +24,10 @@ public class ArtComments extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.art_comments);
 
+		//--- enable crash reporting ---
+		Utils.enableDump(this);
+		// -----------------------------
+
 		slug = getIntent().getStringExtra("slug");
 		setupActionBarUi();
 		restoreState();

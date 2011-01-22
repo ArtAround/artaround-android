@@ -20,6 +20,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.preference.PreferenceManager;
@@ -42,6 +44,8 @@ public class Utils {
 	public static final String NL = "\n";
 	public static final String USER_AGENT = "us.artaround";
 
+	public static final String APP_DIR = "Android/data/us.artaround";
+
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int DEFAULT_CITY_CODE = 0; // Washington, DC
 
@@ -49,6 +53,7 @@ public class Utils {
 	public static final String KEY_LAST_UPDATE = "last_update";
 	public static final String KEY_UPDATE_INTERVAL = "update_interval";
 	public static final String KEY_CLEARED_CACHE = "cleared_cache";
+	public static final String KEY_SEND_CRASH_ONLINE = "send_crash_online";
 
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
 	public static final SimpleDateFormat df = new SimpleDateFormat(Utils.DATE_FORMAT);
@@ -57,6 +62,8 @@ public class Utils {
 	public static float E6 = 1000000;
 
 	public static final boolean DEBUG_MODE = true;
+
+	public static String appVersion;
 
 	private static Method setView = null;
 
@@ -241,5 +248,26 @@ public class Utils {
 			}
 		});
 		return builder.create();
+	}
+
+	public static void enableDump(Context context) {
+		//TODO enable online crash reporting
+		//final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		//final boolean onlineDump = prefs.getBoolean(KEY_SEND_CRASH_ONLINE, true);
+
+		if (!DEBUG_MODE) {
+			return;
+		}
+
+		if (appVersion == null) {
+			try {
+				PackageManager pm = context.getPackageManager();
+				appVersion = pm.getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES).versionName;
+			}
+			catch (final NameNotFoundException e) {
+				appVersion = "0.0";
+			}
+		}
+		Thread.setDefaultUncaughtExceptionHandler(ArtAroundExceptionHandler.getInstance(true, false, appVersion));
 	}
 }
