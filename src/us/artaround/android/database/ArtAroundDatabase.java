@@ -16,7 +16,7 @@ import android.text.TextUtils;
 public class ArtAroundDatabase {
 	public static final String ARTAROUND_AUTHORITY = "us.artaround";
 
-	public static final String[] ARTS_PROJECTION = { Arts.UUID, Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
+	public static final String[] ARTS_PROJECTION = { Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
 			Arts.UPDATED_AT, Arts.LATITUDE, Arts.LONGITUDE, Arts.NEIGHBORHOOD, Arts.PHOTO_IDS, Arts.WARD, Arts.YEAR,
 			Arts.LOCATION_DESCRIPTION, Arts.ARTIST, Arts.DESCRIPTION, Arts.MEDIUM_DISTANCE, Arts.CITY, Artists.NAME };
 
@@ -35,7 +35,6 @@ public class ArtAroundDatabase {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
 
-		public static final String UUID = "uuid";
 		public static final String SLUG = "slug";
 		public static final String TITLE = "title";
 		public static final String CATEGORY = "category";
@@ -92,7 +91,6 @@ public class ArtAroundDatabase {
 		StringBuilder b = new StringBuilder();
 		b.append("CREATE TABLE ").append(Arts.TABLE_NAME).append(" (");
 		b.append(Arts._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(Arts.UUID).append(" INTEGER,");
 		b.append(Arts.SLUG).append(" TEXT,");
 		b.append(Arts.TITLE).append(" TEXT,");
 		b.append(Arts.CATEGORY).append(" TEXT,");
@@ -111,7 +109,6 @@ public class ArtAroundDatabase {
 		b.append(Arts.ARTIST).append(" TEXT);");
 
 		// index on id
-		b.append("CREATE INDEX idu ON ").append(Arts.TABLE_NAME).append(".").append(Arts.UUID).append(";");
 		b.append("CREATE INDEX idx ON ").append(Arts.TABLE_NAME).append(".").append(Arts.SLUG).append(";");
 
 		String str = b.toString();
@@ -123,7 +120,7 @@ public class ArtAroundDatabase {
 		StringBuilder b = new StringBuilder();
 		b.append("CREATE TABLE ").append(Artists.TABLE_NAME).append(" (");
 		b.append(Artists._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(Artists.UUID).append(" INTEGER,");
+		b.append(Artists.UUID).append(" TEXT,");
 		b.append(Artists.NAME).append(" TEXT, ");
 
 		b.append("UNIQUE (").append(Artists.NAME).append("));");
@@ -187,7 +184,7 @@ public class ArtAroundDatabase {
 	}
 
 	public static Art artFromCursor(Cursor c) {
-		Art art = new Art(propl(c, Arts.UUID));
+		Art art = new Art();
 		art.slug = prop(c, Arts.SLUG);
 		art.category = prop(c, Arts.CATEGORY);
 		art.title = prop(c, Arts.TITLE);
@@ -197,7 +194,7 @@ public class ArtAroundDatabase {
 		art.latitude = propf(c, Arts.LATITUDE);
 		art.longitude = propf(c, Arts.LONGITUDE);
 
-		art.artist = new Artist(propl(c, Arts.ARTIST), prop(c, Artists.NAME));
+		art.artist = new Artist(prop(c, Arts.ARTIST), prop(c, Artists.NAME));
 
 		art.year = propi(c, Arts.YEAR);
 		art.description = prop(c, Arts.DESCRIPTION);
@@ -273,7 +270,6 @@ public class ArtAroundDatabase {
 
 	public static ContentValues artToValues(Art art) {
 		ContentValues cv = new ContentValues();
-		cv.put(Arts.UUID, art.uuid);
 		cv.put(Arts.SLUG, art.slug);
 		cv.put(Arts.TITLE, art.title);
 		cv.put(Arts.CATEGORY, art.category);

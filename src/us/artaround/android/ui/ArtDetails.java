@@ -182,7 +182,7 @@ public class ArtDetails extends MapActivity implements OverlayTapListener, Notif
 
 		ArtField artist = (ArtField) findViewById(R.id.artist);
 		artist.setLabelText(getString(R.string.label_artist));
-		if (!TextUtils.isEmpty(art.artist.name)) artist.setValueText(art.artist.name);
+		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) artist.setValueText(art.artist.name);
 
 		ArtField category = (ArtField) findViewById(R.id.category);
 		category.setLabelText(getString(R.string.label_category));

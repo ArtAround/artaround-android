@@ -39,9 +39,9 @@ public class ArtAroundProvider extends ContentProvider {
 	private static HashMap<String, String> neighborhoodsMap;
 
 	private static final int ARTS = 0;
-	private static final int ART_UUID = 1;
+	//private static final int ART_UUID = 1;
 	private static final int ARTISTS = 2;
-	private static final int ARTIST_UUID = 3;
+	//private static final int ARTIST_UUID = 3;
 	private static final int CATEGORIES = 4;
 	private static final int NEIGHBORHOODS = 5;
 
@@ -77,12 +77,12 @@ public class ArtAroundProvider extends ContentProvider {
 		switch (uriMatcher.match(uri)) {
 		case ARTS:
 			return Arts.CONTENT_TYPE;
-		case ART_UUID:
-			return Arts.CONTENT_ITEM_TYPE;
+			//		case ART_UUID:
+			//			return Arts.CONTENT_ITEM_TYPE;
 		case ARTISTS:
 			return Artists.CONTENT_TYPE;
-		case ARTIST_UUID:
-			return Artists.CONTENT_ITEM_TYPE;
+			//		case ARTIST_UUID:
+			//			return Artists.CONTENT_ITEM_TYPE;
 		case CATEGORIES:
 			return Categories.CONTENT_TYPE;
 		case NEIGHBORHOODS:
@@ -125,37 +125,37 @@ public class ArtAroundProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-		StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
+		//StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
 
 		switch (uriMatcher.match(uri)) {
 		case ARTS:
 			qb.setTables(ARTS_TABLES);
 			qb.setProjectionMap(artsMap);
 			break;
-		case ART_UUID:
-			qb.setTables(ARTS_TABLES);
-			qb.setProjectionMap(artsMap);
-
-			where.append(" AND ");
-			where.append(Arts.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // art uuid
-			qb.appendWhere(where.toString());
-			break;
+		//		case ART_UUID:
+		//			qb.setTables(ARTS_TABLES);
+		//			qb.setProjectionMap(artsMap);
+		//
+		//			where.append(" AND ");
+		//			where.append(Arts.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // art uuid
+		//			qb.appendWhere(where.toString());
+		//			break;
 		case ARTISTS:
 			qb.setTables(Artists.TABLE_NAME);
 			qb.setProjectionMap(artistsMap);
 			qb.setDistinct(true);
 			break;
-		case ARTIST_UUID:
-			qb.setTables(Artists.TABLE_NAME);
-			qb.setProjectionMap(artistsMap);
-
-			where.append(Artists.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // artist uuid
-			qb.appendWhere(where.toString());
-			break;
+		//		case ARTIST_UUID:
+		//			qb.setTables(Artists.TABLE_NAME);
+		//			qb.setProjectionMap(artistsMap);
+		//
+		//			where.append(Artists.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // artist uuid
+		//			qb.appendWhere(where.toString());
+		//			break;
 		case CATEGORIES:
 			qb.setTables(Categories.TABLE_NAME);
 			qb.setProjectionMap(categoriesMap);
@@ -285,7 +285,7 @@ public class ArtAroundProvider extends ContentProvider {
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-		StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
+		//StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
 		int count = 0;
 
 		db.beginTransaction();
@@ -294,31 +294,31 @@ public class ArtAroundProvider extends ContentProvider {
 		case ARTS:
 			count = db.update(Arts.TABLE_NAME, values, selection, selectionArgs);
 			break;
-		case ART_UUID:
-			where.append(Arts.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // art id
-			if (!TextUtils.isEmpty(selection)) {
-				where.append(" AND (");
-				where.append(selection);
-				where.append(')');
-			}
-			count = db.update(Arts.TABLE_NAME, values, where.toString(), selectionArgs);
-			break;
+		//		case ART_UUID:
+		//			where.append(Arts.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // art id
+		//			if (!TextUtils.isEmpty(selection)) {
+		//				where.append(" AND (");
+		//				where.append(selection);
+		//				where.append(')');
+		//			}
+		//			count = db.update(Arts.TABLE_NAME, values, where.toString(), selectionArgs);
+		//			break;
 		case ARTISTS:
 			count = db.update(Artists.TABLE_NAME, values, selection, selectionArgs);
 			break;
-		case ARTIST_UUID:
-			where.append(Artists.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // artist name
-			if (!TextUtils.isEmpty(selection)) {
-				where.append(" AND (");
-				where.append(selection);
-				where.append(')');
-			}
-			count = db.update(Artists.TABLE_NAME, values, where.toString(), selectionArgs);
-			break;
+		//		case ARTIST_UUID:
+		//			where.append(Artists.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // artist name
+		//			if (!TextUtils.isEmpty(selection)) {
+		//				where.append(" AND (");
+		//				where.append(selection);
+		//				where.append(')');
+		//			}
+		//			count = db.update(Artists.TABLE_NAME, values, where.toString(), selectionArgs);
+		//			break;
 		case CATEGORIES:
 			count = db.update(Categories.TABLE_NAME, values, selection, selectionArgs);
 			break;
@@ -346,8 +346,7 @@ public class ArtAroundProvider extends ContentProvider {
 	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-
-		StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
+		//StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
 		int count = 0;
 
 		db.beginTransaction();
@@ -356,31 +355,31 @@ public class ArtAroundProvider extends ContentProvider {
 		case ARTS:
 			count = db.delete(Arts.TABLE_NAME, selection, selectionArgs);
 			break;
-		case ART_UUID:
-			where.append(Arts.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // art id
-			if (!TextUtils.isEmpty(selection)) {
-				where.append(" AND (");
-				where.append(selection);
-				where.append(')');
-			}
-			count = db.delete(Arts.TABLE_NAME, where.toString(), selectionArgs);
-			break;
+		//		case ART_UUID:
+		//			where.append(Arts.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // art id
+		//			if (!TextUtils.isEmpty(selection)) {
+		//				where.append(" AND (");
+		//				where.append(selection);
+		//				where.append(')');
+		//			}
+		//			count = db.delete(Arts.TABLE_NAME, where.toString(), selectionArgs);
+		//			break;
 		case ARTISTS:
 			count = db.delete(Artists.TABLE_NAME, selection, selectionArgs);
 			break;
-		case ARTIST_UUID:
-			where.append(Artists.UUID);
-			where.append('=');
-			where.append(uri.getPathSegments().get(1)); // artist name
-			if (!TextUtils.isEmpty(selection)) {
-				where.append(" AND (");
-				where.append(selection);
-				where.append(')');
-			}
-			count = db.delete(Artists.TABLE_NAME, where.toString(), selectionArgs);
-			break;
+		//		case ARTIST_UUID:
+		//			where.append(Artists.UUID);
+		//			where.append('=');
+		//			where.append(uri.getPathSegments().get(1)); // artist name
+		//			if (!TextUtils.isEmpty(selection)) {
+		//				where.append(" AND (");
+		//				where.append(selection);
+		//				where.append(')');
+		//			}
+		//			count = db.delete(Artists.TABLE_NAME, where.toString(), selectionArgs);
+		//			break;
 		case CATEGORIES:
 			count = db.delete(Categories.TABLE_NAME, selection, selectionArgs);
 			break;
@@ -437,10 +436,10 @@ public class ArtAroundProvider extends ContentProvider {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Arts.TABLE_NAME, ARTS);
-		uriMatcher.addURI(ARTAROUND_AUTHORITY, Arts.TABLE_NAME + "/#", ART_UUID);
+		//uriMatcher.addURI(ARTAROUND_AUTHORITY, Arts.TABLE_NAME + "/#", ART_UUID);
 
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Artists.TABLE_NAME, ARTISTS);
-		uriMatcher.addURI(ARTAROUND_AUTHORITY, Artists.TABLE_NAME + "/#", ARTIST_UUID);
+		//uriMatcher.addURI(ARTAROUND_AUTHORITY, Artists.TABLE_NAME + "/#", ARTIST_UUID);
 
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Categories.TABLE_NAME, CATEGORIES);
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Neighborhoods.TABLE_NAME, NEIGHBORHOODS);
@@ -452,7 +451,6 @@ public class ArtAroundProvider extends ContentProvider {
 
 		artsMap = new HashMap<String, String>();
 		artsMap.put(Arts._ID, Arts._ID);
-		artsMap.put(Arts.UUID, Arts.TABLE_NAME + "." + Arts.UUID);
 		artsMap.put(Arts.SLUG, Arts.SLUG);
 		artsMap.put(Arts.TITLE, Arts.TITLE);
 		artsMap.put(Arts.CATEGORY, Arts.CATEGORY);

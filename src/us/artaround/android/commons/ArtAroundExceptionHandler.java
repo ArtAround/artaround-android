@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -25,6 +26,11 @@ import android.os.Environment;
 public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 
 	private final static String TAG = "ArtAround.ExceptionHandler";
+
+	private final static String DUMP_DATE_FORMAT = "yyMMdd'_'HHmm";
+	private final static String DUMP_DIR = "/dump";
+	private final static String DUMP_EXT = ".txt";
+
 	private final String POST_URL = "crash/log.json";
 	private final String PARAM_DUMP = "dump";
 	private final String PARAM_TIMESTAMP = "timestamp";
@@ -32,6 +38,7 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 	private final String PARAM_DEVICE = "device_name";
 	private final String PARAM_OS_VERSION = "os_version";
 
+	private static SimpleDateFormat df = new SimpleDateFormat(DUMP_DATE_FORMAT);
 	private static ArtAroundExceptionHandler instance;
 	private Thread.UncaughtExceptionHandler previousHandler;
 
@@ -52,7 +59,7 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 		String dumpPath = null;
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			dumpPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-			File dir = new File(dumpPath, Utils.APP_DIR + "/dump");
+			File dir = new File(dumpPath, Utils.APP_DIR + DUMP_DIR);
 			dir.mkdirs();
 			if (dir != null) {
 				dumpPath = dir.getAbsolutePath();
@@ -85,7 +92,7 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 		final String stacktrace = wr.toString();
 		err.close();
 
-		final String timestamp = new Date().toString();
+		final String timestamp = df.format(new Date());
 
 		if (cardDump && filePath != null) {
 			dumpOnCard(timestamp, stacktrace);
@@ -104,10 +111,12 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	private void dumpOnCard(final String timestamp, final String stacktrace) {
-		String fileName = timestamp + ".dump";
-		try {
+		String fileName = timestamp + DUMP_EXT;
+		File file = new File(filePath + "/" + fileName);
 
-			FileWriter filewriter = new FileWriter(filePath + "/" + fileName);
+		try {
+			file.createNewFile();
+			FileWriter filewriter = new FileWriter(file);
 			BufferedWriter bw = new BufferedWriter(filewriter);
 			bw.write("App Version:" + appVersion + "\n");
 			bw.write("Device:" + deviceName + "\n");
@@ -115,6 +124,7 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 			bw.write(stacktrace);
 			bw.flush();
 			bw.close();
+			Utils.d(TAG, "Writing crash file " + fileName);
 		}
 		catch (final IOException e) {
 			Utils.w(TAG, TAG, e);

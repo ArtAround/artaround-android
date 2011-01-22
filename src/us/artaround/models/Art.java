@@ -8,7 +8,7 @@ public class Art implements Serializable
 {
 	private static final long serialVersionUID = 7782974469872721623L;
 
-	public long uuid;
+	//public String uuid; // let's hope the slug is unique enough
 	public String slug;
 	public String category;
 	public String title;
@@ -35,9 +35,7 @@ public class Art implements Serializable
 	public transient float _distanceFromCurrentPosition;
 	public transient double _bearingFromCurrentPosition;
 
-	public Art(long uuid) {
-		this.uuid = uuid;
-	}
+	public Art() {}
 
 	@Override
 	public String toString() {

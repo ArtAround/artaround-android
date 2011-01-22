@@ -129,9 +129,7 @@ public class BaseParser {
 						ContentValues category = new ContentValues();
 						ContentValues neighborhood = new ContentValues();
 
-						long artUUID = Math.abs(UUID.randomUUID().toString().hashCode());
-						Art artObj = new Art(artUUID);
-
+						Art artObj = new Art();
 
 						while (jp.nextToken() != JsonToken.END_OBJECT) {
 							String artKey = jp.getCurrentName();
@@ -243,7 +241,7 @@ public class BaseParser {
 									art.put(Arts.ARTIST, temp.get(name).uuid);
 								}
 								else if (!TextUtils.isEmpty(name)) {
-									long artistUUID = Math.abs(UUID.randomUUID().toString().hashCode());
+									String artistUUID = UUID.randomUUID().toString();
 									Artist newArtist = new Artist(artistUUID, name);
 									artObj.artist = newArtist;
 									temp.put(name, newArtist);
@@ -268,7 +266,6 @@ public class BaseParser {
 
 						// the art has some fields
 						if (art.size() > 0) {
-							art.put(Arts.UUID, artUUID);
 							art.put(Arts.CITY, city);
 							arts.add(art);
 							
@@ -288,15 +285,15 @@ public class BaseParser {
 			Utils.d(Utils.TAG, "Parsed arts =" + arts.size());
 			Utils.d(Utils.TAG, "Parsed artists =" + artists.size());
 
-			ArtAroundProvider.contentResolver
-					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
+			//			ArtAroundProvider.contentResolver
+			//					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
 
 			ArtAroundProvider.contentResolver.bulkInsert(Artists.CONTENT_URI,
 					artists.toArray(new ContentValues[artists.size()]));
 
 			Boolean notifyMe = (Boolean) data.getAuxData()[0];
 			if (notifyMe != null && notifyMe) {
-				ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
+				//ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
 				ArtAroundProvider.contentResolver.notifyChange(Artists.CONTENT_URI, null);
 			}
 

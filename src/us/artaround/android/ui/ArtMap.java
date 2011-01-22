@@ -20,6 +20,7 @@ import us.artaround.android.commons.LocationUpdater;
 import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncUpdateListener;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.navigation.Road;
 import us.artaround.android.commons.navigation.RoadProvider;
@@ -35,7 +36,6 @@ import us.artaround.models.City;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -60,7 +60,7 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
-		LoadingTaskCallback<ParseResult>, NotifyingAsyncQueryListener {
+		LoadingTaskCallback<ParseResult>, NotifyingAsyncQueryListener, NotifyingAsyncUpdateListener {
 
 	//--- loading tasks constants ---
 	public static final int MAX_CONCURRENT_TASKS = 1;
@@ -495,29 +495,31 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void gotoArtPage(Art art) {
 		// save the current state of the map
-		startActivity(new Intent(this, ArtPage.class).putExtra("slug", art.slug));
+		startActivity(new Intent(this, ArtPage.class).putExtra("art", art));
 		finish(); // call finish to save memory because of the 2 map views
 	}
 
 	private void onFinishLoadArt() {
 		Utils.d(Utils.TAG, "Finished loading all art from the server.");
 
-		doSaveArt();
+		saveAllArt();
 		Utils.setLastCacheUpdate(this);
 
 		showLoading(false);
 		isLoadingArt.set(false);
 	}
 
-	private void doSaveArt() {
+	private void saveAllArt() {
 		int size = allArt.size();
-		Utils.d(Utils.TAG, "Updating dispersion for " + size + " arts in the db.");
+		Utils.d(Utils.TAG, "Saving " + size + " arts in the db.");
 
-		for (int i = 0; i < size; i++) {
-			Art art = allArt.get(i);
-			queryHandler.startUpdate(ContentUris.withAppendedId(Arts.CONTENT_URI, art.uuid),
-					ArtAroundDatabase.artToValues(art), Arts.SLUG + "=?", new String[] { art.slug });
-		}
+		new Thread() {
+			@Override
+			public void run() {
+				ArtAroundProvider.contentResolver.bulkInsert(Arts.CONTENT_URI, ArtAroundDatabase.artsToValues(allArt));
+			}
+
+		}.start();
 	}
 
 	private void loadArt() {
@@ -853,5 +855,11 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		isLoadingArt.set(false);
 		taskCleanup();
 		Utils.showToast(this, R.string.load_data_failure);
+	}
+
+	@Override
+	public void onUpdateComplete(int token, Object cookie, int result) {
+		Utils.d(Utils.TAG, "Update result = " + result);
+
 	}
 }
