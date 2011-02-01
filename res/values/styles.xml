@@ -3,58 +3,20 @@
 	<style
 		name="ActionBar">
 		<item
-			name="android:id">@+id/actionbar</item>
-		<item
 			name="android:padding">6dp</item>
 		<item
 			name="android:layout_width">fill_parent</item>
 		<item
-			name="android:layout_height">wrap_content</item>	
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:gravity">center_vertical</item>
 		<item
 			name="android:background">@color/action_bar_bg</item>
 	</style>
-
-	<style
-		name="ActionBarButton"
-		parent="@android:style/Widget.ImageButton">
-		<item
-			name="android:paddingLeft">15dp</item>
-		<item
-			name="android:paddingRight">15dp</item>
-		<item
-			name="android:background">@drawable/btn_bg</item>
-	</style>
-
-	<style
-		name="Button"
-		parent="@android:style/Widget.Button">
-		<item
-			name="android:padding">6dp</item>
-		<item
-			name="android:textColor">@drawable/btn_text_color</item>
-		<item
-			name="android:textSize">@dimen/text_mlarge</item>
-		<item
-			name="android:textStyle">bold</item>
-		<item
-			name="android:background">@drawable/btn_bg</item>
-	</style>
-
-	<style
-		name="ArtInfoLabel">
-		<item
-			name="android:textSize">@dimen/text_mlarge</item>
-		<item
-			name="android:textStyle">bold</item>
-		<item
-			name="android:textColor">@color/art_field_label_txt</item>
-	</style>
-
+	
 	<style
 		name="ArtInfoValue"
 		parent="@android:style/Widget.TextView">
-		<item
-			name="android:textSize">@dimen/text_mlarge</item>
 		<item
 			name="android:textColor">@color/art_field_value_txt</item>
 		<item
@@ -62,51 +24,13 @@
 		<item
 			name="android:imeOptions">actionDone</item>
 		<item
-			name="android:inputType">text</item>
-		<item
 			name="android:cursorVisible">false</item>
-		<item
-			name="android:background">@color/art_field_value_bg</item>
 		<item
 			name="android:paddingRight">5dp</item>
 		<item
+			name="android:background">@drawable/edit_text</item>
+		<item
 			name="android:gravity">top|left</item>
-	</style>
-	<style
-		name="CheckBox">
-		<item
-			name="android:button">@drawable/btn_check</item>
-		<item
-			name="android:background">@drawable/btn_check_label</item>
-	</style>
-
-	<style
-		name="CustomDialog"
-		parent="android:style/Theme.Dialog">
-		<item
-			name="android:windowNoTitle">true</item>
-		<item
-			name="android:windowBackground">@drawable/dialog_bg</item>
-	</style>
-
-	<style
-		name="TextMLarge">
-		<item
-			name="android:textSize">@dimen/text_mlarge</item>
-	</style>
-
-	<style
-		name="TextSmall">
-		<item
-			name="android:textSize">@dimen/text_small</item>
-		<item
-			name="android:textColor">@color/text_dimmed</item>
-	</style>
-
-	<style
-		name="TextMedium">
-		<item
-			name="android:textSize">@dimen/text_medium</item>
 	</style>
 
 </resources>

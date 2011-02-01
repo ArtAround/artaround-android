@@ -71,7 +71,7 @@ public class Preferences extends PreferenceActivity implements NotifyingAsyncDel
 			progress.setMessage(getString(R.string.clear_cache_progress));
 			return progress;
 		case DIALOG_CHANGE_CITY:
-			final Dialog dialog = new Dialog(this, R.style.CustomDialog);
+			final Dialog dialog = new Dialog(this);
 			dialog.setTitle(R.string.choose_city);
 			dialog.setContentView(R.layout.dialog_cities);
 

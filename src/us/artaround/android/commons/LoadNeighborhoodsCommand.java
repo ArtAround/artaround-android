@@ -3,10 +3,9 @@ package us.artaround.android.commons;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.ArtAroundException;
 
-public class LoadNeighborhoodsCommand extends ServerCallCommand {
-	public static final int token = "LoadNeighborhoodsCommand".hashCode();
+public class LoadNeighborhoodsCommand extends BackgroundCommand {
 
-	public LoadNeighborhoodsCommand() {
+	public LoadNeighborhoodsCommand(int token) {
 		super(token);
 	}
 

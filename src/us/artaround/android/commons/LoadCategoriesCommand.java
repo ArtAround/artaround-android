@@ -3,10 +3,9 @@ package us.artaround.android.commons;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.ArtAroundException;
 
-public class LoadCategoriesCommand extends ServerCallCommand {
-	public static final int token = "LoadCategoriesCommand".hashCode();
+public class LoadCategoriesCommand extends BackgroundCommand {
 
-	public LoadCategoriesCommand() {
+	public LoadCategoriesCommand(int token) {
 		super(token);
 	}
 

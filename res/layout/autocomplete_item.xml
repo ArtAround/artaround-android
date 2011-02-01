@@ -2,6 +2,4 @@
 <TextView
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:textSize="@dimen/text_mlarge"
-	android:textColor="@color/art_field_value_editing_txt" />
+	android:layout_height="fill_parent" />

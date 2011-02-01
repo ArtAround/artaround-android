@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string
-		name="app_label">ArtAround.Us</string>
+		name="app_label">The Art Around Us</string>
 
 	<string
 		name="ok">OK</string>
 	<string
-		name="cancel">No, thanks</string>
+		name="cancel">Cancel</string>
 	<string
 		name="loading">Loading...</string>
 	<string
@@ -18,13 +18,23 @@
 	<string
 		name="submit">Submit</string>
 	<string
-		name="load_data_failure">Could not retrieve data from server.</string>
+		name="submit_successful">The art has been submitted.\n Please refresh in a while to retrieve it from server.</string>
 	<string
-		name="art_gallery">Art Around Gallery</string>
+		name="edit">Edit</string>
+	<string
+		name="directions">Directions</string>
+	<string
+		name="streetview">Street View</string>
+	<string
+		name="media_source_title">Add Photo</string>
+	<string
+		name="media_source_camera">Take a new photo</string>
+	<string
+		name="media_source_gallery">Select photo from gallery</string>
 
 	<!-- Location & connectivity -->
 	<string
-		name="current_location">You are here :)</string>
+		name="current_location">Current location: </string>
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
@@ -36,7 +46,8 @@
 		name="location_update_failure">Your current location is temporary unavailable.</string>
 	<string
 		name="waiting_location">Waiting for location.</string>
-
+	<string
+		name="update_location">Please refresh your current location.</string>
 	<string
 		name="connection_failure_title">Connection failure</string>
 	<string
@@ -44,6 +55,8 @@
 		function properly.</string>
 	<string
 		name="connection_failure_ok">WiFi Options</string>
+	<string
+		name="load_data_failure">Could not retrieve data from server.</string>
 
 	<!-- Search -->
 	<string
@@ -59,7 +72,7 @@
 	<string
 		name="label_location_desc">Location Description</string>
 	<string
-		name="label_description">Art Description</string>
+		name="label_art_description">Art Description</string>
 	<string
 		name="label_ward">Ward</string>
 	<string
@@ -93,17 +106,25 @@
 	<string
 		name="choose_city">Choose city</string>
 
-	<!-- Art Map Filters -->
+	<!-- Art Map -->
 	<string
-		name="filter">Filter</string>
+		name="art_directions">Art Routes</string>
+	<string
+		name="art_nearby">Art Nearby</string>
+	<string
+		name="art_filters">Art Filters</string>
 
-	<!-- Art Page Tabs -->
+	<!-- Art Info -->
 	<string
-		name="tab_details">Details</string>
+		name="art_add_new">Add New Art</string>
 	<string
-		name="tab_gallery">Gallery</string>
+		name="art_minimap">Detailed Map</string>
 	<string
-		name="tab_comments">Comments</string>
+		name="art_comments">Comments</string>
+	<string
+		name="art_gallery">Gallery</string>
+	<string
+		name="reposition_pin">Drag the pin to your location</string>
 
 	<string
 		name="share">Share</string>
@@ -116,10 +137,9 @@
 		name="add_favorite">Add Favorite</string>
 	<string
 		name="remove_favorite">Remove Favorite</string>
-		
 	<string
-		name="art_nearby">Art Nearby</string>
-		
+		name="add_photo">Add Photo</string>
+	
 	<string
 		name="write_comment_hint">Write a Comment</string>
 

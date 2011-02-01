@@ -9,4 +9,8 @@
 		android:id="@+id/favorite_art"
 		android:icon="@drawable/ic_menu_favorite"
 		android:title="@string/add_favorite" />
+	<item
+		android:id="@+id/streetview"
+		android:icon="@drawable/ic_menu_map"
+		android:title="@string/streetview" />
 </menu>

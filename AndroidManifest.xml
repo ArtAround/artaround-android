@@ -9,14 +9,12 @@
 
 	<application
 		android:icon="@drawable/icon"
-		android:label="@string/app_label"
-		android:debuggable="true">
+		android:label="@string/app_label">
 
 		<activity
 			android:name=".android.ui.ArtMap"
 			android:label="@string/app_label"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:launchMode="singleTop" >
+			android:theme="@android:style/Theme.NoTitleBar">
 
 			<intent-filter>
 				<action
@@ -24,47 +22,32 @@
 				<category
 					android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
-
-			<intent-filter>
-				<action
-					android:name="android.intent.action.SEARCH" />
-			</intent-filter>
 		</activity>
-		
+
 		<activity
 			android:name=".android.ui.ArtFilters"
-			android:theme="@style/CustomDialog" />		
+			android:theme="@android:style/Theme.Dialog"
+			android:label="@string/art_filters"/>
 
-		<activity
-			android:name=".android.ui.ArtPage"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
-
-		<activity
-			android:name=".android.ui.ArtComments"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
-
-		<!-- It seems in order to have multiple map views in the same application, the map activities must run in different processes. -->
-		<activity
-			android:name=".android.ui.ArtDetails"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
-
-		<activity
-			android:name=".android.ui.ArtGallery"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
-			
 		<activity
 			android:name=".android.ui.ArtNearby"
 			android:theme="@android:style/Theme.NoTitleBar"
 			android:label="@string/app_label" />
 
 		<activity
+			android:name=".android.ui.ArtInfo"
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
+
+		<activity
+			android:name=".android.ui.NewArtInfo"
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
+
+		<activity
 			android:name=".android.ui.Preferences"
-			android:label="@string/app_label"
-			android:theme="@android:style/Theme" />
+			android:theme="@android:style/Theme.NoTitleBar"
+			android:label="@string/app_label" />
 
 		<provider
 			android:name=".android.database.ArtAroundProvider"

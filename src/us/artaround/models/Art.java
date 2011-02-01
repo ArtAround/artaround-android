@@ -1,7 +1,6 @@
 package us.artaround.models;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 public class Art implements Serializable
@@ -15,14 +14,14 @@ public class Art implements Serializable
 	public String city;
 	public String url;
 
-	public Date createdAt;
-	public Date updatedAt;
+	public String createdAt;
+	public String updatedAt;
 
 	public int year, ward;
 
-	public float latitude;
-	public float longitude;
-	public float mediumDistance;
+	public double latitude;
+	public double longitude;
+	public double mediumDistance;
 
 	public String locationDesc;
 	public String description;
@@ -32,29 +31,51 @@ public class Art implements Serializable
 	public List<String> photoIds;
 	public List<Comment> comments;
 
-	public transient float _distanceFromCurrentPosition;
+	public transient double _distanceFromCurrentPosition;
 	public transient double _bearingFromCurrentPosition;
 
 	public Art() {}
 
 	@Override
 	public String toString() {
-		return "Art [slug=" + slug + ", category=" + category + ", title=" + title + ", city=" + city + ", url=" + url
-				+ ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", year=" + year + ", ward=" + ward
-				+ ", latitude=" + latitude + ", longitude=" + longitude + ", mediumDistance=" + mediumDistance
-				+ ", locationDesc=" + locationDesc + ", neighborhood=" + neighborhood + ", artist=" + artist
-				+ ", photoIds=" + photoIds + "]";
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o == null || o instanceof Art) return false;
-		Art a = (Art) o;
-		return this.latitude == a.latitude && this.longitude == a.longitude;
-	}
-
-	@Override
-	public int hashCode() {
-		return (int) (latitude * 101 + latitude);
+		StringBuilder builder = new StringBuilder();
+		builder.append("Art [slug=");
+		builder.append(slug);
+		builder.append(", category=");
+		builder.append(category);
+		builder.append(", title=");
+		builder.append(title);
+		builder.append(", city=");
+		builder.append(city);
+		builder.append(", url=");
+		builder.append(url);
+		builder.append(", createdAt=");
+		builder.append(createdAt);
+		builder.append(", updatedAt=");
+		builder.append(updatedAt);
+		builder.append(", year=");
+		builder.append(year);
+		builder.append(", ward=");
+		builder.append(ward);
+		builder.append(", latitude=");
+		builder.append(latitude);
+		builder.append(", longitude=");
+		builder.append(longitude);
+		builder.append(", mediumDistance=");
+		builder.append(mediumDistance);
+		builder.append(", locationDesc=");
+		builder.append(locationDesc);
+		builder.append(", description=");
+		builder.append(description);
+		builder.append(", neighborhood=");
+		builder.append(neighborhood);
+		builder.append(", artist=");
+		builder.append(artist);
+		builder.append(", photoIds=");
+		builder.append(photoIds);
+		builder.append(", comments=");
+		builder.append(comments);
+		builder.append("]");
+		return builder.toString();
 	}
 }

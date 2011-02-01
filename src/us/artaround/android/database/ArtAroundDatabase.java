@@ -1,6 +1,5 @@
 package us.artaround.android.database;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -179,7 +178,7 @@ public class ArtAroundDatabase {
 		return cursor.getInt(cursor.getColumnIndex(name));
 	}
 
-	public static float propf(Cursor cursor, String name) {
+	public static double propd(Cursor cursor, String name) {
 		return cursor.getFloat(cursor.getColumnIndex(name));
 	}
 
@@ -191,14 +190,14 @@ public class ArtAroundDatabase {
 		art.locationDesc = prop(c, Arts.LOCATION_DESCRIPTION);
 		art.neighborhood = prop(c, Arts.NEIGHBORHOOD);
 		art.ward = propi(c, Arts.WARD);
-		art.latitude = propf(c, Arts.LATITUDE);
-		art.longitude = propf(c, Arts.LONGITUDE);
+		art.latitude = propd(c, Arts.LATITUDE);
+		art.longitude = propd(c, Arts.LONGITUDE);
 
 		art.artist = new Artist(prop(c, Arts.ARTIST), prop(c, Artists.NAME));
 
 		art.year = propi(c, Arts.YEAR);
 		art.description = prop(c, Arts.DESCRIPTION);
-		art.mediumDistance = propf(c, Arts.MEDIUM_DISTANCE);
+		art.mediumDistance = propd(c, Arts.MEDIUM_DISTANCE);
 		art.city = prop(c, Arts.CITY);
 
 		String photoIds = prop(c, Arts.PHOTO_IDS);
@@ -210,13 +209,9 @@ public class ArtAroundDatabase {
 			}
 		}
 
-		try {
-			art.createdAt = Utils.parseDate(prop(c, Arts.CREATED_AT));
-			art.updatedAt = Utils.parseDate(prop(c, Arts.UPDATED_AT));
-		}
-		catch (ParseException e) {
-			Utils.w(Utils.TAG, "SQL: Could not parse art dates.", e);
-		}
+		art.createdAt = prop(c, Arts.CREATED_AT);
+		art.updatedAt = prop(c, Arts.UPDATED_AT);
+
 		return art;
 	}
 
@@ -276,8 +271,8 @@ public class ArtAroundDatabase {
 		cv.put(Arts.NEIGHBORHOOD, art.neighborhood);
 		cv.put(Arts.LOCATION_DESCRIPTION, art.locationDesc);
 		cv.put(Arts.DESCRIPTION, art.description);
-		cv.put(Arts.CREATED_AT, Utils.formatDate(art.createdAt));
-		cv.put(Arts.UPDATED_AT, Utils.formatDate(art.updatedAt));
+		cv.put(Arts.CREATED_AT, art.createdAt);
+		cv.put(Arts.UPDATED_AT, art.updatedAt);
 		cv.put(Arts.WARD, art.ward);
 		cv.put(Arts.YEAR, art.year);
 		cv.put(Arts.LATITUDE, art.latitude);

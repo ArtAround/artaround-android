@@ -19,9 +19,11 @@ import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -33,10 +35,12 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 	private Location location;
 	private List<Art> arts;
 
-	private TextView title;
+	private Animation rotateAnim;
+	private ImageView imgRefresh;
+	private TextView tvTitle;
 	private View loading;
-	private LoadingButton btnLoading;
-	private NumberFormat distanceFormat = NumberFormat.getInstance();
+	private ImageButton btnLocation;
+	private final NumberFormat distanceFormat = NumberFormat.getInstance();
 	{
 		distanceFormat.setMaximumFractionDigits(2);
 		distanceFormat.setMinimumFractionDigits(2);
@@ -73,9 +77,9 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 	}
 
 	private void setupUi() {
-		title = (TextView) findViewById(R.id.app_label);
-		title.setText(R.string.art_nearby);
-		title.setOnClickListener(new View.OnClickListener() {
+		tvTitle = (TextView) findViewById(R.id.app_label);
+		tvTitle.setText(R.string.art_nearby);
+		tvTitle.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
@@ -83,19 +87,21 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 			}
 		});
 		
-		btnLoading = (LoadingButton) findViewById(R.id.btn_refresh);
-		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
-		btnLoading.setOnClickListener(new View.OnClickListener() {
+		btnLocation = (ImageButton) findViewById(R.id.btn_location);
+		btnLocation.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startLocationUpdate();
 			}
 		});
+
+		imgRefresh = (ImageView) findViewById(R.id.img_refresh);
+		rotateAnim = Utils.getRoateAnim(this);
 	}
 
 	private void startLocationUpdate() {
 		showLoading();
-		title.setText(getString(R.string.art_nearby));
+		tvTitle.setText(getString(R.string.art_nearby));
 		locationUpdater.updateLocation();
 	}
 
@@ -111,7 +117,6 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 		locationUpdater.updateAddress(location);
 
 		computeDistances();
-		//computeDirections();
 		displayItems();
 	}
 
@@ -153,15 +158,20 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 			loading = findViewById(R.id.stub_loading);
 		}
 		loading.setVisibility(View.VISIBLE);
-		btnLoading.showLoading(true);
 
+		btnLocation.setEnabled(false);
+		imgRefresh.setVisibility(View.VISIBLE);
+		imgRefresh.startAnimation(rotateAnim);
 	}
 	
 	private void hideLoading() {
 		if (loading != null) {
 			loading.setVisibility(View.GONE);
 		}
-		btnLoading.showLoading(false);
+
+		btnLocation.setEnabled(true);
+		imgRefresh.setVisibility(View.INVISIBLE);
+		imgRefresh.clearAnimation();
 	}
 
 	private void displayItems() {
@@ -178,7 +188,8 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Art a = arts.get(position);
-				startActivity(new Intent(ArtNearby.this, ArtPage.class).putExtra("slug", a.slug));
+				startActivity(new Intent(ArtNearby.this, ArtInfo.class).putExtra("art", a).putExtra("location",
+						location));
 			}
 		});
 	}
@@ -202,7 +213,7 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 	}
 
 	private class CustomArtAdapter extends ArrayAdapter<Art> {
-		private ArrayList<Art> data;
+		private final ArrayList<Art> data;
 
 		public CustomArtAdapter(Context context, ArrayList<Art> data) {
 			super(context, R.layout.art_nearby_item, data);
@@ -287,7 +298,7 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 	@Override
 	public void onAddressUpdate(String address) {
 		hideLoading();
-		title.setText(title.getText() + " " + address);
+		tvTitle.setText(tvTitle.getText() + " " + address);
 	}
 
 	@Override

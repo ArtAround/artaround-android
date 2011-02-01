@@ -8,26 +8,34 @@
 
 	<declare-styleable
 		name="ArtField">
-		<attr 
-			name="label_left"
+		<attr
+			name="labelLeft"
 			format="boolean" />
 		<attr
-			name="multiline"
+			name="multiLine"
 			format="boolean" />
 		<attr
-			name="minlines"
+			name="minLines"
 			format="integer" />
 		<attr
-			name="color_bg_normal"
-			format="reference" />
+			name="colorBgNormal"
+			format="reference|color" />
 		<attr
-			name="color_bg_editing"
-			format="reference" />
+			name="colorBgEditing"
+			format="reference|color" />
 		<attr
-			name="color_txt_normal"
-			format="reference" />
+			name="colorTxtNormal"
+			format="reference|color" />
 		<attr
-			name="color_txt_editing"
-			format="reference" />
+			name="colorTxtEditing"
+			format="reference|color" />
+		<attr
+			name="inputType"
+			format="enum">
+			<enum
+				name="text" value="1" />
+			<enum
+				name="number" value="2" />
+		</attr>
 	</declare-styleable>
 </resources>

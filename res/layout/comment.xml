@@ -9,20 +9,16 @@
 	<TextView
 		android:id="@+id/username"
 		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		style="@style/TextMLarge"
-		android:text="aa" />
+		android:layout_height="wrap_content" />
 
 	<TextView
 		android:id="@+id/created_at"
 		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		style="@style/TextSmall" />
+		android:layout_height="wrap_content" />
 
 	<TextView
 		android:id="@+id/text"
 		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		style="@style/TextMedium" />
+		android:layout_height="wrap_content" />
 </LinearLayout>
 

@@ -14,41 +14,41 @@
 		android:gravity="center"
 		android:text="@string/empty"
 		android:textStyle="bold"
-		android:textSize="@dimen/text_large"
 		android:textColor="@color/art_field_label_txt" />
 
 	<ListView
 		android:id="@android:id/android:list"
 		android:layout_width="fill_parent"
 		android:layout_height="0dp"
-		android:layout_weight="1" />
+		android:layout_weight="1"
+		android:scrollbarStyle="outsideOverlay"
+		android:scrollingCache="false" />
 
 	<LinearLayout
 		android:orientation="horizontal"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:gravity="center|bottom"
-		android:background="@drawable/border"
+		android:background="@color/action_bar_bg"
 		android:padding="6dp">
 
 		<EditText
 			android:id="@+id/edit_comment"
 			android:layout_width="0dp"
 			android:layout_weight="1"
-			android:layout_height="wrap_content"
-			android:minLines="1"
-			android:maxLines="2"
-			android:textSize="@dimen/text_mlarge"
+			android:layout_height="50dp"
 			android:hint="@string/write_comment_hint"
-			android:inputType="textShortMessage" />
+			android:drawableLeft="@drawable/ic_edit"
+			android:drawablePadding="6dp"
+			android:textSize="14dp"
+			android:background="@drawable/edit_text" />
 		<Button
 			android:id="@+id/btn_comment"
-			style="@style/Button"
-			android:layout_width="wrap_content"
+			android:layout_width="120dp"
 			android:layout_height="wrap_content"
-			android:layout_marginLeft="8dp"
-			android:layout_marginBottom="1px"
-			android:textStyle="bold"
-			android:text="@string/submit" />
+			android:layout_alignParentRight="true"
+			android:drawableLeft="@drawable/ic_check"
+			android:background="@drawable/btn_default_small"
+			android:text="@string/submit"
+			android:includeFontPadding="false" />
 	</LinearLayout>
 </LinearLayout>

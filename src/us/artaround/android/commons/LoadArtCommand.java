@@ -6,20 +6,14 @@ import us.artaround.android.parsers.ParseResult;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.ArtAroundException;
 
-public class LoadArtCommand extends ServerCallCommand {
-	private int page;
-	private int perPage;
+public class LoadArtCommand extends BackgroundCommand {
+	private final int page;
+	private final int perPage;
 
 	public LoadArtCommand(int page, int perPage) {
-		super();
-		this.token = UUID.randomUUID().hashCode();
+		super(0, UUID.randomUUID().toString());
 		this.page = page;
 		this.perPage = perPage;
-	}
-
-	@Override
-	public int getToken() {
-		return token;
 	}
 
 	@SuppressWarnings("unchecked")

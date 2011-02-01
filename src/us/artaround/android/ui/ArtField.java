@@ -7,6 +7,7 @@ import android.content.res.TypedArray;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -22,39 +23,37 @@ public class ArtField extends LinearLayout {
 	private String savedLabel;
 	private String savedValue;
 
-	private int orientation;
-	private int colorBgNormal, colorBgEditing;
-	private int colorTxtNormal, colorTxtEditing;
-	private int minlines;
-	private boolean multiline;
-	private boolean labelLeft;
+	// see http://developer.android.com/reference/android/widget/TextView.html#attr_android:inputType
+	private final static int INPUT_TYPE_TEXT = 1;
+	private final static int INPUT_TYPE_TEXT_MULTILINE = 131072;
 
-	private Context context;
+	private final int colorTxtNormal, colorTxtEditing;
+	private final int minLines;
+	private final int inputType;
+	private final boolean multiLine;
+
+	private final Context context;
 
 	public ArtField(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.context = context;
 
 		Resources res = context.getResources();
-
 		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ArtField);
 
-		labelLeft = a.getBoolean(R.styleable.ArtField_label_left, true);
-		multiline = a.getBoolean(R.styleable.ArtField_multiline, false);
-		minlines = a.getInt(R.styleable.ArtField_minlines, 1);
+		multiLine = a.getBoolean(R.styleable.ArtField_multiLine, false);
+		minLines = a.getInt(R.styleable.ArtField_minLines, 1);
 
-		colorBgNormal = res.getColor(a.getResourceId(R.styleable.ArtField_color_bg_normal, R.color.art_field_value_bg));
-		colorBgEditing = res.getColor(a.getResourceId(R.styleable.ArtField_color_bg_editing,
-				R.color.art_field_value_editing_bg));
-		colorTxtNormal = res.getColor(a.getResourceId(R.styleable.ArtField_color_txt_normal,
-				R.color.art_field_value_txt));
-		colorTxtEditing = res.getColor(a.getResourceId(R.styleable.ArtField_color_txt_editing,
+		colorTxtNormal = res
+				.getColor(a.getResourceId(R.styleable.ArtField_colorTxtNormal, R.color.art_field_value_txt));
+		colorTxtEditing = res.getColor(a.getResourceId(R.styleable.ArtField_colorTxtEditing,
 				R.color.art_field_value_editing_txt));
+
+		inputType = a.getInt(R.styleable.ArtField_inputType, INPUT_TYPE_TEXT);
 
 		a.recycle();
 
-		orientation = labelLeft ? HORIZONTAL : VERTICAL;
-		setOrientation(orientation);
+		setOrientation(VERTICAL);
 
 		initUi(context, attrs);
 	}
@@ -65,35 +64,27 @@ public class ArtField extends LinearLayout {
 		label = (TextView) inflater.inflate(R.layout.art_field_label, null);
 		value = (AutoCompleteTextView) inflater.inflate(R.layout.art_field_value, null);
 
-		LinearLayout.LayoutParams lparams = new LayoutParams(context, attrs);
-		LinearLayout.LayoutParams vparams = new LayoutParams(context, attrs);
-
-		if (VERTICAL == orientation) {
-			lparams.width = LayoutParams.FILL_PARENT;
-			vparams.width = LayoutParams.FILL_PARENT;
-
-		}
-		else {
-			lparams.width = 0;
-			lparams.weight = 1;
-
-			vparams.width = 0;
-			vparams.weight = 1.5F;
-		}
-
-		lparams.height = LayoutParams.WRAP_CONTENT;
-		label.setLayoutParams(lparams);
-
-		vparams.height = LayoutParams.FILL_PARENT;
-		value.setLayoutParams(vparams);
-
-		value.setSingleLine(!multiline);
-		value.setFocusable(false); // default
-		value.setMinLines(minlines);
-
 		addView(label);
 		addView(value);
 
+		LinearLayout.LayoutParams lparams = (LayoutParams) label.getLayoutParams();
+		LinearLayout.LayoutParams vparams = (LayoutParams) value.getLayoutParams();
+
+		lparams.width = LayoutParams.FILL_PARENT;
+		lparams.height = LayoutParams.WRAP_CONTENT;
+		lparams.weight = 0;
+
+		vparams.width = LayoutParams.FILL_PARENT;
+		lparams.height = LayoutParams.WRAP_CONTENT;
+		lparams.weight = 1;
+
+		label.setLayoutParams(lparams);
+		value.setLayoutParams(vparams);
+
+		value.setFocusable(false); // default
+		value.setMinLines(minLines);
+		value.setRawInputType(multiLine ? inputType | INPUT_TYPE_TEXT_MULTILINE : inputType);
+		value.setGravity(multiLine ? Gravity.TOP : Gravity.CENTER_VERTICAL);
 	}
 
 	@Override
@@ -185,8 +176,8 @@ public class ArtField extends LinearLayout {
 		}
 
 		value.setCursorVisible(isEditing);
-		value.setBackgroundColor(isEditing ? colorBgEditing : colorBgNormal);
 		value.setTextColor(isEditing ? colorTxtEditing : colorTxtNormal);
+		value.setEnabled(isEditing);
 	}
 
 	public void setAdapterItems(String[] items) {

@@ -1,6 +1,8 @@
 package us.artaround.android.parsers;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -34,6 +37,8 @@ public class BaseParser {
 	public static final int TYPE_CATEGORIES = 2;
 	public static final int TYPE_NEIGHBORHOODS = 3;
 	public static final int TYPE_COMMENTS = 4;
+	public static final int TYPE_STRING_RESPONSE = 5;
+	public static final int TYPE_NONE = 6;
 
 	private static final HashMap<String, Artist> temp = new HashMap<String, Artist>();
 	
@@ -58,6 +63,10 @@ public class BaseParser {
 		case TYPE_COMMENTS:
 			parseComments(data);
 			break;
+		case TYPE_STRING_RESPONSE:
+			parseStringResponse(data);
+			break;
+		case TYPE_NONE:
 		default:
 			//do nothing
 		}
@@ -202,25 +211,12 @@ public class BaseParser {
 							else if (CREATED_AT_KEY.equalsIgnoreCase(artKey)) {
 								String date = jp.getText().trim();
 								art.put(Arts.CREATED_AT, date);
-
-								try {
-									artObj.createdAt = Utils.parseDate(date);
-								}
-								catch (ParseException e) {
-									Utils.w(TAG, "Date not parsed correctly: " + date);
-								}
+								artObj.createdAt = date;
 							}
 							else if (UPDATED_AT_KEY.equalsIgnoreCase(artKey)) {
 								String date = jp.getText().trim();
 								art.put(Arts.UPDATED_AT, date);
-
-								try {
-									artObj.updatedAt = Utils.parseDate(date);
-								}
-								catch (ParseException e) {
-									Utils.w(TAG, "Date not parsed correctly: " + date);
-								}
-
+								artObj.updatedAt = date;
 							}
 							else if (PHOTO_IDS_KEY.equalsIgnoreCase(artKey)) {
 								List<String> photoIds = new ArrayList<String>();
@@ -487,6 +483,93 @@ public class BaseParser {
 		}
 		finally {
 			closeParser(jp);
+		}
+	}
+
+	private static void parseStringResponse(StreamData data) {
+		JsonFactory f = new JsonFactory();
+		JsonParser jp = null;
+
+		try {
+			jp = f.createJsonParser(data.getHttpData());
+
+			JsonToken token = jp.nextToken();
+			if (token != JsonToken.START_OBJECT) {
+				Utils.d(TAG,
+						"parseStringResponse(): cannot move current json token on START_OBJECT.");
+				return;
+			}
+
+			while (jp.nextToken() != JsonToken.END_OBJECT) {
+				String key = jp.getCurrentName();
+				jp.nextValue();
+
+				if (SLUG_KEY.equalsIgnoreCase(key)) {
+					data.setAuxData(jp.getText());
+				} else {
+					jp.skipChildren();
+				}
+			}
+		}
+		catch (JsonParseException e) {
+			Log.w(TAG, "parseStringResponse(): exception", e);
+		}
+		catch (IOException e) {
+			Log.w(TAG, "parseStringResponse(): exception", e);
+		}
+		finally {
+			closeParser(jp);
+		}
+
+	}
+
+	public static String writeArt(Art art) {
+		JsonFactory f = new JsonFactory();
+		StringWriter writer = new StringWriter();
+		try {
+			JsonGenerator g = f.createJsonGenerator(writer);
+			g.writeStartObject();
+			g.writeStringField(TITLE_KEY, art.title);
+			g.writeStringField(CATEGORY_KEY, art.category);
+			g.writeStringField(NEIGHBORHOOD_KEY, art.neighborhood);
+			g.writeStringField(LOCATION_DESCRIPTION_KEY, art.locationDesc);
+			g.writeStringField(DESCRIPTION_KEY, art.description);
+
+			if (art.artist != null) {
+				g.writeStringField(ARTIST_KEY, art.artist.name);
+			}
+			g.writeNumberField(WARD_KEY, art.ward);
+			g.writeNumberField(YEAR_KEY, art.year);
+
+			g.writeArrayFieldStart(LOCATION_KEY);
+			g.writeNumber(art.latitude);
+			g.writeNumber(art.longitude);
+			g.writeEndArray();
+
+			g.writeStringField(CREATED_AT_KEY, art.createdAt);
+			g.writeStringField(UPDATED_AT_KEY, art.updatedAt);
+
+			g.writeEndObject();
+			g.flush();
+			g.close();
+
+			return writer.toString();
+		}
+		catch (IOException e) {
+			Log.w(TAG, "writeArt(): exception", e);
+			return null;
+		}
+		finally {
+			closeWriter(writer);
+		}
+	}
+
+	private static final void closeWriter(Writer wr) {
+		try {
+			wr.close();
+		}
+		catch (IOException e) {
+			Log.w(TAG, "Could not close the writer.", e);
 		}
 	}
 

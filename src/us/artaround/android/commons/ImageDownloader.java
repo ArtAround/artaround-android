@@ -11,12 +11,10 @@ import java.net.URLConnection;
 
 import org.apache.http.util.ByteArrayBuffer;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 
 public class ImageDownloader {
-	public static final String SDCARD_CACHE = "Android/data/us.artaround/cache/";
 
 	private static File getFile(String name, String size) {
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
@@ -26,25 +24,25 @@ public class ImageDownloader {
 		}
 
 		File storage = Environment.getExternalStorageDirectory();
-		File dir = new File(storage.getAbsolutePath(), SDCARD_CACHE + "/" + size);
+		File dir = new File(storage.getAbsolutePath(), Utils.APP_DIR + Utils.APP_DIR_CACHE + "/" + size);
 		dir.mkdirs();
 
 		return new File(dir.getAbsolutePath(), name);
 	}
 
 	// should be called from within a background task, it performs a network call
-	public static Uri getImage(Context context, String name, String size, String url) {
-		Uri uri = quickGetImage(context, name, size);
+	public static Uri getImage(String name, String size, String url) {
+		Uri uri = quickGetImage(name, size);
 		if (uri == null) {
-			cacheImage(context, url, name, size);
-			uri = quickGetImage(context, name, size);
+			cacheImage(url, name, size);
+			uri = quickGetImage(name, size);
 		}
 		Utils.i(Utils.TAG, "Fetched image " + name + " from cache.");
 		return uri;
 	}
 
 	// will not make a network call, if file exists on disk
-	public static Uri quickGetImage(Context context, String name, String size) {
+	public static Uri quickGetImage(String name, String size) {
 		File imageFile = getFile(name, size);
 		if (imageFile == null || !imageFile.exists())
 			return null;
@@ -52,7 +50,7 @@ public class ImageDownloader {
 			return Uri.parse(imageFile.getAbsolutePath());
 	}
 
-	public static void cacheImage(Context context, String url, String name, String size) {
+	public static void cacheImage(String url, String name, String size) {
 		downloadFile(url, getFile(name, size));
 	}
 

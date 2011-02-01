@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import us.artaround.R;
+import us.artaround.android.commons.BackgroundCommand;
 import us.artaround.android.commons.LoadCategoriesCommand;
 import us.artaround.android.commons.LoadNeighborhoodsCommand;
 import us.artaround.android.commons.LoadingTask;
@@ -40,7 +41,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
 public class ArtFilters extends ListActivity implements OnItemClickListener, NotifyingAsyncQueryListener,
-		LoadingTaskCallback<Void> {
+		LoadingTaskCallback {
 	private static final String TAG = "ArtAround.ArtFilters";
 
 	public static final String[] FILTER_NAMES = { "category", "neighborhood", "artist" };
@@ -67,7 +68,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 	private int currentToken;
 	private int currentInputLength;
 
-	private LoadingTask<Void> loadCTask, loadNTask;
+	private LoadingTask loadCTask, loadNTask;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +161,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 
 		startManagingCursor(cursor);
 		boolean hasData = cursor.moveToFirst();
-		
+
 		if ((Boolean) cookie == true) {
 			Utils.d(TAG, "---> first activity run");
 			createListAdapter(cursor);
@@ -198,13 +199,12 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		Utils.d(TAG, "startServerLoad() for token " + token);
 		switch (token) {
 		case FILTER_CATEGORY:
-			loadCTask = (LoadingTask<Void>) new LoadingTask<Void>(this,
-					new LoadCategoriesCommand()).execute();
+			loadCTask = (LoadingTask) new LoadingTask(this, new LoadCategoriesCommand(FILTER_CATEGORY)).execute();
 			break;
 
 		case FILTER_NEIGHBORHOOD:
-			loadNTask = (LoadingTask<Void>) new LoadingTask<Void>(this,
-					new LoadNeighborhoodsCommand()).execute();
+			loadNTask = (LoadingTask) new LoadingTask(this, new LoadNeighborhoodsCommand(FILTER_NEIGHBORHOOD))
+					.execute();
 			break;
 		}
 	}
@@ -329,8 +329,8 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 	}
 
 	class CheckboxifiedCursorAdapter extends SimpleCursorAdapter {
-		private LayoutInflater inflater;
-		private String[] from;
+		private final LayoutInflater inflater;
+		private final String[] from;
 		private Cursor cursor;
 
 		public CheckboxifiedCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
@@ -388,34 +388,35 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 	}
 
 	@Override
-	public void beforeLoadingTask(int token) {
+	public void beforeLoadingTask(BackgroundCommand command) {
 		showLoading(true);
 	}
 
 	@Override
-	public void afterLoadingTask(int token, Void result) {
-		finishTask(token);
+	public void afterLoadingTask(BackgroundCommand command, Object result) {
+		finishTask(command.getToken());
 	}
 
 	@Override
-	public void onLoadingTaskError(int token, ArtAroundException exception) {
-		finishTask(token);
+	public void onLoadingTaskError(BackgroundCommand command, ArtAroundException exception) {
+		finishTask(command.getToken());
 	}
 
 	private void finishTask(int token) {
 		Utils.d(TAG, "finishTask() " + token);
 
-		if (token == LoadCategoriesCommand.token) {
+		switch (token) {
+		case FILTER_CATEGORY:
 			loadCTask = null;
-		}
-		if (token == LoadNeighborhoodsCommand.token) {
+			break;
+		case FILTER_NEIGHBORHOOD:
 			loadNTask = null;
+			break;
 		}
-
 		showLoading(false);
 	}
 
 	private static class Holder {
-		LoadingTask<Void> loadCTask, loadNTask;
+		LoadingTask loadCTask, loadNTask;
 	}
 }

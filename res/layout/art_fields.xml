@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:artfield="http://schemas.android.com/apk/res/us.artaround"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical"
+	android:background="@color/art_details_bg">
+
+	<ScrollView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
+		android:fadingEdgeLength="3dp">
+
+		<LinearLayout
+			android:id="@+id/fields"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:layout_weight="1"
+			android:orientation="vertical"
+			android:padding="6dp">
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/title"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/artist"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/category"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/neighborhood"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/year"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				artfield:inputType="number" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/ward"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="6dp"
+				artfield:inputType="number" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/location_description"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				artfield:minLines="2"
+				artfield:multiLine="true" />
+
+			<us.artaround.android.ui.ArtField
+				android:id="@+id/art_description"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				artfield:minLines="2"
+				artfield:multiLine="true" />
+		</LinearLayout>
+	</ScrollView>
+	
+	<RelativeLayout
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_weight="0"
+		android:layout_marginTop="12dp"
+		android:padding="6dp"
+		android:background="@color/action_bar_bg"
+		android:orientation="horizontal">
+
+		<Button
+			android:id="@+id/btn_edit"
+			android:layout_width="120dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:drawableLeft="@drawable/ic_edit"
+			android:text="@string/edit"
+			android:includeFontPadding="false"
+			android:background="@drawable/btn_default_small" />
+
+		<Button
+			android:id="@+id/btn_submit"
+			android:layout_width="120dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:drawableLeft="@drawable/ic_check"
+			android:background="@drawable/btn_default_small"
+			android:text="@string/submit"
+			android:includeFontPadding="false"
+			android:visibility="gone" />
+	</RelativeLayout>
+</LinearLayout>
+		
+
+
+
+
+

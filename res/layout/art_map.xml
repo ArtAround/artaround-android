@@ -1,46 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:orientation="vertical">
 
-	<include
-		layout="@layout/actionbar"
+	<LinearLayout
+		android:id="@+id/actionbar"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content" />
-	
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		android:background="@color/action_bar_bg"
+		android:padding="6dp">
+
+		<TextView
+			android:id="@+id/app_label"
+			android:layout_width="wrap_content"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			android:textColor="@android:color/white"
+			android:textStyle="bold"
+			android:text="@string/app_label"
+			android:singleLine="true"
+			android:ellipsize="marquee" />
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="6dp"
+			android:gravity="right">
+
+			<ImageView
+				android:id="@+id/img_refresh"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="6dp"
+				android:layout_gravity="center"
+				android:src="@drawable/ic_refresh_white"
+				android:visibility="invisible" />
+				
+			<ImageButton
+				android:id="@+id/btn_location"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="6dp"
+				android:src="@drawable/ic_location"
+				android:background="@drawable/btn_default_small" />
+			
+			<ImageButton
+				android:id="@+id/btn_filter"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="6dp"
+				android:src="@drawable/ic_filter"
+				android:background="@drawable/btn_default_small" />
+				
+			<ImageButton
+				android:id="@+id/btn_add"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ic_add"
+				android:background="@drawable/btn_default_small" />
+		</LinearLayout>
+
+	</LinearLayout>
+
 	<us.artaround.android.ui.ArtMapView
 		android:id="@+id/map_view"
 		android:layout_width="fill_parent"
-		android:layout_height="0dp"
-		android:layout_weight="1"
+		android:layout_height="fill_parent"
+		android:layout_below="@+id/actionbar"
+		android:layout_above="@+id/footerbar"
 		android:clickable="true"
 		android:apiKey="@string/maps_api" />
+		
+	<TextView
+		android:id="@+id/popup_directions"
+		android:background="@drawable/dialog_bg"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_above="@+id/footerbar"
+		android:gravity="center_vertical"
+		android:layout_marginLeft="20dp"
+		android:layout_marginRight="20dp"
+		android:layout_marginTop="20dp"
+		android:layout_centerHorizontal="true"
+		android:padding="12dp"
+		android:maxLines="10"
+		android:textColor="#FFFFFF"
+		android:text="@string/directions"
+		android:scrollbars="vertical"
+		android:visibility="invisible" />
 
-	<LinearLayout
+	<RelativeLayout
 		android:id="@+id/footerbar"
-		style="@style/ActionBar">
-
-		<Button
-			android:id="@+id/btn_filter"
-			android:layout_width="0dp"
-			android:layout_weight="1"
-			android:layout_height="wrap_content"
-			android:layout_marginRight="6dp"
-			android:drawableLeft="@drawable/ic_filter_state"
-			android:text="@string/filter"
-			android:gravity="center"
-			style="@style/Button" />
-
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:background="@color/action_bar_bg"
+		android:padding="6dp">
+		
 		<Button
 			android:id="@+id/btn_nearby"
-			android:layout_width="0dp"
-			android:layout_weight="1"
+			android:layout_width="120dp"
 			android:layout_height="wrap_content"
-			android:drawableLeft="@drawable/ic_pin_small_state"
+			android:layout_margin="0dp"
 			android:text="@string/art_nearby"
-			style="@style/Button" />
-	</LinearLayout>
+			android:includeFontPadding="false"
+			android:drawableLeft="@drawable/ic_nearby"
+			android:background="@drawable/btn_default_small" />
 
-</LinearLayout>
+		<Button
+			android:id="@+id/btn_directions"
+			android:layout_width="120dp"
+			android:layout_height="wrap_content"
+			android:layout_margin="0dp"
+			android:layout_alignParentRight="true"
+			android:text="@string/art_directions"
+			android:includeFontPadding="false"
+			android:drawableLeft="@drawable/ic_directions"
+			android:background="@drawable/btn_default_small" />
+		
+	</RelativeLayout>
+
+</RelativeLayout>

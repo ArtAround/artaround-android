@@ -1,4 +1,4 @@
-#Sat Nov 06 16:30:41 EET 2010
+#Sat Jan 22 21:55:10 EET 2011
 eclipse.preferences.version=1
 editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
 formatter_profile=_ArtAround
@@ -24,7 +24,7 @@ sp_cleanup.make_local_variable_final=false
 sp_cleanup.make_parameters_final=false
 sp_cleanup.make_private_fields_final=true
 sp_cleanup.make_type_abstract_if_missing_method=false
-sp_cleanup.make_variable_declarations_final=false
+sp_cleanup.make_variable_declarations_final=true
 sp_cleanup.never_use_blocks=false
 sp_cleanup.never_use_parentheses_in_expressions=true
 sp_cleanup.on_save_use_additional_actions=true

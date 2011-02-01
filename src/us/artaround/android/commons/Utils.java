@@ -1,12 +1,12 @@
 package us.artaround.android.commons;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -22,18 +22,17 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.location.Location;
+import android.net.Uri;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.widget.TabHost;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -42,9 +41,12 @@ public class Utils {
 	public static final String TAG = "ArtAround";
 	public static final String STR_SEP = ",";
 	public static final String NL = "\n";
+	public static final String DNL = "\n\n";
 	public static final String USER_AGENT = "us.artaround";
 
 	public static final String APP_DIR = "Android/data/us.artaround";
+	public static final String APP_DIR_CACHE = "/cache";
+	public static final String APP_NAME = "ArtAround";
 
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int DEFAULT_CITY_CODE = 0; // Washington, DC
@@ -56,19 +58,30 @@ public class Utils {
 	public static final String KEY_SEND_CRASH_ONLINE = "send_crash_online";
 
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
-	public static final SimpleDateFormat df = new SimpleDateFormat(Utils.DATE_FORMAT);
+	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(Utils.DATE_FORMAT);
+	public static final SimpleDateFormat titleDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
+
+	public static final NumberFormat coordinateFormatter = NumberFormat.getInstance();
+	{
+		coordinateFormatter.setMaximumFractionDigits(4);
+	}
 
 	public static final int TIMEOUT = 30000; // 30 seconds
-	public static float E6 = 1000000;
 
 	public static final boolean DEBUG_MODE = true;
 
 	public static String appVersion;
 
-	private static Method setView = null;
+	//	private static final int OUTPUT_X = 800;
+	//	private static final int OUTPUT_Y = 600;
+	private static final int ASPECT_X = 1;
+	private static final int ASPECT_Y = 1;
+	private static final boolean SCALE = true;
+	private static final boolean FACE_DETECTION = true;
+	private static final String OUTPUT_FORMAT = Bitmap.CompressFormat.JPEG.toString();
 
 	public static int floatE6(float f) {
-		return (int) ((int) f * E6);
+		return (int) ((int) f * 1E6);
 	}
 
 	public static GeoPoint geo(Location location) {
@@ -76,7 +89,7 @@ public class Utils {
 	}
 
 	public static GeoPoint geo(float latitude, float longitude) {
-		return new GeoPoint((int) (latitude * E6), (int) (longitude * E6));
+		return new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6));
 	}
 
 	public static GeoPoint geo(double latitude, double longitude) {
@@ -87,69 +100,17 @@ public class Utils {
 		if (date == null) {
 			return null;
 		}
-		return df.format(date);
+		return dateFormatter.format(date);
 	}
 
 	public static Date parseDate(String date) throws ParseException {
 		if (TextUtils.isEmpty(date)) {
 			return new Date();
 		}
-		return df.parse(date);
+		return dateFormatter.parse(date);
 	}
 
-	/*
-	 * Using reflection to support custom tabs for 1.6 and up, and default to
-	 * regular tabs for 1.5.
-	 */
-	static {
-		checkCustomTabs();
-	}
-
-	// check for existence of TabHost.TabSpec#setIndicator(View)
-	private static void checkCustomTabs() {
-		try {
-			setView = TabHost.TabSpec.class.getMethod("setIndicator", new Class[] { View.class });
-		}
-		catch (NoSuchMethodException nsme) {}
-	}
-
-	public static void addTab(Activity activity, TabHost tabHost, String tag, Intent intent, String name,
-			Drawable backup) {
-		TabHost.TabSpec tab = tabHost.newTabSpec(tag).setContent(intent);
-
-		if (setView != null) {
-			try {
-				setView.invoke(tab, tabView(activity, name));
-			}
-			catch (IllegalAccessException ie) {
-				throw new RuntimeException(ie);
-			}
-			catch (InvocationTargetException ite) {
-				Throwable cause = ite.getCause();
-
-				if (cause instanceof RuntimeException)
-					throw (RuntimeException) cause;
-				else if (cause instanceof Error)
-					throw (Error) cause;
-				else
-					throw new RuntimeException(ite);
-			}
-		}
-		else
-			// default 1.5 tabs
-			tab.setIndicator(name, backup);
-
-		tabHost.addTab(tab);
-	}
-
-	public static View tabView(Context context, String name) {
-		LayoutInflater inflater = LayoutInflater.from(context);
-		View tab = inflater.inflate(R.layout.tab, null);
-		((TextView) tab.findViewById(R.id.tab_name)).setText(name);
-		return tab;
-	}
-
-	public static Animation getLoadingAni(Context context) {
+	public static Animation getRoateAnim(Context context) {
 		Animation rotate = new RotateAnimation(0, 360, RotateAnimation.RELATIVE_TO_SELF, 0.5f,
 				RotateAnimation.RELATIVE_TO_SELF, 0.5f);
 		rotate.setDuration(800);
@@ -160,6 +121,10 @@ public class Utils {
 
 	public static void showToast(Context context, int msgId) {
 		Toast.makeText(context, msgId, Toast.LENGTH_LONG).show();
+	}
+
+	public static void showToast(Context context, String msg) {
+		Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 	}
 
 	public static void d(String tag, String message) {
@@ -270,4 +235,58 @@ public class Utils {
 		}
 		Thread.setDefaultUncaughtExceptionHandler(ArtAroundExceptionHandler.getInstance(true, false, appVersion));
 	}
+
+	public static File getCacheFolder() {
+		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+			File cacheFolder = new File(storagePath, APP_DIR + APP_DIR_CACHE);
+			cacheFolder.mkdirs();
+			return cacheFolder;
+		}
+		else
+			return null;
+	}
+
+	public static Intent getCropImageIntent(Intent intent, Uri output) {
+		intent.putExtra("crop", "true");
+		intent.putExtra("aspectX", ASPECT_X);
+		intent.putExtra("aspectY", ASPECT_Y);
+		//intent.putExtra("outputX", OUTPUT_X);
+		//intent.putExtra("outputY", OUTPUT_Y);
+		intent.putExtra("scale", SCALE);
+		intent.putExtra("noFaceDetection", !FACE_DETECTION);
+		intent.putExtra("outputFormat", OUTPUT_FORMAT);
+		intent.putExtra(MediaStore.EXTRA_OUTPUT, output);
+		return intent;
+	}
+
+	public static Intent getStreetViewIntent(double latitude, double longitude) {
+		// 1
+		// yaw - direction you look
+		// pitch - degrees from level where up is negative
+		// zoom - is a zoom multiplier
+		// mz - map zoom
+		return new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("google.streetview:cbll=" + latitude + ","
+				+ longitude + "&cbp=1,99.56,,1,-5.27&mz=21"));
+	}
+
+	public static Uri getNewPhotoUri() {
+		String photoName = Utils.APP_NAME + "_" + Utils.titleDateFormatter.format(new Date()) + ".jpg";
+		File cacheFolder = Utils.getCacheFolder();
+		if (cacheFolder != null) {
+			return Uri.fromFile(new File(cacheFolder, photoName));
+		}
+		return null;
+	}
+
+	public static Uri getCroppedPhotoUri() {
+		String photoName = Utils.APP_NAME + "_cropped.jpg";
+		File cacheFolder = Utils.getCacheFolder();
+		if (cacheFolder != null) {
+			return Uri.fromFile(new File(cacheFolder, photoName));
+		}
+		return null;
+	}
+
 }

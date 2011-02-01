@@ -1,29 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:padding="6dp"
 	android:background="@color/art_details_bg">
 
-	<TextView
+	<android.widget.Gallery
+		android:id="@+id/gallery"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/art_gallery"
-		android:textSize="@dimen/text_large"
-		android:textStyle="bold"
-		android:textColor="@color/art_field_label_txt" />
+		android:layout_margin="10dp" />
 
-	<Gallery
-		android:id="@+id/gallery1"
+	<RelativeLayout
+		android:id="@+id/imgView_wrap"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content" />
-		
-	<ImageView
-		android:id="@+id/image1"
-		android:layout_width="@dimen/photo_width"
-		android:layout_height="@dimen/photo_height"
-		android:scaleType="fitXY" />
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/gallery"
+		android:layout_margin="10dp"
+		android:background="@drawable/border">
 
-</LinearLayout>
+		<TextView
+			android:id="@+id/empty"
+			android:layout_width="fill_parent"
+			android:layout_height="200dp"
+			android:layout_gravity="center"
+			android:gravity="center"
+			android:textStyle="bold"
+			android:text="@string/empty" />
+
+		<ImageView
+			android:id="@+id/gallery_imageView"
+			android:layout_width="300dp"
+			android:layout_height="200dp"
+			android:scaleType="fitXY" />
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:id="@+id/footerbar"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:background="@color/action_bar_bg"
+		android:padding="6dp">
+
+		<Button
+			android:id="@+id/btn_add"
+			android:layout_width="120dp"
+			android:layout_height="wrap_content"
+			android:layout_margin="0dp"
+			android:text="@string/media_source_title"
+			android:includeFontPadding="false"
+			android:drawableLeft="@drawable/ic_add"
+			android:background="@drawable/btn_default_small" />
+	</RelativeLayout>
+
+</RelativeLayout>

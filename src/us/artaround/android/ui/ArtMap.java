@@ -1,7 +1,5 @@
 package us.artaround.android.ui;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
+import us.artaround.android.commons.BackgroundCommand;
 import us.artaround.android.commons.LoadArtCommand;
 import us.artaround.android.commons.LoadingTask;
 import us.artaround.android.commons.LoadingTask.LoadingTaskCallback;
@@ -22,10 +21,16 @@ import us.artaround.android.commons.NotifyingAsyncQueryHandler;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncUpdateListener;
 import us.artaround.android.commons.Utils;
-import us.artaround.android.commons.navigation.Road;
-import us.artaround.android.commons.navigation.RoadProvider;
+import us.artaround.android.commons.navigation.Navigation;
+import us.artaround.android.commons.navigation.Navigation.NavigationListener;
+import us.artaround.android.commons.navigation.Placemark;
+import us.artaround.android.commons.navigation.Route;
+import us.artaround.android.commons.navigation.RouteLineOverlay;
 import us.artaround.android.database.ArtAroundDatabase;
+import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
+import us.artaround.android.database.ArtAroundDatabase.Categories;
+import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.parsers.ParseResult;
 import us.artaround.android.services.ServiceFactory;
@@ -35,7 +40,8 @@ import us.artaround.models.ArtDispersionComparator;
 import us.artaround.models.City;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
+import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -47,12 +53,20 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
+import android.text.format.Time;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -60,7 +74,8 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
-		LoadingTaskCallback<ParseResult>, NotifyingAsyncQueryListener, NotifyingAsyncUpdateListener {
+		LoadingTaskCallback, NotifyingAsyncQueryListener, NotifyingAsyncUpdateListener, OnTimeSetListener,
+		NavigationListener {
 
 	//--- loading tasks constants ---
 	public static final int MAX_CONCURRENT_TASKS = 1;
@@ -72,25 +87,30 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private static final int ZOOM_MIN_LEVEL = 8;
 	private static final int ZOOM_MAX_LEVEL = ZOOM_MIN_LEVEL + MAX_PINS_PER_ZOOM.length;
 
+	private static final int AVG_SPEED = 3000; // 3km/h
+	private static final long AVG_VISIT_TIME = 600000; // 10 min
+	private static final int HOUR = 3600000;
+
 	//--- activity requests ids ---
 	public static final int REQUEST_FILTER = 0;
 
 	//--- dialog ids ---
-	private static final int DIALOG_ART_INFO = 0;
 	private static final int DIALOG_LOCATION_SETTINGS = 1;
 	private static final int DIALOG_WIFI_FAIL = 2;
-	private static final int DIALOG_LOADING = 3;
+	private static final int DIALOG_TIME_PICKER = 3;
 
+	private Animation rotateAnim, inAnim, outAnim;
 	private ArtMapView mapView;
-	private CurrentOverlay currentOverlay;
 	private ArtBalloonsOverlay artOverlay;
+	private ArtBalloonsOverlay routeOverlay;
 	private HashMap<Art, OverlayItem> items;
 
-	private LoadingButton btnAdd, btnLoading;
-	private Button btnNearby, btnFilter;
+	private ImageButton btnLocation, btnAdd, btnFilter;
+	private ImageView imgRefresh;
+	private Button btnNearby, btnDirections;
+	private TextView tvDirections;
 
-	private ArrayList<Art> allArt;
-	private ArrayList<Art> filteredArt;
+	private ArrayList<Art> allArt, filteredArt, roadArt;
 	private int nrPinsToDisplayAtThisZoomLevel;
 	private HashMap<Integer, HashSet<String>> filters;
 
@@ -98,37 +118,19 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private boolean toBeRessurected;
 	private AtomicBoolean isLoadingArt;
 
-	private City city;
-
 	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
-	private Location location;
+	private Location currentLocation;
+	private City currentCity;
 
-	private Map<Integer, LoadingTask<ParseResult>> runningTasks;
+	private Map<String, LoadingTask> runningTasks;
 	private AtomicInteger tasksCount;
 	private AtomicInteger tasksLeft;
 
-	private Road road;
-
-	//FIXME make sure the give pin is not removed by the zooming filter
-	//TODO compute the correct zoom to display all the road
-	private Runnable updateRoadRunner = new Runnable() {
-		@Override
-		public void run() {
-			RoadOverlay roadOverlay = new RoadOverlay(road, mapView);
-			GeoPoint middle = roadOverlay.getMoveTo();
-
-			List<Overlay> ov = mapView.getOverlays();
-			ov.clear();
-			ov.add(roadOverlay);
-			ov.add(artOverlay);
-			ov.add(currentOverlay);
-
-			mapView.getController().animateTo(middle);
-			mapView.getController().setZoom(mapView.getMaxZoomLevel() - 2); //FIXME magic number
-			mapView.invalidate();
-		}
-	};
+	private long routeTotalTime;
+	private List<GeoPoint> routePoints;
+	private int routePosition;
+	private Navigation navigation;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -142,39 +144,32 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		initVars();
 		restoreState();
 		setupUi();
-		handleIntent(getIntent());
-
-		// Google Maps needs WIFI enabled!!
-		//checkWifiStatus();
+		changeCity();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		setupState();
-		handleIntent(getIntent());
 	}
 
 	private void changeCity() {
-		City current = ServiceFactory.getCurrentCity();
-
-		if (current != city) {
-			taskCleanup();
-			showLoading(false);
-
-			allArt.clear();
-			clearPins();
-
-			city = ServiceFactory.getCurrentCity();
-			centerMapOnCurrentLocation();
-		}
+		currentCity = ServiceFactory.getCurrentCity();
+		Utils.d(Utils.TAG, "Change city to " + currentCity.name);
+		centerMapOnCurrentLocation();
 	}
 
 	private void setupState() {
 		Utils.d(Utils.TAG, "Setup state...");
 
-		changeCity();
-
+		City newCurrent = ServiceFactory.getCurrentCity();
+		if (newCurrent.code != currentCity.code) {
+			taskCleanup();
+			showLoading(false);
+			allArt.clear();
+			clearPins();
+			changeCity();
+		}
 
 		if (isLoadingFromServer()) {
 			showLoading(true);
@@ -182,8 +177,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		}
 		else {
 			if (Utils.isCacheOutdated(this)) {
+				Utils.d(Utils.TAG, "Cache is outdated!");
 				allArt.clear();
 				clearPins();
+				clearCache();
 			}
 
 			if (allArt.isEmpty()) {
@@ -208,15 +205,23 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		if (!toBeRessurected) {
 			taskCleanup();
+			finish();
 		}
+	}
+
+	private void clearCache() {
+		queryHandler.startDelete(Arts.CONTENT_URI, null, null);
+		queryHandler.startDelete(Artists.CONTENT_URI, null, null);
+		queryHandler.startDelete(Categories.CONTENT_URI, null, null);
+		queryHandler.startDelete(Neighborhoods.CONTENT_URI, null, null);
 	}
 
 	private void taskCleanup() {
 		Utils.d(Utils.TAG, "Stopping all current tasks.");
 
-		Iterator<LoadingTask<ParseResult>> it = runningTasks.values().iterator();
+		Iterator<LoadingTask> it = runningTasks.values().iterator();
 		while (it.hasNext()) {
-			LoadingTask<ParseResult> task = it.next();
+			LoadingTask task = it.next();
 			task.cancel(true);
 			it.remove();
 		}
@@ -224,65 +229,44 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		tasksCount.set(0);
 	}
 
-	private void handleIntent(Intent intent) {
-		if (intent.hasExtra("toLat") && intent.hasExtra("toLong")) {
-
-			final float toLat = intent.getFloatExtra("toLat", 0);
-			final float toLong = intent.getFloatExtra("toLong", 0);
-			final float fromLat = (float) (location != null ? location.getLatitude() : city.center.getLatitudeE6()
-					/ Utils.E6);
-			final float fromLong = (float) (location != null ? location.getLongitude() : city.center.getLongitudeE6()
-					/ Utils.E6);
-
-			new Thread() {
-				@Override
-				public void run() {
-					String url = RoadProvider.getUrl(fromLat, fromLong, toLat, toLong);
-					InputStream is = Utils.getConnection(url);
-					road = RoadProvider.getRoad(is);
-					try {
-						is.close();
-					}
-					catch (IOException e) {
-						// ignore
-					}
-					runOnUiThread(updateRoadRunner);
-				}
-			}.start();
-		}
-	}
-
 	private void initVars() {
 		toBeRessurected = false;
-
 		ServiceFactory.init(getApplicationContext());
-		city = ServiceFactory.getCurrentCity();
-
 		locationUpdater = new LocationUpdater(this);
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
+		routePoints = new ArrayList<GeoPoint>();
+		navigation = new Navigation(true);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void restoreState() {
 		Holder holder = (Holder) getLastNonConfigurationInstance();
+
 		if (holder == null) {
-			newZoom = ZOOM_DEFAULT_LEVEL;
+			Intent i = getIntent();
+			newZoom = i.getIntExtra("newZoom", ZOOM_DEFAULT_LEVEL);
+			currentLocation = i.getParcelableExtra("location");
+			filters = (HashMap<Integer, HashSet<String>>) i.getSerializableExtra("filters");
+			if (filters == null) {
+				filters = new HashMap<Integer, HashSet<String>>();
+			}
+
 			allArt = new ArrayList<Art>();
 			filteredArt = new ArrayList<Art>();
-			filters = new HashMap<Integer, HashSet<String>>();
 			tasksLeft = new AtomicInteger(0);
 			tasksCount = new AtomicInteger(0);
-			runningTasks = Collections.synchronizedMap(new HashMap<Integer, LoadingTask<ParseResult>>());
+			runningTasks = Collections.synchronizedMap(new HashMap<String, LoadingTask>());
 			isLoadingArt = new AtomicBoolean(false);
 		}
 		else {
-			newZoom = holder.zoom;
+			newZoom = holder.newZoom;
 			allArt = holder.allArt;
 			filteredArt = holder.artFiltered;
 			filters = holder.filters;
 			tasksLeft = holder.tasksLeft;
 			tasksCount = holder.tasksCount;
 			runningTasks = holder.runningArtTasks;
-			location = holder.location;
+			currentLocation = holder.location;
 			isLoadingArt = holder.isLoadingArt;
 		}
 
@@ -298,18 +282,34 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void setupActionBarUi() {
-		btnLoading = (LoadingButton) findViewById(R.id.btn_1);
-		btnLoading.setImageResource(R.drawable.ic_btn_refresh);
-		btnLoading.setOnClickListener(new View.OnClickListener() {
+		imgRefresh = (ImageView) findViewById(R.id.img_refresh);
+
+		btnLocation = (ImageButton) findViewById(R.id.btn_location);
+		btnLocation.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				setupState();
 				startLocationUpdate();
 			}
 		});
 
-		btnAdd = (LoadingButton) findViewById(R.id.btn_2);
-		btnAdd.setImageResource(R.drawable.ic_btn_add);
+		btnFilter = (ImageButton) findViewById(R.id.btn_filter);
+		btnFilter.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startActivityForResult(new Intent(ArtMap.this, ArtFilters.class).putExtra("filters", filters),
+						REQUEST_FILTER);
+			}
+		});
+
+		btnAdd = (ImageButton) findViewById(R.id.btn_add);
+		btnAdd.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				gotoNewArtPage();
+			}
+		});
+
+		rotateAnim = Utils.getRoateAnim(this);
 	}
 
 	private void setupFooterBarUi() {
@@ -321,14 +321,62 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			}
 		});
 
-		btnFilter = (Button) findViewById(R.id.btn_filter);
-		btnFilter.setOnClickListener(new View.OnClickListener() {
+		btnDirections = (Button) findViewById(R.id.btn_directions);
+		btnDirections.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startActivityForResult(new Intent(ArtMap.this, ArtFilters.class).putExtra("filters", filters),
-						REQUEST_FILTER);
+				showDialog(DIALOG_TIME_PICKER);
 			}
 		});
+
+		tvDirections = (TextView) findViewById(R.id.popup_directions);
+		tvDirections.setMovementMethod(new ScrollingMovementMethod());
+		tvDirections.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				hideDirectionsPopup();
+			}
+		});
+
+		outAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_out);
+		outAnim.setAnimationListener(new AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				tvDirections.setVisibility(View.VISIBLE);
+			}
+		});
+
+		inAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_in);
+		inAnim.setAnimationListener(new AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				tvDirections.setVisibility(View.INVISIBLE);
+			}
+		});
+	}
+
+	private void showDirectionsPopup() {
+		if (tvDirections.getVisibility() == View.INVISIBLE) {
+			tvDirections.startAnimation(outAnim);
+		}
+	}
+
+	private void hideDirectionsPopup() {
+		if (tvDirections.getVisibility() == View.VISIBLE) {
+			tvDirections.startAnimation(inAnim);
+		}
 	}
 
 	private void setupMapUi() {
@@ -340,19 +388,18 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 		items = new HashMap<Art, OverlayItem>();
 		artOverlay = new ArtBalloonsOverlay(getResources().getDrawable(R.drawable.ic_pin), this, mapView);
-		currentOverlay = new CurrentOverlay(this, R.drawable.ic_pin_current);
-
-		List<Overlay> overlays = mapView.getOverlays();
-		overlays.add(artOverlay);
-		overlays.add(currentOverlay);
-
-		centerMapOnCurrentLocation();
+		mapView.getOverlays().add(artOverlay);
 	}
 
 	private void showLoading(boolean loading) {
-		btnLoading.showLoading(loading);
-		btnNearby.setEnabled(!loading);
-		btnFilter.setEnabled(!loading);
+		if (loading) {
+			imgRefresh.setVisibility(View.VISIBLE);
+			imgRefresh.startAnimation(rotateAnim);
+		}
+		else {
+			imgRefresh.clearAnimation();
+			imgRefresh.setVisibility(View.INVISIBLE);
+		}
 	}
 
 	private void clearPins() {
@@ -361,7 +408,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void attachTasksCallback() {
-		for (LoadingTask<ParseResult> task : runningTasks.values()) {
+		for (LoadingTask task : runningTasks.values()) {
 			if (task.getStatus() == AsyncTask.Status.RUNNING) {
 				task.attachCallback(this); // pass the new context
 			}
@@ -369,7 +416,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void detachTasksCallback() {
-		for (LoadingTask<ParseResult> task : runningTasks.values()) {
+		for (LoadingTask task : runningTasks.values()) {
 			if (task.getStatus() == AsyncTask.Status.RUNNING) {
 				task.detachCallback();
 			}
@@ -386,9 +433,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		holder.tasksCount = tasksCount;
 		holder.allArt = allArt;
 		holder.artFiltered = filteredArt;
-		holder.zoom = newZoom;
+		holder.newZoom = newZoom;
 		holder.filters = filters;
-		holder.location = location;
+		holder.location = currentLocation;
 		holder.isLoadingArt = isLoadingArt;
 
 		detachTasksCallback();
@@ -405,8 +452,6 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	protected Dialog onCreateDialog(int id) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		switch (id) {
-		case DIALOG_ART_INFO:
-			break;
 		case DIALOG_LOCATION_SETTINGS:
 			builder.setTitle(getString(R.string.location_suggest_settings_title));
 			builder.setMessage(getString(R.string.location_suggest_settings_msg));
@@ -441,11 +486,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 				}
 			});
 			break;
-		case DIALOG_LOADING:
-			ProgressDialog progress = new ProgressDialog(this);
-			progress.setCancelable(false);
-			progress.setMessage(getString(R.string.loading));
-			return progress;
+		case DIALOG_TIME_PICKER:
+			Time t = new Time();
+			t.setToNow();
+			return new TimePickerDialog(this, this, t.hour, t.minute, true);
 		}
 		return builder.create();
 	}
@@ -495,7 +539,21 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void gotoArtPage(Art art) {
 		// save the current state of the map
-		startActivity(new Intent(this, ArtPage.class).putExtra("art", art));
+		Intent iArt = new Intent(this, ArtInfo.class);
+		iArt.putExtra("art", art).putExtra("location", currentLocation);
+		iArt.putExtra("newZoom", newZoom);
+		iArt.putExtra("filters", filters);
+		startActivity(iArt);
+		finish(); // call finish to save memory because of the 2 map views
+	}
+
+	private void gotoNewArtPage() {
+		// save the current state of the map
+		Intent iArt = new Intent(this, NewArtInfo.class);
+		iArt.putExtra("location", currentLocation);
+		iArt.putExtra("newZoom", newZoom);
+		iArt.putExtra("filters", filters);
+		startActivity(iArt);
 		finish(); // call finish to save memory because of the 2 map views
 	}
 
@@ -532,7 +590,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private void loadArtFromDatabase() {
 		Utils.d(Utils.TAG, "Starting querying for arts from db...");
 		queryHandler.startQuery(-1, null, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
-				ArtAroundDatabase.ARTS_WHERE, new String[] { city.name }, null);
+				ArtAroundDatabase.ARTS_WHERE, new String[] { currentCity.name }, null);
 	}
 
 	private boolean isLoadingFromServer() {
@@ -549,8 +607,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		startTask(1);
 	}
 
-	private void loadMoreArtFromServer(ParseResult result, Integer token) {
-		runningTasks.remove(token);
+	private void loadMoreArtFromServer(ParseResult result, String id) {
+		runningTasks.remove(id);
 
 		if (result.page == 1) {
 			tasksLeft.set((int) (Math.ceil((double) (result.totalCount - result.count) / (double) result.perPage)));
@@ -575,9 +633,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void startTask(int page) {
 		LoadArtCommand comm = new LoadArtCommand(page, ARTS_PER_PAGE);
-		LoadingTask<ParseResult> task = new LoadingTask<ParseResult>(this, comm);
+		LoadingTask task = new LoadingTask(this, comm);
 		task.execute();
-		runningTasks.put(comm.getToken(), task);
+		runningTasks.put(comm.getId(), task);
 	}
 
 	private void processLoadedArt(List<Art> art) {
@@ -746,12 +804,19 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		Utils.showToast(this, R.string.waiting_location);
 		showLoading(true);
 		btnNearby.setEnabled(false);
+		btnDirections.setEnabled(false);
+		btnLocation.setEnabled(false);
+		btnFilter.setEnabled(false);
 		locationUpdater.updateLocation();
 	}
 
 	private void endLocationUpdate() {
+		setupState();
 		showLoading(false);
 		btnNearby.setEnabled(true);
+		btnDirections.setEnabled(true);
+		btnLocation.setEnabled(true);
+		btnFilter.setEnabled(true);
 		locationUpdater.removeUpdates();
 	}
 
@@ -765,22 +830,21 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void centerMapOnCurrentLocation() {
-		final GeoPoint geo = location != null ? Utils.geo(location) : city.center;
+		final GeoPoint geo = currentLocation != null ? Utils.geo(currentLocation) : currentCity.center;
 		mapView.getController().animateTo(geo);
-		currentOverlay.setGeoPoint(geo);
 		Utils.d(Utils.TAG, "Centered map on " + geo);
 	}
 
 	@Override
 	public void onLocationUpdate(Location location) {
-		this.location = location;
+		this.currentLocation = location;
 		endLocationUpdate();
 		centerMapOnCurrentLocation();
 	}
 
 	@Override
 	public void onLocationUpdateError() {
-		Log.w(Utils.TAG, "Timeout!");
+		Utils.w(Utils.TAG, "Timeout!");
 
 		endLocationUpdate();
 		Utils.showToast(this, R.string.location_update_failure);
@@ -797,7 +861,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		if (cursor == null) {
 			showLoading(false);
 			isLoadingArt.set(false);
-			Log.w(Utils.TAG, "Something is wrong, returned art cursor is null!");
+			Utils.w(Utils.TAG, "Something is wrong, returned art cursor is null!");
 			return;
 		}
 
@@ -818,19 +882,19 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private static class Holder {
 		public AtomicBoolean isLoadingArt;
 		public Location location;
-		int zoom;
-		Map<Integer, LoadingTask<ParseResult>> runningArtTasks;
+		int newZoom;
+		Map<String, LoadingTask> runningArtTasks;
 		AtomicInteger tasksCount, tasksLeft;
-		ArrayList<Art> allArt;
-		ArrayList<Art> artFiltered;
+		ArrayList<Art> allArt, artFiltered;
 		HashMap<Integer, HashSet<String>> filters;
 	}
 
 	@Override
-	public void beforeLoadingTask(int token) {}
+	public void beforeLoadingTask(BackgroundCommand command) {}
 
 	@Override
-	public void afterLoadingTask(int token, ParseResult result) {
+	public void afterLoadingTask(BackgroundCommand command, Object object) {
+		ParseResult result = (ParseResult) object;
 		Utils.d(Utils.TAG, "Result of task is: " + result);
 
 		if (result == null) {
@@ -846,11 +910,11 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			onFinishLoadArt();
 		}
 
-		loadMoreArtFromServer(result, token);
+		loadMoreArtFromServer(result, command.getId());
 	}
 
 	@Override
-	public void onLoadingTaskError(int token, ArtAroundException exception) {
+	public void onLoadingTaskError(BackgroundCommand command, ArtAroundException exception) {
 		showLoading(false);
 		isLoadingArt.set(false);
 		taskCleanup();
@@ -860,6 +924,162 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	@Override
 	public void onUpdateComplete(int token, Object cookie, int result) {
 		Utils.d(Utils.TAG, "Update result = " + result);
-
 	}
+
+	@Override
+	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+		Time t = new Time();
+		t.setToNow();
+		t.hour = hourOfDay;
+		t.minute = minute;
+		routeTotalTime = t.toMillis(false);
+		computeRoute();
+	}
+
+	private void computeRoute() {
+		if (currentLocation == null) {
+			Utils.showToast(this, R.string.update_location);
+			return;
+		}
+		roadArt = new ArrayList<Art>(allArt);
+
+		GeoPoint current = Utils.geo(currentLocation);
+		routePoints.add(Utils.geo(currentLocation));
+
+		List<Overlay> overlays = mapView.getOverlays();
+		overlays.remove(artOverlay);
+		routeOverlay = new ArtBalloonsOverlay(getResources().getDrawable(R.drawable.ic_pin), mapView);
+		overlays.add(routeOverlay);
+		overlays.add(new CurrentOverlay(this, getResources().getDrawable(R.drawable.ic_pin_current), current, false));
+
+		Time now = new Time();
+		now.setToNow();
+		long timeLeft = routeTotalTime - now.toMillis(true);
+
+		addNextGeoPoint(current, timeLeft);
+
+		Utils.d(Utils.TAG, "route=" + routePoints);
+
+		if (routePoints.size() > 2) {
+			// because the routePosition must be set before any other thread finishes
+			synchronized (this) {
+				navigation.navigateTo(routePoints.get(0), routePoints.get(1), Navigation.TYPE_WALKING, this);
+				routePosition = 1;
+			}
+		}
+	}
+
+	private void addNextGeoPoint(GeoPoint currentGeo, long timeLeft) {
+		if (timeLeft <= 0) return;
+
+		double currentLat = currentGeo.getLatitudeE6() / 1E6;
+		double currentLong = currentGeo.getLongitudeE6() / 1E6;
+
+		float[] buf = new float[1];
+		double minDist = Float.MAX_VALUE;
+		double minLat = 0;
+		double minLong = 0;
+		Art nearestArt = null;
+
+		int n = roadArt.size();
+		for (int i = 0; i < n; ++i) {
+			Art art = roadArt.get(i);
+
+			Location.distanceBetween(currentLat, currentLong, art.latitude, art.longitude, buf);
+			art._distanceFromCurrentPosition = buf[0];
+
+			if (art._distanceFromCurrentPosition < minDist) {
+				minDist = art._distanceFromCurrentPosition;
+				nearestArt = art;
+			}
+		}
+
+		if (minDist == Float.MAX_VALUE) { // did not find any points
+			return;
+		}
+
+		minLat = nearestArt.latitude;
+		minLong = nearestArt.longitude;
+		roadArt.remove(nearestArt);
+
+		routeOverlay.addOverlay(new ArtOverlayItem(nearestArt));
+		routeOverlay.doPopulate();
+		mapView.invalidate();
+
+		long duration = (long) ((minDist / AVG_SPEED) * HOUR) + AVG_VISIT_TIME;
+		if (duration > timeLeft) return;
+
+		Utils.d(Utils.TAG, "dist=" + minDist + ",time=" + ((float) duration / HOUR));
+
+		GeoPoint p = Utils.geo(minLat, minLong);
+		routePoints.add(p);
+
+		addNextGeoPoint(Utils.geo(minLat, minLong), timeLeft - duration);
+	}
+
+	@Override
+	public void onNavigationAvailable(int type, Route route) {
+		Utils.d("MapRoute", "route=" + route);
+
+		List<GeoPoint> points = route.getGeoPoints();
+		List<Placemark> placemarks = route.getPlacemarks();
+
+		if (points != null) {
+			int size = points.size();
+			for (int i = 0; i < size; i++) {
+				Placemark pl = null;
+				if (placemarks.size() > i) {
+					pl = placemarks.get(i);
+				}
+				if (pl != null) {
+					tvDirections.setText(tvDirections.getText() + buildDirections(pl));
+				}
+			}
+		}
+		RouteLineOverlay rlo = new RouteLineOverlay(this, mapView, points);
+		mapView.getOverlays().add(rlo);
+		mapView.invalidate();
+
+		synchronized (this) {
+			if (routePosition == 1) {
+				showDirectionsPopup();
+				mapView.setZoomLevel(ZOOM_MAX_LEVEL - 2);
+			}
+			if (routePosition < routePoints.size() - 1) {
+				navigation.navigateTo(routePoints.get(routePosition), routePoints.get(routePosition + 1),
+						Navigation.TYPE_WALKING, this);
+				routePosition += 1;
+			}
+			else {
+				tvDirections.setText(tvDirections.getText() + Utils.DNL + route.getTotalDistance());
+			}
+		}
+	}
+
+	@Override
+	public void onNavigationUnavailable(GeoPoint startPoint, GeoPoint endPoint) {
+		Utils.d("MapRoute", "Can't get directions from " + startPoint + " to " + endPoint);
+	}
+
+	private String buildDirections(Placemark placemark) {
+		if (placemark == null) return "";
+		String instructions = placemark.getInstructions();
+		String distance = placemark.getDistance();
+
+		StringBuilder bld = new StringBuilder();
+		if (!TextUtils.isEmpty(instructions)) {
+			bld.append(instructions);
+			if (!TextUtils.isEmpty(distance)) {
+				bld.append(" -> ");
+			}
+		}
+		if (!TextUtils.isEmpty(distance)) {
+			bld.append(distance);
+		}
+		if (bld.length() > 0) {
+			bld.append(Utils.NL);
+		}
+		return bld.toString();
+	}
+
 }

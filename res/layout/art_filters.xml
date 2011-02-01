@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
 	android:orientation="vertical"
-	android:padding="15dp">
+	android:padding="6dp">
 
 	<Spinner
 		android:id="@+id/spinner"
@@ -19,7 +19,8 @@
 		android:drawableLeft="@drawable/ic_search"
 		android:drawablePadding="6dp"
 		android:imeOptions="actionSearch"
-		android:hint="@string/search_hint" />
+		android:hint="@string/search_hint"
+		android:background="@drawable/textfield_selected" />
 
 	<include
 		android:id="@+id/loading"
@@ -39,7 +40,6 @@
 			android:layout_height="fill_parent"
 			android:layout_gravity="center"
 			android:gravity="center"
-			android:textSize="@dimen/text_mlarge"
 			android:textStyle="bold"
 			android:text="@string/empty" />
 
@@ -50,7 +50,7 @@
 
 			android:scrollbarStyle="outsideOverlay"
 			android:scrollingCache="false"
-
+	 		android:listSelector="@drawable/list_selector_background"
 			android:cacheColorHint="@color/dialog_bg"
 			android:divider="@drawable/divider"
 			android:dividerHeight="1px"

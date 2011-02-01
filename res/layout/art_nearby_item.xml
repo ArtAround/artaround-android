@@ -12,7 +12,6 @@
 		android:layout_alignParentLeft="true"
 		android:layout_marginRight="34dp"
 		android:layout_marginBottom="6dp"
-		android:textSize="@dimen/text_large"
 		android:textStyle="bold"
 		android:singleLine="false"
 		android:textColor="@color/art_field_label_txt"
@@ -34,7 +33,6 @@
 		android:layout_below="@+id/art_title"
 		android:layout_alignParentLeft="true"
 		android:layout_toLeftOf="@+id/distance"
-		android:textSize="@dimen/text_mlarge"
 		android:textColor="#5E5E5E"
 		android:text="Art Location Description Here" />
 		
@@ -45,7 +43,6 @@
 		android:layout_below="@+id/direction"
 		android:layout_alignParentRight="true"
 		android:layout_alignTop="@+id/description"
-		android:textSize="@dimen/text_mlarge"
 		android:textStyle="bold"
 		android:textColor="@color/art_nearby_distance"
 		android:text="550 m" />

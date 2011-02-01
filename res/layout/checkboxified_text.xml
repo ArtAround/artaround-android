@@ -12,8 +12,8 @@
   	android:layout_marginRight="2dp"
   	android:focusable="false"
   	android:focusableInTouchMode="false"
-  	android:clickable="false"
-  	style="@style/CheckBox" />
+  	android:button="@drawable/btn_check"
+  	android:clickable="false" />
   	
   <TextView
   	android:id="@+id/text"

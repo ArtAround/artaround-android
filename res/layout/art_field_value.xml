@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoCompleteTextView
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:text="@string/value_unset"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
 	android:linksClickable="true"
 	android:autoLink="web|email"
+	android:completionThreshold="1"
 	style="@style/ArtInfoValue" />
