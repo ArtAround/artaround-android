@@ -269,11 +269,11 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		editText.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				if (s.length() > 0 || (currentInputLength > 0 && s.length() == 0)) {
+				if ((currentInputLength == 0 && s.length() >= 3) || currentInputLength > 0) {
 					currentInputLength = s.length();
 
 					String where = FROM[0] + " LIKE ?";
-					String[] args = new String[] { s.toString().toLowerCase() + "%" };
+					String[] args = new String[] { "%" + s.toString().toLowerCase() + "%" };
 
 					startDatabaseQuery(currentToken, false, where, args);
 				}

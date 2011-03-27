@@ -15,15 +15,13 @@ import android.text.TextUtils;
 public class ArtAroundDatabase {
 	public static final String ARTAROUND_AUTHORITY = "us.artaround";
 
-	public static final String[] ARTS_PROJECTION = { Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
+	public static final String[] ARTS_PROJECTION = { Arts._ID, Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
 			Arts.UPDATED_AT, Arts.LATITUDE, Arts.LONGITUDE, Arts.NEIGHBORHOOD, Arts.PHOTO_IDS, Arts.WARD, Arts.YEAR,
 			Arts.LOCATION_DESCRIPTION, Arts.ARTIST, Arts.DESCRIPTION, Arts.MEDIUM_DISTANCE, Arts.CITY, Artists.NAME };
 
 	public static final String[] CATEGORIES_PROJECTION = { Categories._ID, Categories.NAME };
 	public static final String[] NEIGHBORHOODS_PROJECTION = { Neighborhoods._ID, Neighborhoods.NAME };
 	public static final String[] ARTISTS_PROJECTION = { Artists._ID, Artists.UUID, Artists.NAME };
-
-	public static final String ARTS_WHERE = Arts.CITY + "=?";
 
 	// We don't need to instantiate this class.
 	private ArtAroundDatabase() {}
@@ -52,6 +50,15 @@ public class ArtAroundDatabase {
 		public static final String CITY = "city";
 
 		public static final String DEFAULT_SORT_ORDER = MEDIUM_DISTANCE + " DESC";
+	}
+
+	public static final class ArtFavorites implements BaseColumns {
+		public static final String TABLE_NAME = "art_favorites";
+		public static final Uri CONTENT_URI = Uri.parse("content://" + ARTAROUND_AUTHORITY + "/" + TABLE_NAME);
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
+
+		public static final String SLUG = "slug";
 	}
 
 	public static final class Artists implements BaseColumns {
@@ -87,8 +94,7 @@ public class ArtAroundDatabase {
 	}
 
 	public static String createArtsTable() {
-		StringBuilder b = new StringBuilder();
-		b.append("CREATE TABLE ").append(Arts.TABLE_NAME).append(" (");
+		StringBuilder b = new StringBuilder("CREATE TABLE ").append(Arts.TABLE_NAME).append(" (");
 		b.append(Arts._ID).append(" INTEGER PRIMARY KEY,");
 		b.append(Arts.SLUG).append(" TEXT,");
 		b.append(Arts.TITLE).append(" TEXT,");
@@ -108,11 +114,23 @@ public class ArtAroundDatabase {
 		b.append(Arts.ARTIST).append(" TEXT);");
 
 		// index on id
-		b.append("CREATE INDEX idx ON ").append(Arts.TABLE_NAME).append(".").append(Arts.SLUG).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Arts.TABLE_NAME).append(".").append(Arts.SLUG)
+				.append(";");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
 		return str;
+	}
+
+	public static String createArtFavoritesTable() {
+		StringBuilder b = new StringBuilder("CREATE TABLE ").append(ArtFavorites.TABLE_NAME).append(" (");
+		b.append(ArtFavorites._ID).append(" INTEGER PRIMARY KEY,");
+		b.append(Arts.SLUG).append(" TEXT);");
+
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(ArtFavorites.TABLE_NAME).append(".")
+				.append(ArtFavorites.SLUG).append(";");
+
+		return b.toString();
 	}
 
 	public static String createArtistsTable() {
@@ -125,8 +143,10 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Artists.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX idu ON ").append(Artists.TABLE_NAME).append(".").append(Artists.UUID).append(";");
-		b.append("CREATE INDEX idx ON ").append(Artists.TABLE_NAME).append(".").append(Artists.NAME).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append(".").append(Artists.UUID)
+				.append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Artists.TABLE_NAME).append(".").append(Artists.NAME)
+				.append(";");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
@@ -142,7 +162,8 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Categories.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX idx ON ").append(Categories.TABLE_NAME).append(".").append(Categories.NAME).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Categories.TABLE_NAME).append(".")
+				.append(Categories.NAME).append(";");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
@@ -158,8 +179,8 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Neighborhoods.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX idx ON ").append(Neighborhoods.TABLE_NAME).append(".").append(Neighborhoods.NAME)
-				.append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Neighborhoods.TABLE_NAME).append(".")
+				.append(Neighborhoods.NAME).append(";");
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
 		return str;

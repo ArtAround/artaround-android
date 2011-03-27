@@ -22,7 +22,7 @@
 	<string
 		name="edit">Edit</string>
 	<string
-		name="directions">Directions</string>
+		name="directions">Directions\n</string>
 	<string
 		name="streetview">Street View</string>
 	<string
@@ -109,6 +109,7 @@
 	<!-- Art Map -->
 	<string
 		name="art_directions">Art Routes</string>
+	<string name="art_favorites">Favorites</string>
 	<string
 		name="art_nearby">Art Nearby</string>
 	<string
@@ -137,6 +138,10 @@
 		name="add_favorite">Add Favorite</string>
 	<string
 		name="remove_favorite">Remove Favorite</string>
+	<string
+		name="added_favorite">%s is now favorite.</string>
+	<string
+		name="removed_favorite">%s is no longer favorite.</string>
 	<string
 		name="add_photo">Add Photo</string>
 	

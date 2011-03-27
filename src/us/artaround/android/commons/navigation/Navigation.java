@@ -10,6 +10,8 @@ import com.google.android.maps.GeoPoint;
 
 public class Navigation {
 
+	public static final String TAG = "ArtAround.Navigation";
+
 	public static final int TYPE_WALKING = 0;
 	public static final int TYPE_DRIVING = 1;
 
@@ -64,7 +66,7 @@ public class Navigation {
 		private final GeoPoint endPoint;
 
 		public LoadRouteTask(GeoPoint startPoint, GeoPoint endPoint) {
-			Utils.d("MapRoute", "Getting directions from " + startPoint + " to " + endPoint);
+			Utils.d(TAG, "Getting directions from " + startPoint + " to " + endPoint);
 			this.startPoint = startPoint;
 			this.endPoint = endPoint;
 		}
@@ -90,7 +92,7 @@ public class Navigation {
 				urlString.append("&doflg=ptm");
 			}
 
-			Utils.d("MapRoute", "url=" + urlString.toString());
+			Utils.d(TAG, "url=" + urlString.toString());
 
 			Route route = null;
 			try {

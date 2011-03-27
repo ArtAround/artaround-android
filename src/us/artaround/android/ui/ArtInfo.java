@@ -6,15 +6,20 @@ import us.artaround.R;
 import us.artaround.android.commons.BackgroundCommand;
 import us.artaround.android.commons.LoadFlickrPhotosCommand;
 import us.artaround.android.commons.LoadingTask;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncDeleteListener;
+import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncInsertListener;
 import us.artaround.android.commons.Utils;
 import us.artaround.android.commons.navigation.Navigation;
 import us.artaround.android.commons.navigation.Navigation.NavigationListener;
 import us.artaround.android.commons.navigation.Route;
 import us.artaround.android.commons.navigation.RouteLineOverlay;
+import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.services.FlickrService;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,7 +31,8 @@ import android.view.View;
 
 import com.google.android.maps.GeoPoint;
 
-public class ArtInfo extends NewArtInfo implements OverlayTapListener, NavigationListener {
+public class ArtInfo extends NewArtInfo implements OverlayTapListener, NavigationListener,
+		NotifyingAsyncInsertListener, NotifyingAsyncDeleteListener {
 	private final static int LOAD_FLICKR_PHOTOS = 200;
 
 	private boolean isRoadShowing;
@@ -44,7 +50,9 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 		super.setupState();
 		// TODO restore tasks
 
+		Utils.d(Utils.TAG, "Has photos? " + art.photoIds);
 		if (art.photoIds != null && art.photoIds.size() > 0) {
+
 			new LoadingTask(this, new LoadFlickrPhotosCommand(LOAD_FLICKR_PHOTOS, art.photoIds.get(0),
 					FlickrService.SIZE_MEDIUM)).execute();
 		}
@@ -101,19 +109,38 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 	}
 
 	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		menu.findItem(R.id.favorite_art).setTitle(isFavorite() ? R.string.remove_favorite : R.string.add_favorite);
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.share_art:
 			doShareArt();
 			return true;
 		case R.id.favorite_art:
-			doFavoriteArt();
+			doFavoriteArt(isFavorite());
 			return true;
 		case R.id.streetview:
 			startActivity(Utils.getStreetViewIntent(art.latitude, art.longitude));
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	private boolean isFavorite() {
+		boolean isFavorite = false;
+		Cursor cursor = managedQuery(ArtFavorites.CONTENT_URI, null, ArtFavorites.TABLE_NAME + "." + ArtFavorites.SLUG
+				+ "=?", new String[] { art.slug }, null);
+
+		isFavorite = (cursor != null && cursor.moveToFirst());
+
+		if (cursor != null && !cursor.isClosed()) {
+			cursor.close();
+		}
+		return isFavorite;
 	}
 
 	private String getShareText() {
@@ -134,13 +161,24 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 	private void doShareArt() {
 		Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain")
 				.putExtra(Intent.EXTRA_TEXT, getShareText());
+		if (currentLocation != null) {
+			intent.putExtra("latitude", currentLocation.getLatitude());
+			intent.putExtra("longitude", currentLocation.getLongitude());
+		}
 		startActivity(Intent.createChooser(intent, getString(R.string.share_art_title)));
 	}
 
-	private void doFavoriteArt() {
-		//TODO
+	private void doFavoriteArt(boolean isFavorite) {
+		showLoading(true);
+		if (!isFavorite) {
+			ContentValues values = new ContentValues(1);
+			values.put(ArtFavorites.SLUG, art.slug);
+			queryHandler.startInsert(ArtFavorites.CONTENT_URI, values);
+		}
+		else {
+			queryHandler.startDelete(ArtFavorites.CONTENT_URI, ArtFavorites.SLUG + "=?", new String[] { art.slug });
+		}
 	}
-
 
 	@Override
 	public void onSuggestLocationSettings() {
@@ -226,6 +264,18 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 		if (command.getToken() == LOAD_FLICKR_PHOTOS) {
 			showLoading(false);
 		}
+	}
+
+	@Override
+	public void onDeleteComplete(int token, Object cookie, int result) {
+		showLoading(false);
+		Utils.showToast(this, getString(R.string.removed_favorite, art.title));
+	}
+
+	@Override
+	public void onInsertComplete(int token, Object cookie, Uri uri) {
+		showLoading(false);
+		Utils.showToast(this, getString(R.string.added_favorite, art.title));
 	}
 
 }

@@ -21,11 +21,6 @@ import us.artaround.android.commons.NotifyingAsyncQueryHandler;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncUpdateListener;
 import us.artaround.android.commons.Utils;
-import us.artaround.android.commons.navigation.Navigation;
-import us.artaround.android.commons.navigation.Navigation.NavigationListener;
-import us.artaround.android.commons.navigation.Placemark;
-import us.artaround.android.commons.navigation.Route;
-import us.artaround.android.commons.navigation.RouteLineOverlay;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
@@ -40,8 +35,6 @@ import us.artaround.models.ArtDispersionComparator;
 import us.artaround.models.City;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.TimePickerDialog;
-import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -53,20 +46,14 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.format.Time;
-import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.TimePicker;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -74,8 +61,7 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
-		LoadingTaskCallback, NotifyingAsyncQueryListener, NotifyingAsyncUpdateListener, OnTimeSetListener,
-		NavigationListener {
+		LoadingTaskCallback, NotifyingAsyncQueryListener, NotifyingAsyncUpdateListener /*, OnTimeSetListener, NavigationListener*/ {
 
 	//--- loading tasks constants ---
 	public static final int MAX_CONCURRENT_TASKS = 1;
@@ -87,9 +73,9 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private static final int ZOOM_MIN_LEVEL = 8;
 	private static final int ZOOM_MAX_LEVEL = ZOOM_MIN_LEVEL + MAX_PINS_PER_ZOOM.length;
 
-	private static final int AVG_SPEED = 3000; // 3km/h
-	private static final long AVG_VISIT_TIME = 600000; // 10 min
-	private static final int HOUR = 3600000;
+	//private static final int AVG_SPEED = 3000; // 3000m/h
+	//private static final long AVG_VISIT_TIME = 600000; // 10 min
+	//private static final int HOUR = 3600000;
 
 	//--- activity requests ids ---
 	public static final int REQUEST_FILTER = 0;
@@ -97,20 +83,23 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	//--- dialog ids ---
 	private static final int DIALOG_LOCATION_SETTINGS = 1;
 	private static final int DIALOG_WIFI_FAIL = 2;
-	private static final int DIALOG_TIME_PICKER = 3;
+	//private static final int DIALOG_TIME_PICKER = 3;
 
-	private Animation rotateAnim, inAnim, outAnim;
+	private Animation rotateAnim;
+	//private Animation inAnim, outAnim;
 	private ArtMapView mapView;
 	private ArtBalloonsOverlay artOverlay;
-	private ArtBalloonsOverlay routeOverlay;
+	//private ArtBalloonsOverlay routeOverlay;
 	private HashMap<Art, OverlayItem> items;
 
-	private ImageButton btnLocation, btnAdd, btnFilter;
+	private ImageButton btnLocation, btnAdd, btnFilter, btnRevert;
 	private ImageView imgRefresh;
-	private Button btnNearby, btnDirections;
-	private TextView tvDirections;
+	private Button btnNearby, btnFavorites;
+	//private Button btnRoute;
+	//private TextView tvRoute;
 
-	private ArrayList<Art> allArt, filteredArt, roadArt;
+	private ArrayList<Art> allArt, filteredArt;
+	//private ArrayList<Art> roadArt;
 	private int nrPinsToDisplayAtThisZoomLevel;
 	private HashMap<Integer, HashSet<String>> filters;
 
@@ -127,10 +116,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private AtomicInteger tasksCount;
 	private AtomicInteger tasksLeft;
 
-	private long routeTotalTime;
-	private List<GeoPoint> routePoints;
-	private int routePosition;
-	private Navigation navigation;
+	//private long routeTotalTime;
+	//private List<GeoPoint> routePoints;
+	//private int routePosition;
+	//private Navigation navigation;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -210,10 +199,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	}
 
 	private void clearCache() {
-		queryHandler.startDelete(Arts.CONTENT_URI, null, null);
-		queryHandler.startDelete(Artists.CONTENT_URI, null, null);
-		queryHandler.startDelete(Categories.CONTENT_URI, null, null);
-		queryHandler.startDelete(Neighborhoods.CONTENT_URI, null, null);
+		ArtAroundProvider.contentResolver.delete(Arts.CONTENT_URI, null, null);
+		ArtAroundProvider.contentResolver.delete(Artists.CONTENT_URI, null, null);
+		ArtAroundProvider.contentResolver.delete(Categories.CONTENT_URI, null, null);
+		ArtAroundProvider.contentResolver.delete(Neighborhoods.CONTENT_URI, null, null);
 	}
 
 	private void taskCleanup() {
@@ -234,8 +223,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		ServiceFactory.init(getApplicationContext());
 		locationUpdater = new LocationUpdater(this);
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
-		routePoints = new ArrayList<GeoPoint>();
-		navigation = new Navigation(true);
+		//routePoints = new ArrayList<GeoPoint>();
+		//navigation = new Navigation(true);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -292,6 +281,17 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			}
 		});
 
+		btnRevert = (ImageButton) findViewById(R.id.btn_revert);
+		btnRevert.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// cleanup and restore default state
+				revertDisplay();
+				setupState();
+				btnRevert.setVisibility(View.INVISIBLE);
+			}
+		});
+
 		btnFilter = (ImageButton) findViewById(R.id.btn_filter);
 		btnFilter.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -321,63 +321,83 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			}
 		});
 
-		btnDirections = (Button) findViewById(R.id.btn_directions);
-		btnDirections.setOnClickListener(new View.OnClickListener() {
+		btnFavorites = (Button) findViewById(R.id.btn_favorites);
+		btnFavorites.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				showDialog(DIALOG_TIME_PICKER);
+				startActivity(new Intent(ArtMap.this, ArtFavs.class));
 			}
 		});
 
-		tvDirections = (TextView) findViewById(R.id.popup_directions);
-		tvDirections.setMovementMethod(new ScrollingMovementMethod());
-		tvDirections.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				hideDirectionsPopup();
-			}
-		});
+		//		btnRoute = (Button) findViewById(R.id.btn_directions);
+		//		btnRoute.setOnClickListener(new View.OnClickListener() {
+		//			@Override
+		//			public void onClick(View v) {
+		//				showDialog(DIALOG_TIME_PICKER);
+		//			}
+		//		});
+		//		btnRoute.setOnLongClickListener(new View.OnLongClickListener() {
+		//			@Override
+		//			public boolean onLongClick(View v) {
+		//				if (tvRoute.getVisibility() == View.INVISIBLE) {
+		//					showDirectionsPopup();
+		//				}
+		//				return true;
+		//			}
+		//		});
+		//
+		//		tvRoute = (TextView) findViewById(R.id.popup_directions);
+		//		tvRoute.setMovementMethod(new ScrollingMovementMethod());
+		//		tvRoute.setOnLongClickListener(new View.OnLongClickListener() {
+		//			@Override
+		//			public boolean onLongClick(View v) {
+		//				if (tvRoute.getVisibility() == View.VISIBLE) {
+		//					hideDirectionsPopup();
+		//				}
+		//				return true;
+		//			}
+		//		});
 
-		outAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_out);
-		outAnim.setAnimationListener(new AnimationListener() {
-			@Override
-			public void onAnimationStart(Animation animation) {}
-
-			@Override
-			public void onAnimationRepeat(Animation animation) {}
-
-			@Override
-			public void onAnimationEnd(Animation animation) {
-				tvDirections.setVisibility(View.VISIBLE);
-			}
-		});
-
-		inAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_in);
-		inAnim.setAnimationListener(new AnimationListener() {
-			@Override
-			public void onAnimationStart(Animation animation) {}
-
-			@Override
-			public void onAnimationRepeat(Animation animation) {}
-
-			@Override
-			public void onAnimationEnd(Animation animation) {
-				tvDirections.setVisibility(View.INVISIBLE);
-			}
-		});
+		//		outAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_out);
+		//		outAnim.setAnimationListener(new AnimationListener() {
+		//			@Override
+		//			public void onAnimationStart(Animation animation) {}
+		//
+		//			@Override
+		//			public void onAnimationRepeat(Animation animation) {}
+		//
+		//			@Override
+		//			public void onAnimationEnd(Animation animation) {
+		//				tvRoute.setVisibility(View.VISIBLE);
+		//			}
+		//		});
+		//
+		//		inAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.glide_in);
+		//		inAnim.setAnimationListener(new AnimationListener() {
+		//			@Override
+		//			public void onAnimationStart(Animation animation) {}
+		//
+		//			@Override
+		//			public void onAnimationRepeat(Animation animation) {}
+		//
+		//			@Override
+		//			public void onAnimationEnd(Animation animation) {
+		//				tvRoute.setVisibility(View.INVISIBLE);
+		//			}
+		//		});
 	}
 
-	private void showDirectionsPopup() {
-		if (tvDirections.getVisibility() == View.INVISIBLE) {
-			tvDirections.startAnimation(outAnim);
-		}
-	}
-
-	private void hideDirectionsPopup() {
-		if (tvDirections.getVisibility() == View.VISIBLE) {
-			tvDirections.startAnimation(inAnim);
-		}
-	}
+	//	private void showDirectionsPopup() {
+	//		if (tvRoute.getVisibility() == View.INVISIBLE) {
+	//			tvRoute.startAnimation(outAnim);
+	//		}
+	//	}
+	//
+	//	private void hideDirectionsPopup() {
+	//		if (tvRoute.getVisibility() == View.VISIBLE) {
+	//			tvRoute.startAnimation(inAnim);
+	//		}
+	//	}
 
 	private void setupMapUi() {
 		mapView = (ArtMapView) findViewById(R.id.map_view);
@@ -405,6 +425,18 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 	private void clearPins() {
 		artOverlay.doClear();
 		artOverlay.doPopulate();
+	}
+
+	private void revertDisplay() {
+		clearPins();
+		allArt.clear();
+		filteredArt.clear();
+		filters.clear();
+		mapView.getOverlays().clear();
+		mapView.getOverlays().add(artOverlay);
+		mapView.setZoomLevel(ZOOM_DEFAULT_LEVEL);
+		mapView.invalidate();
+		//hideDirectionsPopup();
 	}
 
 	private void attachTasksCallback() {
@@ -486,10 +518,10 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 				}
 			});
 			break;
-		case DIALOG_TIME_PICKER:
-			Time t = new Time();
-			t.setToNow();
-			return new TimePickerDialog(this, this, t.hour, t.minute, true);
+		//		case DIALOG_TIME_PICKER:
+		//			Time t = new Time();
+		//			t.setToNow();
+		//			return new TimePickerDialog(this, this, t.hour, t.minute, true);
 		}
 		return builder.create();
 	}
@@ -503,6 +535,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 			filterArt(allArt);
 			displayArt(filteredArt);
+
+			btnRevert.setVisibility(View.VISIBLE);
 
 			break;
 		}
@@ -589,8 +623,8 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void loadArtFromDatabase() {
 		Utils.d(Utils.TAG, "Starting querying for arts from db...");
-		queryHandler.startQuery(-1, null, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
-				ArtAroundDatabase.ARTS_WHERE, new String[] { currentCity.name }, null);
+		queryHandler.startQuery(-1, null, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, Arts.CITY + "=?",
+				new String[] { currentCity.name }, null);
 	}
 
 	private boolean isLoadingFromServer() {
@@ -674,11 +708,12 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 			art.get(i).mediumDistance /= allS;
 		}
 		Collections.sort(art, new ArtDispersionComparator());
-		//Collections.reverse(art);
 	}
 
 	private float distance(Art a, Art b) {
-		return (float) Math.sqrt(Math.pow(a.latitude - b.latitude, 2) + Math.pow(a.longitude - b.longitude, 2));
+		float[] results = new float[1];
+		Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, results);
+		return results[0];
 	}
 
 	private OverlayItem ensureOverlay(Art a) {
@@ -804,7 +839,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		Utils.showToast(this, R.string.waiting_location);
 		showLoading(true);
 		btnNearby.setEnabled(false);
-		btnDirections.setEnabled(false);
+		//btnRoute.setEnabled(false);
 		btnLocation.setEnabled(false);
 		btnFilter.setEnabled(false);
 		locationUpdater.updateLocation();
@@ -814,7 +849,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		setupState();
 		showLoading(false);
 		btnNearby.setEnabled(true);
-		btnDirections.setEnabled(true);
+		//btnRoute.setEnabled(true);
 		btnLocation.setEnabled(true);
 		btnFilter.setEnabled(true);
 		locationUpdater.removeUpdates();
@@ -926,160 +961,161 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 		Utils.d(Utils.TAG, "Update result = " + result);
 	}
 
-	@Override
-	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-		Time t = new Time();
-		t.setToNow();
-		t.hour = hourOfDay;
-		t.minute = minute;
-		routeTotalTime = t.toMillis(false);
-		computeRoute();
-	}
+	//	@Override
+	//	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+	//		Time t = new Time();
+	//		t.setToNow();
+	//		t.hour = hourOfDay;
+	//		t.minute = minute;
+	//		routeTotalTime = t.toMillis(false);
+	//		computeRoute();
+	//	}
 
-	private void computeRoute() {
-		if (currentLocation == null) {
-			Utils.showToast(this, R.string.update_location);
-			return;
-		}
-		roadArt = new ArrayList<Art>(allArt);
+	//	private void computeRoute() {
+	//		if (currentLocation == null) {
+	//			Utils.showToast(this, R.string.update_location);
+	//			return;
+	//		}
+	//		roadArt = new ArrayList<Art>(allArt);
+	//
+	//		GeoPoint current = Utils.geo(currentLocation);
+	//		routePoints.add(Utils.geo(currentLocation));
+	//
+	//		List<Overlay> overlays = mapView.getOverlays();
+	//		overlays.remove(artOverlay);
+	//		routeOverlay = new ArtBalloonsOverlay(getResources().getDrawable(R.drawable.ic_pin), mapView);
+	//		overlays.add(routeOverlay);
+	//		overlays.add(new CurrentOverlay(this, getResources().getDrawable(R.drawable.ic_pin_current), current, false));
+	//
+	//		Time now = new Time();
+	//		now.setToNow();
+	//		long timeLeft = routeTotalTime - now.toMillis(true);
+	//
+	//		addNextGeoPoint(current, timeLeft);
+	//
+	//		Utils.d(Utils.TAG, "route=" + routePoints);
+	//
+	//		if (routePoints.size() > 2) {
+	//			// because the routePosition must be set before any other thread finishes
+	//			synchronized (this) {
+	//				navigation.navigateTo(routePoints.get(0), routePoints.get(1), Navigation.TYPE_WALKING, this);
+	//				routePosition = 1;
+	//			}
+	//		}
+	//	}
 
-		GeoPoint current = Utils.geo(currentLocation);
-		routePoints.add(Utils.geo(currentLocation));
-
-		List<Overlay> overlays = mapView.getOverlays();
-		overlays.remove(artOverlay);
-		routeOverlay = new ArtBalloonsOverlay(getResources().getDrawable(R.drawable.ic_pin), mapView);
-		overlays.add(routeOverlay);
-		overlays.add(new CurrentOverlay(this, getResources().getDrawable(R.drawable.ic_pin_current), current, false));
-
-		Time now = new Time();
-		now.setToNow();
-		long timeLeft = routeTotalTime - now.toMillis(true);
-
-		addNextGeoPoint(current, timeLeft);
-
-		Utils.d(Utils.TAG, "route=" + routePoints);
-
-		if (routePoints.size() > 2) {
-			// because the routePosition must be set before any other thread finishes
-			synchronized (this) {
-				navigation.navigateTo(routePoints.get(0), routePoints.get(1), Navigation.TYPE_WALKING, this);
-				routePosition = 1;
-			}
-		}
-	}
-
-	private void addNextGeoPoint(GeoPoint currentGeo, long timeLeft) {
-		if (timeLeft <= 0) return;
-
-		double currentLat = currentGeo.getLatitudeE6() / 1E6;
-		double currentLong = currentGeo.getLongitudeE6() / 1E6;
-
-		float[] buf = new float[1];
-		double minDist = Float.MAX_VALUE;
-		double minLat = 0;
-		double minLong = 0;
-		Art nearestArt = null;
-
-		int n = roadArt.size();
-		for (int i = 0; i < n; ++i) {
-			Art art = roadArt.get(i);
-
-			Location.distanceBetween(currentLat, currentLong, art.latitude, art.longitude, buf);
-			art._distanceFromCurrentPosition = buf[0];
-
-			if (art._distanceFromCurrentPosition < minDist) {
-				minDist = art._distanceFromCurrentPosition;
-				nearestArt = art;
-			}
-		}
-
-		if (minDist == Float.MAX_VALUE) { // did not find any points
-			return;
-		}
-
-		minLat = nearestArt.latitude;
-		minLong = nearestArt.longitude;
-		roadArt.remove(nearestArt);
-
-		routeOverlay.addOverlay(new ArtOverlayItem(nearestArt));
-		routeOverlay.doPopulate();
-		mapView.invalidate();
-
-		long duration = (long) ((minDist / AVG_SPEED) * HOUR) + AVG_VISIT_TIME;
-		if (duration > timeLeft) return;
-
-		Utils.d(Utils.TAG, "dist=" + minDist + ",time=" + ((float) duration / HOUR));
-
-		GeoPoint p = Utils.geo(minLat, minLong);
-		routePoints.add(p);
-
-		addNextGeoPoint(Utils.geo(minLat, minLong), timeLeft - duration);
-	}
-
-	@Override
-	public void onNavigationAvailable(int type, Route route) {
-		Utils.d("MapRoute", "route=" + route);
-
-		List<GeoPoint> points = route.getGeoPoints();
-		List<Placemark> placemarks = route.getPlacemarks();
-
-		if (points != null) {
-			int size = points.size();
-			for (int i = 0; i < size; i++) {
-				Placemark pl = null;
-				if (placemarks.size() > i) {
-					pl = placemarks.get(i);
-				}
-				if (pl != null) {
-					tvDirections.setText(tvDirections.getText() + buildDirections(pl));
-				}
-			}
-		}
-		RouteLineOverlay rlo = new RouteLineOverlay(this, mapView, points);
-		mapView.getOverlays().add(rlo);
-		mapView.invalidate();
-
-		synchronized (this) {
-			if (routePosition == 1) {
-				showDirectionsPopup();
-				mapView.setZoomLevel(ZOOM_MAX_LEVEL - 2);
-			}
-			if (routePosition < routePoints.size() - 1) {
-				navigation.navigateTo(routePoints.get(routePosition), routePoints.get(routePosition + 1),
-						Navigation.TYPE_WALKING, this);
-				routePosition += 1;
-			}
-			else {
-				tvDirections.setText(tvDirections.getText() + Utils.DNL + route.getTotalDistance());
-			}
-		}
-	}
-
-	@Override
-	public void onNavigationUnavailable(GeoPoint startPoint, GeoPoint endPoint) {
-		Utils.d("MapRoute", "Can't get directions from " + startPoint + " to " + endPoint);
-	}
-
-	private String buildDirections(Placemark placemark) {
-		if (placemark == null) return "";
-		String instructions = placemark.getInstructions();
-		String distance = placemark.getDistance();
-
-		StringBuilder bld = new StringBuilder();
-		if (!TextUtils.isEmpty(instructions)) {
-			bld.append(instructions);
-			if (!TextUtils.isEmpty(distance)) {
-				bld.append(" -> ");
-			}
-		}
-		if (!TextUtils.isEmpty(distance)) {
-			bld.append(distance);
-		}
-		if (bld.length() > 0) {
-			bld.append(Utils.NL);
-		}
-		return bld.toString();
-	}
+	//	private void addNextGeoPoint(GeoPoint currentGeo, long timeLeft) {
+	//		if (timeLeft <= 0) return;
+	//
+	//		double currentLat = currentGeo.getLatitudeE6() / 1E6;
+	//		double currentLong = currentGeo.getLongitudeE6() / 1E6;
+	//
+	//		float[] buf = new float[1];
+	//		double minDist = Float.MAX_VALUE;
+	//		double minLat = 0;
+	//		double minLong = 0;
+	//		Art nearestArt = null;
+	//
+	//		int n = roadArt.size();
+	//		for (int i = 0; i < n; ++i) {
+	//			Art art = roadArt.get(i);
+	//
+	//			Location.distanceBetween(currentLat, currentLong, art.latitude, art.longitude, buf);
+	//			art._distanceFromCurrentPosition = buf[0];
+	//
+	//			if (art._distanceFromCurrentPosition < minDist) {
+	//				minDist = art._distanceFromCurrentPosition;
+	//				nearestArt = art;
+	//			}
+	//		}
+	//
+	//		if (minDist == Float.MAX_VALUE) { // did not find any points
+	//			return;
+	//		}
+	//
+	//		minLat = nearestArt.latitude;
+	//		minLong = nearestArt.longitude;
+	//		roadArt.remove(nearestArt);
+	//
+	//		routeOverlay.addOverlay(new ArtOverlayItem(nearestArt));
+	//		routeOverlay.doPopulate();
+	//		mapView.invalidate();
+	//
+	//		long duration = (long) ((minDist / AVG_SPEED) * HOUR) + AVG_VISIT_TIME;
+	//		if (duration > timeLeft) return;
+	//
+	//		Utils.d(Utils.TAG, "dist=" + minDist + ",time=" + ((float) duration / HOUR));
+	//
+	//		GeoPoint p = Utils.geo(minLat, minLong);
+	//		routePoints.add(p);
+	//
+	//		addNextGeoPoint(Utils.geo(minLat, minLong), timeLeft - duration);
+	//	}
+	//
+	//	@Override
+	//	public void onNavigationAvailable(int type, Route route) {
+	//		Utils.d(Navigation.TAG, "route=" + route);
+	//
+	//		List<GeoPoint> points = route.getGeoPoints();
+	//		List<Placemark> placemarks = route.getPlacemarks();
+	//
+	//		if (points != null) {
+	//			int size = points.size();
+	//			for (int i = 0; i < size; i++) {
+	//				Placemark pl = null;
+	//				if (placemarks.size() > i) {
+	//					pl = placemarks.get(i);
+	//				}
+	//				if (pl != null) {
+	//					tvRoute.setText(tvRoute.getText() + buildDirections(pl));
+	//				}
+	//			}
+	//		}
+	//
+	//		synchronized (this) {
+	//			if (routePosition == 1) {
+	//				showDirectionsPopup();
+	//				mapView.setZoomLevel(mapView.getMaxZoomLevel() - 2); // FIXME magic number
+	//				btnRevert.setVisibility(View.VISIBLE);
+	//			}
+	//			if (routePosition < routePoints.size() - 1) {
+	//				navigation.navigateTo(routePoints.get(routePosition), routePoints.get(routePosition + 1),
+	//						Navigation.TYPE_WALKING, this);
+	//				routePosition += 1;
+	//
+	//				tvRoute.setText(tvRoute.getText() + " --- " + route.getTotalDistance() + " ---" + Utils.DNL);
+	//			}
+	//		}
+	//
+	//		RouteLineOverlay rlo = new RouteLineOverlay(this, mapView, points);
+	//		mapView.getOverlays().add(rlo);
+	//		mapView.invalidate();
+	//	}
+	//
+	//	@Override
+	//	public void onNavigationUnavailable(GeoPoint startPoint, GeoPoint endPoint) {
+	//		Utils.d(Navigation.TAG, "Can't get directions from " + startPoint + " to " + endPoint);
+	//	}
+	//
+	//	private String buildDirections(Placemark placemark) {
+	//		if (placemark == null) return "";
+	//		String instructions = placemark.getInstructions();
+	//		String distance = placemark.getDistance();
+	//
+	//		StringBuilder bld = new StringBuilder();
+	//		if (!TextUtils.isEmpty(instructions)) {
+	//			bld.append(instructions);
+	//			if (!TextUtils.isEmpty(distance)) {
+	//				bld.append(" -> ");
+	//			}
+	//		}
+	//		if (!TextUtils.isEmpty(distance)) {
+	//			bld.append(distance);
+	//		}
+	//		if (bld.length() > 0) {
+	//			bld.append(Utils.NL);
+	//		}
+	//		return bld.toString();
+	//	}
 
 }

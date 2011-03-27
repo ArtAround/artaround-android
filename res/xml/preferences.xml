@@ -8,11 +8,6 @@
 			android:title="@string/preferences_clear_cache_title"
 			android:summary="@string/preferences_clear_cache_summary"
 			android:key="clear_cache" />
-		
-		<Preference
-			android:title="@string/preferences_change_city_title"
-			android:summary="@string/preferences_change_city_summary"
-			android:key="change_city" />
 	</PreferenceCategory>
 	
 </PreferenceScreen>

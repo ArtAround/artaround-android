@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="6dp">
+	<TextView
+		android:id="@+id/art_title"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:textStyle="bold"
+		android:textColor="@color/art_field_label_txt"
+		android:text="Art Title Here" />
+	<TextView
+		android:id="@+id/art_description"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:singleLine="false"
+		android:textColor="#5E5E5E"
+		android:text="Art Location Description Here" />
+</LinearLayout>

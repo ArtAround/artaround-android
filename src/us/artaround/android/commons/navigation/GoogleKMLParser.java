@@ -127,7 +127,8 @@ public class GoogleKMLParser {
 				String distance = node.getFirstChild().getNodeValue();
 				// route.setTotalDistance(distance.split("<br/>")[0].substring(10).replace("&#160;",
 				// " "));
-				route.setTotalDistance(cleanup(distance));
+				distance = cleanup(distance);
+				route.setTotalDistance(distance);
 			}
 			else if (node.getNodeName().equals(ELEMENT_GEOM)) {
 				// Get the space-separated coordinates of the geographical points defining the

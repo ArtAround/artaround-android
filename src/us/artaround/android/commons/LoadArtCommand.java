@@ -21,5 +21,4 @@ public class LoadArtCommand extends BackgroundCommand {
 	public ParseResult execute() throws ArtAroundException {
 		return ServiceFactory.getArtService().getArts(page, perPage);
 	}
-
 }

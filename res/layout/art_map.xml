@@ -39,7 +39,7 @@
 				android:layout_gravity="center"
 				android:src="@drawable/ic_refresh_white"
 				android:visibility="invisible" />
-				
+
 			<ImageButton
 				android:id="@+id/btn_location"
 				android:layout_width="wrap_content"
@@ -47,7 +47,7 @@
 				android:layout_marginRight="6dp"
 				android:src="@drawable/ic_location"
 				android:background="@drawable/btn_default_small" />
-			
+
 			<ImageButton
 				android:id="@+id/btn_filter"
 				android:layout_width="wrap_content"
@@ -55,7 +55,7 @@
 				android:layout_marginRight="6dp"
 				android:src="@drawable/ic_filter"
 				android:background="@drawable/btn_default_small" />
-				
+
 			<ImageButton
 				android:id="@+id/btn_add"
 				android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
 		android:layout_above="@+id/footerbar"
 		android:clickable="true"
 		android:apiKey="@string/maps_api" />
-		
+
 	<TextView
 		android:id="@+id/popup_directions"
 		android:background="@drawable/dialog_bg"
@@ -100,7 +100,7 @@
 		android:layout_alignParentBottom="true"
 		android:background="@color/action_bar_bg"
 		android:padding="6dp">
-		
+
 		<Button
 			android:id="@+id/btn_nearby"
 			android:layout_width="120dp"
@@ -111,17 +111,26 @@
 			android:drawableLeft="@drawable/ic_nearby"
 			android:background="@drawable/btn_default_small" />
 
+		<ImageButton
+			android:id="@+id/btn_revert"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:src="@drawable/ic_revert"
+			android:background="@drawable/btn_default_small"
+			android:visibility="invisible" />
+
 		<Button
-			android:id="@+id/btn_directions"
+			android:id="@+id/btn_favorites"
 			android:layout_width="120dp"
 			android:layout_height="wrap_content"
 			android:layout_margin="0dp"
 			android:layout_alignParentRight="true"
-			android:text="@string/art_directions"
+			android:text="@string/art_favorites"
 			android:includeFontPadding="false"
-			android:drawableLeft="@drawable/ic_directions"
+			android:drawableLeft="@drawable/ic_favorite"
 			android:background="@drawable/btn_default_small" />
-		
+
 	</RelativeLayout>
 
 </RelativeLayout>

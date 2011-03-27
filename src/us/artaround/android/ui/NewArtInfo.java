@@ -76,6 +76,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	protected static final int UPLOAD_PHOTO_TOKEN = 101;
 	protected static final int LOAD_CATEGORIES_TOKEN = 102;
 	protected static final int LOAD_NEIGHBORHOODS_TOKEN = 103;
+	protected static final int LOAD_COMMENTS_TOKEN = 104;
 
 	protected static final int DIALOG_PROGRESS = 0;
 
@@ -344,6 +345,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	}
 
 	protected void setGallerySelection(int pos) {
+		if(allUris.isEmpty()) return;
 		((ImageAdapter) gallery.getAdapter()).notifyDataSetChanged();
 		galleryDetail.setImageURI(allUris.get(pos));
 		gallery.setSelection(pos, true);
@@ -655,7 +657,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 			else {
 				dismissDialog(DIALOG_PROGRESS);
 				Utils.showToast(this, R.string.submit_successful);
-				finish();
+				doFinish();
 			}
 			break;
 		}

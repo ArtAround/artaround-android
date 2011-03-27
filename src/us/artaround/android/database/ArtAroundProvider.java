@@ -1,6 +1,7 @@
 package us.artaround.android.database;
 
 import static us.artaround.android.database.ArtAroundDatabase.ARTAROUND_AUTHORITY;
+import static us.artaround.android.database.ArtAroundDatabase.createArtFavoritesTable;
 import static us.artaround.android.database.ArtAroundDatabase.createArtistsTable;
 import static us.artaround.android.database.ArtAroundDatabase.createArtsTable;
 import static us.artaround.android.database.ArtAroundDatabase.createCategoriesTable;
@@ -9,6 +10,7 @@ import static us.artaround.android.database.ArtAroundDatabase.createNeighborhood
 import java.util.HashMap;
 
 import us.artaround.android.commons.Utils;
+import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
@@ -39,13 +41,13 @@ public class ArtAroundProvider extends ContentProvider {
 	private static HashMap<String, String> neighborhoodsMap;
 
 	private static final int ARTS = 0;
-	//private static final int ART_UUID = 1;
 	private static final int ARTISTS = 2;
-	//private static final int ARTIST_UUID = 3;
 	private static final int CATEGORIES = 4;
 	private static final int NEIGHBORHOODS = 5;
+	private static final int ART_FAVORITES = 6;
 
 	private static final String ARTS_TABLES;
+	private static final String ART_FAVORITES_TABLES;
 
 	private static final UriMatcher uriMatcher;
 
@@ -77,16 +79,14 @@ public class ArtAroundProvider extends ContentProvider {
 		switch (uriMatcher.match(uri)) {
 		case ARTS:
 			return Arts.CONTENT_TYPE;
-			//		case ART_UUID:
-			//			return Arts.CONTENT_ITEM_TYPE;
 		case ARTISTS:
 			return Artists.CONTENT_TYPE;
-			//		case ARTIST_UUID:
-			//			return Artists.CONTENT_ITEM_TYPE;
 		case CATEGORIES:
 			return Categories.CONTENT_TYPE;
 		case NEIGHBORHOODS:
 			return Neighborhoods.CONTENT_TYPE;
+		case ART_FAVORITES:
+			return ArtFavorites.CONTENT_TYPE;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -102,6 +102,8 @@ public class ArtAroundProvider extends ContentProvider {
 			return Categories.TABLE_NAME;
 		case NEIGHBORHOODS:
 			return Neighborhoods.TABLE_NAME;
+		case ART_FAVORITES:
+			return ArtFavorites.TABLE_NAME;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -117,6 +119,8 @@ public class ArtAroundProvider extends ContentProvider {
 			return Categories.CONTENT_URI;
 		case NEIGHBORHOODS:
 			return Neighborhoods.CONTENT_URI;
+		case ART_FAVORITES:
+			return ArtFavorites.CONTENT_URI;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -125,50 +129,33 @@ public class ArtAroundProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-		//StringBuilder where = uri.getPathSegments().size() == 1 ? null : new StringBuilder(100);
 
 		switch (uriMatcher.match(uri)) {
 		case ARTS:
 			qb.setTables(ARTS_TABLES);
 			qb.setProjectionMap(artsMap);
 			break;
-		//		case ART_UUID:
-		//			qb.setTables(ARTS_TABLES);
-		//			qb.setProjectionMap(artsMap);
-		//
-		//			where.append(" AND ");
-		//			where.append(Arts.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // art uuid
-		//			qb.appendWhere(where.toString());
-		//			break;
 		case ARTISTS:
 			qb.setTables(Artists.TABLE_NAME);
 			qb.setProjectionMap(artistsMap);
-			qb.setDistinct(true);
 			break;
-		//		case ARTIST_UUID:
-		//			qb.setTables(Artists.TABLE_NAME);
-		//			qb.setProjectionMap(artistsMap);
-		//
-		//			where.append(Artists.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // artist uuid
-		//			qb.appendWhere(where.toString());
-		//			break;
 		case CATEGORIES:
 			qb.setTables(Categories.TABLE_NAME);
 			qb.setProjectionMap(categoriesMap);
-			qb.setDistinct(true);
 			break;
 		case NEIGHBORHOODS:
 			qb.setTables(Neighborhoods.TABLE_NAME);
 			qb.setProjectionMap(neighborhoodsMap);
-			qb.setDistinct(true);
+			break;
+		case ART_FAVORITES:
+			qb.setTables(ART_FAVORITES_TABLES);
+			qb.setProjectionMap(artsMap);
 			break;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
+
+		qb.setDistinct(true);
 
 		//  if no sort order is specified use the default
 		String orderBy = "";
@@ -202,7 +189,13 @@ public class ArtAroundProvider extends ContentProvider {
 
 	@Override
 	public Uri insert(Uri uri, ContentValues initialValues) {
+		db.beginTransaction();
+
 		long rowId = db.insert(getTableName(uri), BaseColumns._ID, initialValues);
+
+		db.setTransactionSuccessful();
+		db.endTransaction();
+
 		if (rowId > 0) {
 			Uri newUri = ContentUris.withAppendedId(getContentUri(uri), rowId);
 			contentResolver.notifyChange(newUri, null);
@@ -294,31 +287,9 @@ public class ArtAroundProvider extends ContentProvider {
 		case ARTS:
 			count = db.update(Arts.TABLE_NAME, values, selection, selectionArgs);
 			break;
-		//		case ART_UUID:
-		//			where.append(Arts.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // art id
-		//			if (!TextUtils.isEmpty(selection)) {
-		//				where.append(" AND (");
-		//				where.append(selection);
-		//				where.append(')');
-		//			}
-		//			count = db.update(Arts.TABLE_NAME, values, where.toString(), selectionArgs);
-		//			break;
 		case ARTISTS:
 			count = db.update(Artists.TABLE_NAME, values, selection, selectionArgs);
 			break;
-		//		case ARTIST_UUID:
-		//			where.append(Artists.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // artist name
-		//			if (!TextUtils.isEmpty(selection)) {
-		//				where.append(" AND (");
-		//				where.append(selection);
-		//				where.append(')');
-		//			}
-		//			count = db.update(Artists.TABLE_NAME, values, where.toString(), selectionArgs);
-		//			break;
 		case CATEGORIES:
 			count = db.update(Categories.TABLE_NAME, values, selection, selectionArgs);
 			break;
@@ -341,6 +312,12 @@ public class ArtAroundProvider extends ContentProvider {
 	/**
 	 * Delete a record from the database.
 	 * 
+	 * From SQLite: When the WHERE is omitted from a DELETE statement and the
+	 * table being deleted has no triggers, SQLite uses an optimization to erase
+	 * the entire table content without having to visit each row of the table
+	 * individually. This "truncate" optimization makes the delete run much
+	 * faster
+	 * 
 	 * @see android.content.ContentProvider#delete(android.net.Uri,
 	 *      java.lang.String, java.lang.String[])
 	 */
@@ -355,36 +332,17 @@ public class ArtAroundProvider extends ContentProvider {
 		case ARTS:
 			count = db.delete(Arts.TABLE_NAME, selection, selectionArgs);
 			break;
-		//		case ART_UUID:
-		//			where.append(Arts.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // art id
-		//			if (!TextUtils.isEmpty(selection)) {
-		//				where.append(" AND (");
-		//				where.append(selection);
-		//				where.append(')');
-		//			}
-		//			count = db.delete(Arts.TABLE_NAME, where.toString(), selectionArgs);
-		//			break;
 		case ARTISTS:
 			count = db.delete(Artists.TABLE_NAME, selection, selectionArgs);
 			break;
-		//		case ARTIST_UUID:
-		//			where.append(Artists.UUID);
-		//			where.append('=');
-		//			where.append(uri.getPathSegments().get(1)); // artist name
-		//			if (!TextUtils.isEmpty(selection)) {
-		//				where.append(" AND (");
-		//				where.append(selection);
-		//				where.append(')');
-		//			}
-		//			count = db.delete(Artists.TABLE_NAME, where.toString(), selectionArgs);
-		//			break;
 		case CATEGORIES:
 			count = db.delete(Categories.TABLE_NAME, selection, selectionArgs);
 			break;
 		case NEIGHBORHOODS:
 			count = db.delete(Neighborhoods.TABLE_NAME, selection, selectionArgs);
+			break;
+		case ART_FAVORITES:
+			count = db.delete(ArtFavorites.TABLE_NAME, selection, selectionArgs);
 			break;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
@@ -413,6 +371,7 @@ public class ArtAroundProvider extends ContentProvider {
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			db.execSQL(createArtsTable());
+			db.execSQL(createArtFavoritesTable());
 			db.execSQL(createArtistsTable());
 			db.execSQL(createCategoriesTable());
 			db.execSQL(createNeighborhoodsTable());
@@ -444,14 +403,16 @@ public class ArtAroundProvider extends ContentProvider {
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Categories.TABLE_NAME, CATEGORIES);
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Neighborhoods.TABLE_NAME, NEIGHBORHOODS);
 
+		uriMatcher.addURI(ARTAROUND_AUTHORITY, ArtFavorites.TABLE_NAME, ART_FAVORITES);
+
 		artistsMap = new HashMap<String, String>();
 		artistsMap.put(Artists._ID, Artists._ID);
 		artistsMap.put(Artists.UUID, Artists.UUID);
 		artistsMap.put(Artists.NAME, Artists.NAME);
 
 		artsMap = new HashMap<String, String>();
-		artsMap.put(Arts._ID, Arts._ID);
-		artsMap.put(Arts.SLUG, Arts.SLUG);
+		artsMap.put(Arts._ID, Arts.TABLE_NAME + "." + Arts._ID);
+		artsMap.put(Arts.SLUG, Arts.TABLE_NAME + "." + Arts.SLUG);
 		artsMap.put(Arts.TITLE, Arts.TITLE);
 		artsMap.put(Arts.CATEGORY, Arts.CATEGORY);
 		artsMap.put(Arts.NEIGHBORHOOD, Arts.NEIGHBORHOOD);
@@ -477,7 +438,7 @@ public class ArtAroundProvider extends ContentProvider {
 		neighborhoodsMap.put(Neighborhoods._ID, Neighborhoods._ID);
 		neighborhoodsMap.put(Neighborhoods.NAME, Neighborhoods.NAME);
 
-		// left outer join because art.artist might be null
+		// matches all the arts, even when art.artist is null
 		StringBuilder b = new StringBuilder();
 		b.append(Arts.TABLE_NAME).append(" LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
 		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
@@ -485,5 +446,14 @@ public class ArtAroundProvider extends ContentProvider {
 
 		ARTS_TABLES = b.toString();
 
+		// matches the slugs that are both in Arts and ArtFavorites
+		b.delete(0, b.length());
+		b.append(ArtFavorites.TABLE_NAME).append(" INNER JOIN ").append(Arts.TABLE_NAME);
+		b.append(" ON (").append(ArtFavorites.TABLE_NAME).append(".").append(ArtFavorites.SLUG).append("=");
+		b.append(Arts.TABLE_NAME).append(".").append(Arts.SLUG).append(") LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
+		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
+		b.append(Artists.TABLE_NAME).append(".").append(Artists.UUID).append(")");
+
+		ART_FAVORITES_TABLES = b.toString();
 	}
 }

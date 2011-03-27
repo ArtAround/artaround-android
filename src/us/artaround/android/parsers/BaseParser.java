@@ -222,9 +222,7 @@ public class BaseParser {
 								List<String> photoIds = new ArrayList<String>();
 								//[id1, id2, ...]
 								while (jp.nextToken() != JsonToken.END_ARRAY) {
-									if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
-										photoIds.add(jp.getText());
-									}
+									photoIds.add(jp.getText());
 								}
 								art.put(Arts.PHOTO_IDS, TextUtils.join(Utils.STR_SEP, photoIds));
 								artObj.photoIds = photoIds;
@@ -284,6 +282,7 @@ public class BaseParser {
 			//			ArtAroundProvider.contentResolver
 			//					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
 
+			// save artists
 			ArtAroundProvider.contentResolver.bulkInsert(Artists.CONTENT_URI,
 					artists.toArray(new ContentValues[artists.size()]));
 

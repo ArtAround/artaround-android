@@ -9,7 +9,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-
 /**
  * Slightly more abstract {@link AsyncQueryHandler} that helps keep a
  * {@link WeakReference} back to a listener. Will properly close any
@@ -61,10 +60,9 @@ public class NotifyingAsyncQueryHandler extends AsyncQueryHandler {
 	 * {@link QueryListener#onQueryComplete(int, Object, Cursor)} is called if a
 	 * valid {@link QueryListener} is present.
 	 */
-	@Override
-	public void startQuery(int token, Object cookie, Uri uri, String[] projection, String selection,
-			String[] selectionArgs, String sortOrder) {
-		super.startQuery(token, cookie, uri, projection, selection, selectionArgs, sortOrder);
+	public void startQuery(int token, Uri uri, String[] projection, String selection, String[] selectionArgs,
+			String sortOrder) {
+		super.startQuery(token, null, uri, projection, selection, selectionArgs, sortOrder);
 	}
 
 	/**
@@ -85,47 +83,35 @@ public class NotifyingAsyncQueryHandler extends AsyncQueryHandler {
 	/** {@inheritDoc} */
 	@Override
 	protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
-		final NotifyingAsyncQueryListener queryListener = (NotifyingAsyncQueryListener) (listener == null ? null
-				: listener.get());
-		if (queryListener != null) {
-			queryListener.onQueryComplete(token, cookie, cursor);
+		NotifyingAsyncListener l = listener.get();
+		if (l == null || !(l instanceof NotifyingAsyncQueryListener)) {
+			if (cursor != null) {
+				cursor.close();
+			}
+			return;
 		}
-		else if (cursor != null) {
-			cursor.close();
-		}
+
+		((NotifyingAsyncQueryListener) l).onQueryComplete(token, cookie, cursor);
 	}
 
 	@Override
 	protected void onDeleteComplete(int token, Object cookie, int result) {
-		if (!(listener instanceof NotifyingAsyncDeleteListener)) return;
-
-		final NotifyingAsyncDeleteListener deleteListener = (NotifyingAsyncDeleteListener) (listener == null ? null
-				: listener.get());
-		if (deleteListener != null) {
-			deleteListener.onDeleteComplete(token, cookie, result);
-		}
+		NotifyingAsyncListener l = listener.get();
+		if (l == null || !(l instanceof NotifyingAsyncDeleteListener)) return;
+		((NotifyingAsyncDeleteListener) l).onDeleteComplete(token, cookie, result);
 	}
 
 	@Override
 	protected void onInsertComplete(int token, Object cookie, Uri uri) {
-		if (!(listener instanceof NotifyingAsyncInsertListener)) return;
-
-		final NotifyingAsyncInsertListener insertListener = (NotifyingAsyncInsertListener) (listener == null ? null
-				: listener.get());
-		if (insertListener != null) {
-			insertListener.onInsertComplete(token, cookie, uri);
-		}
+		NotifyingAsyncListener l = listener.get();
+		if (l == null || !(l instanceof NotifyingAsyncInsertListener)) return;
+		((NotifyingAsyncInsertListener) l).onInsertComplete(token, cookie, uri);
 	}
 
 	@Override
 	protected void onUpdateComplete(int token, Object cookie, int result) {
-		if (!(listener instanceof NotifyingAsyncUpdateListener)) return;
-
-		final NotifyingAsyncUpdateListener updateListener = (NotifyingAsyncUpdateListener) (listener == null ? null
-				: listener.get());
-		if (updateListener != null) {
-			updateListener.onUpdateComplete(token, cookie, result);
-		}
+		NotifyingAsyncListener l = listener.get();
+		if (l == null || !(l instanceof NotifyingAsyncUpdateListener)) return;
+		((NotifyingAsyncUpdateListener) l).onUpdateComplete(token, cookie, result);
 	}
-
 }

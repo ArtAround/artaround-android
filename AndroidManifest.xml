@@ -13,7 +13,7 @@
 
 		<activity
 			android:name=".android.ui.ArtMap"
-			android:label="@string/app_label"
+
 			android:theme="@android:style/Theme.NoTitleBar">
 
 			<intent-filter>
@@ -27,27 +27,27 @@
 		<activity
 			android:name=".android.ui.ArtFilters"
 			android:theme="@android:style/Theme.Dialog"
-			android:label="@string/art_filters"/>
+			android:label="@string/art_filters" />
 
 		<activity
 			android:name=".android.ui.ArtNearby"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
+			android:theme="@android:style/Theme.NoTitleBar" />
+
+		<activity
+			android:name=".android.ui.ArtFavs"
+			android:theme="@android:style/Theme.NoTitleBar" />
 
 		<activity
 			android:name=".android.ui.ArtInfo"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
+			android:theme="@android:style/Theme.NoTitleBar" />
 
 		<activity
 			android:name=".android.ui.NewArtInfo"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
+			android:theme="@android:style/Theme.NoTitleBar" />
 
 		<activity
 			android:name=".android.ui.Preferences"
-			android:theme="@android:style/Theme.NoTitleBar"
-			android:label="@string/app_label" />
+			android:theme="@android:style/Theme.NoTitleBar" />
 
 		<provider
 			android:name=".android.database.ArtAroundProvider"

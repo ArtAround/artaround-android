@@ -3,24 +3,20 @@
 	<integer-array
 		name="city_codes">
 		<item>0</item>
-		<item>1</item>
 	</integer-array>
 	
 	<string-array
 		name="city_names">
 		<item>Washington</item>
-		<item>Bucuresti</item>
 	</string-array>
 	
 	<string-array
 		name="city_centers">
 		<item>38895111,-77036365</item>
-		<item>44437711,26097367</item>
 	</string-array>
 	
 	<string-array
 		name="city_servers">
 		<item>http://theartaround.us/api/v1/</item>
-		<item>http://192.168.1.104:8080/artaround/api/v1/</item>
 	</string-array>
 </resources>

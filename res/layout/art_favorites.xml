@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical"
+	android:background="@color/art_details_bg">
+
+	<LinearLayout
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		android:background="@color/action_bar_bg"
+		android:padding="6dp">
+
+		<TextView
+			android:id="@+id/app_label"
+			android:layout_width="wrap_content"
+			android:layout_weight="1"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			android:textColor="@android:color/white"
+			android:textStyle="bold"
+			android:text="@string/art_favorites"
+			android:singleLine="true"
+			android:ellipsize="marquee" />
+			
+		<ImageView
+			android:id="@+id/img_refresh"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginRight="6dp"
+			android:layout_gravity="center"
+			android:src="@drawable/ic_refresh_white"
+			android:visibility="invisible" />
+	</LinearLayout>
+
+	<include
+		layout="@layout/show_loading"
+		android:id="@+id/stub_loading"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:visibility="gone" />
+
+	<TextView
+		android:id="@android:id/android:empty"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:layout_gravity="center"
+		android:gravity="center"
+		android:textStyle="bold"
+		android:text="@string/empty" />
+
+	<ListView
+		android:id="@android:id/android:list"
+		android:layout_width="fill_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		android:scrollbarStyle="outsideOverlay"
+		android:scrollingCache="false"
+		android:cacheColorHint="@color/art_details_bg"
+		android:divider="@drawable/divider_dark"
+		android:dividerHeight="1px" />
+</LinearLayout>
