@@ -114,8 +114,8 @@ public class ArtAroundDatabase {
 		b.append(Arts.ARTIST).append(" TEXT);");
 
 		// index on id
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Arts.TABLE_NAME).append(".").append(Arts.SLUG)
-				.append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Arts.TABLE_NAME).append("(").append(Arts.SLUG)
+				.append(");");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
@@ -127,8 +127,8 @@ public class ArtAroundDatabase {
 		b.append(ArtFavorites._ID).append(" INTEGER PRIMARY KEY,");
 		b.append(Arts.SLUG).append(" TEXT);");
 
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(ArtFavorites.TABLE_NAME).append(".")
-				.append(ArtFavorites.SLUG).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(ArtFavorites.TABLE_NAME).append("(")
+				.append(ArtFavorites.SLUG).append(");");
 
 		return b.toString();
 	}
@@ -143,10 +143,10 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Artists.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append(".").append(Artists.UUID)
-				.append(";");
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Artists.TABLE_NAME).append(".").append(Artists.NAME)
-				.append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append("(").append(Artists.UUID)
+				.append(");");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Artists.TABLE_NAME).append("(").append(Artists.NAME)
+				.append(");");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
@@ -162,8 +162,8 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Categories.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Categories.TABLE_NAME).append(".")
-				.append(Categories.NAME).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Categories.TABLE_NAME).append("(")
+				.append(Categories.NAME).append(");");
 
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
@@ -179,8 +179,8 @@ public class ArtAroundDatabase {
 		b.append("UNIQUE (").append(Neighborhoods.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Neighborhoods.TABLE_NAME).append(".")
-				.append(Neighborhoods.NAME).append(";");
+		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Neighborhoods.TABLE_NAME).append("(")
+				.append(Neighborhoods.NAME).append(");");
 		String str = b.toString();
 		//Log.d(Utils.TAG, "SQL: " + str);
 		return str;
