@@ -23,10 +23,10 @@
 			android:apiKey="@string/maps_api" />
 
 		<ImageView
-			android:id="@+id/drag"
+			android:id="@+id/minimap_drag"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:src="@drawable/ic_pin_current"
+			android:src="@drawable/ic_pin"
 			android:visibility="gone" />
 	</RelativeLayout>
 

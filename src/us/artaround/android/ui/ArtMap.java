@@ -11,16 +11,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
-import us.artaround.android.commons.BackgroundCommand;
-import us.artaround.android.commons.LoadArtCommand;
-import us.artaround.android.commons.LoadingTask;
-import us.artaround.android.commons.LoadingTask.LoadingTaskCallback;
-import us.artaround.android.commons.LocationUpdater;
-import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncUpdateListener;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.BackgroundCommand;
+import us.artaround.android.common.LoadArtCommand;
+import us.artaround.android.common.LoadingTask;
+import us.artaround.android.common.LoadingTask.LoadingTaskCallback;
+import us.artaround.android.common.LocationUpdater;
+import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
+import us.artaround.android.common.NotifyingAsyncQueryHandler;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncUpdateListener;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
@@ -573,7 +573,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void gotoArtPage(Art art) {
 		// save the current state of the map
-		Intent iArt = new Intent(this, ArtInfo.class);
+		Intent iArt = new Intent(this, ArtEdit.class);
 		iArt.putExtra("art", art).putExtra("location", currentLocation);
 		iArt.putExtra("newZoom", newZoom);
 		iArt.putExtra("filters", filters);
@@ -583,7 +583,7 @@ public class ArtMap extends MapActivity implements OverlayTapListener, ZoomListe
 
 	private void gotoNewArtPage() {
 		// save the current state of the map
-		Intent iArt = new Intent(this, NewArtInfo.class);
+		Intent iArt = new Intent(this, ArtEdit.class);
 		iArt.putExtra("location", currentLocation);
 		iArt.putExtra("newZoom", newZoom);
 		iArt.putExtra("filters", filters);

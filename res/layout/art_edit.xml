@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	style="@style/Activity">
+
+	<!-- ============================================= -->
+	<!-- Actionbar -->
+	<LinearLayout
+		style="@style/Actionbar">
+		<TextView
+			style="@style/ActionbarTitle.NoBack"
+			android:id="@+id/actionbar_title"
+			android:text="@string/art_edit_actionbar_title" />
+
+		<ImageView
+			style="@style/ActionbarLoader"
+			android:id="@+id/actionbar_loader" />
+	</LinearLayout>
+	<!-- ============================================= -->
+
+	<us.artaround.android.ui.ArtScrollView
+		style="@style/Scrollable"
+		android:id="@+id/scroll_view">
+
+		<TableLayout
+			style="@style/ArtEditTable">
+
+			<!-- ============================================= -->
+			<!-- Name -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+				<TextView
+					style="@style/ArtEditLabel"
+					android:text="@string/art_edit_label_name" />
+
+				<EditText
+					style="@style/ArtEditInput.HintEmpty"
+					android:id="@+id/art_edit_input_name" />
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Artist -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+				<TextView
+					style="@style/ArtEditLabel"
+					android:text="@string/art_edit_label_artist" />
+
+				<AutoCompleteTextView
+					style="@style/ArtEditInput"
+					android:id="@+id/art_edit_input_artist" />
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Year, Category -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+
+				<TextView
+					style="@style/ArtEditLabel"
+					android:text="@string/art_edit_label_year" />
+
+				<LinearLayout>
+					<EditText
+						style="@style/ArtEditInput"
+						android:id="@+id/art_edit_input_year"
+						android:layout_width="wrap_content"
+						android:minWidth="70dp"
+						android:inputType="number" />
+
+					<TextView
+						style="@style/ArtEditLabel"
+						android:text="@string/art_edit_label_category"
+						android:layout_width="wrap_content" />
+
+					<AutoCompleteTextView
+						style="@style/ArtEditInput.HintEmpty"
+						android:id="@+id/art_edit_input_category"
+						android:layout_width="0dp"
+						android:layout_weight="1" />
+				</LinearLayout>
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Description -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+				<EditText
+					style="@style/ArtEditInput.Textarea"
+					android:id="@+id/art_edit_input_description"
+					android:hint="@string/art_edit_hint_description"
+					android:layout_span="2" />
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Gallery -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+
+				<Gallery
+					style="@style/ArtGallery"
+					android:id="@+id/gallery"
+					android:layout_span="2" />
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Ward, Neighborhood -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+
+				<TextView
+					style="@style/ArtEditLabel"
+					android:text="@string/art_edit_label_ward" />
+
+				<LinearLayout>
+					<EditText
+						style="@style/ArtEditInput"
+						android:id="@+id/art_edit_input_ward"
+						android:layout_width="wrap_content"
+						android:minWidth="50dp"
+						android:inputType="number" />
+
+					<TextView
+						style="@style/ArtEditLabel"
+						android:text="@string/art_edit_label_neighborhood"
+						android:layout_width="wrap_content" />
+
+					<AutoCompleteTextView
+						style="@style/ArtEditInput.HintEmpty"
+						android:id="@+id/art_edit_input_neighborhood"
+						android:layout_width="0dp"
+						android:layout_weight="1" />
+				</LinearLayout>
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Location Description -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+
+				<EditText
+					style="@style/ArtEditInput.Textarea"
+					android:id="@+id/art_edit_input_location_description"
+					android:hint="@string/art_edit_hint_location_description"
+					android:layout_span="2" />
+			</TableRow>
+			<!-- ============================================= -->
+
+			<!-- ============================================= -->
+			<!-- Minimap -->
+			<TableRow
+				style="@style/ArtEditTable.Row">
+
+				<LinearLayout
+					android:orientation="vertical"
+					android:layout_span="2">
+
+					<TextView
+						style="@style/ArtEditLabel"
+						android:id="@+id/art_edit_label_minimap"
+						android:text="@string/art_edit_label_minimap" />
+
+					<TextView
+						style="@style/ArtEditLabel"
+						android:id="@+id/minimap_coords"
+						android:layout_below="@+id/art_edit_label_minimap" />
+
+					<RelativeLayout
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="5dp"
+						android:layout_marginBottom="5dp">
+
+						<us.artaround.android.ui.ArtMapView
+							style="@style/ArtMinimap"
+							android:id="@+id/minimap"
+							android:layout_below="@+id/minimap_coords"
+							android:clickable="true" />
+
+						<ImageView
+							android:id="@+id/minimap_drag"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:src="@drawable/ic_pin"
+							android:visibility="gone" />
+					</RelativeLayout>
+				</LinearLayout>
+			</TableRow>
+
+			<!-- ============================================= -->
+			<!-- Bottombar -->
+			<TableRow
+				style="@style/ArtEditTable.Row"
+				android:layout_marginTop="10dp">
+
+				<RelativeLayout
+					android:layout_span="2">
+
+					<Button
+						style="@style/Button"
+						android:id="@+id/btn_cancel"
+						android:text="@string/cancel" />
+
+					<Button
+						style="@style/Button"
+						android:id="@+id/btn_submit"
+						android:text="@string/submit"
+						android:layout_alignParentRight="true" />
+				</RelativeLayout>
+			</TableRow>
+			<!-- ============================================= -->
+
+		</TableLayout>
+	</us.artaround.android.ui.ArtScrollView>
+</LinearLayout>

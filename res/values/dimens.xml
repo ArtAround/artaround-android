@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<dimen
+		name="ActionbarTitle">18dp</dimen>
+
+	<dimen
+		name="ArtEditLabel">14dp</dimen>
+	<dimen
+		name="ArtEditInput">16dp</dimen>
+	<dimen
+		name="ArtMinimapHeight">200dp</dimen>
+	<dimen
+		name="ArtGalleryHeight">200dp</dimen>
+
+</resources>

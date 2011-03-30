@@ -6,18 +6,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
-import us.artaround.android.commons.BackgroundCommand;
-import us.artaround.android.commons.LoadCategoriesCommand;
-import us.artaround.android.commons.LoadNeighborhoodsCommand;
-import us.artaround.android.commons.LoadingTask;
-import us.artaround.android.commons.LoadingTask.LoadingTaskCallback;
-import us.artaround.android.commons.LocationUpdater;
-import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
-import us.artaround.android.commons.SubmitArtCommand;
-import us.artaround.android.commons.UploadPhotoCommand;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.BackgroundCommand;
+import us.artaround.android.common.LoadCategoriesCommand;
+import us.artaround.android.common.LoadNeighborhoodsCommand;
+import us.artaround.android.common.LoadingTask;
+import us.artaround.android.common.LoadingTask.LoadingTaskCallback;
+import us.artaround.android.common.LocationUpdater;
+import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
+import us.artaround.android.common.NotifyingAsyncQueryHandler;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.common.SubmitArtCommand;
+import us.artaround.android.common.UploadPhotoCommand;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
@@ -117,9 +117,8 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	protected int currentPage = 0, pageCount = 3;
 
 	protected Uri uploadTempPhotoUri;
-	protected ArrayList<Uri> allUris, uploadPhotoUris;
+	protected ArrayList<String> allUris, uploadPhotoUris;
 	protected AtomicInteger leftToUpload;
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -258,7 +257,6 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 		setModeEditing();
 		setCurrentPage();
 
-
 		if (currentLocation == null && currentGeo == null) {
 			startLocationUpdate();
 		}
@@ -323,7 +321,6 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 		setupGallery();
 	}
 
-
 	protected void setupMiniMap() {
 		miniMap = (MapView) findViewById(R.id.mini_map);
 		miniMap.setBuiltInZoomControls(false);
@@ -333,21 +330,21 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	protected void setupGallery() {
 		galleryDetail = (ImageView) findViewById(R.id.gallery_imageView);
 		gallery = (Gallery) findViewById(R.id.gallery);
-		gallery.setAdapter(new ImageAdapter(this, allUris));
+		gallery.setAdapter(new GalleryAdapter(this, allUris));
 		gallery.setEmptyView(findViewById(R.id.empty));
 		gallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				galleryDetail.setImageURI(allUris.get(position));
+				galleryDetail.setImageURI(Uri.parse(allUris.get(position)));
 			}
 		});
 		registerForContextMenu(gallery);
 	}
 
 	protected void setGallerySelection(int pos) {
-		if(allUris.isEmpty()) return;
-		((ImageAdapter) gallery.getAdapter()).notifyDataSetChanged();
-		galleryDetail.setImageURI(allUris.get(pos));
+		if (allUris.isEmpty()) return;
+		((GalleryAdapter) gallery.getAdapter()).notifyDataSetChanged();
+		galleryDetail.setImageURI(Uri.parse(allUris.get(pos)));
 		gallery.setSelection(pos, true);
 	}
 
@@ -494,8 +491,8 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 		case REQUEST_CODE_GALLERY:
 		case REQUEST_CODE_CROP_FROM_CAMERA:
 			// delete file in the end
-			uploadPhotoUris.add(uploadTempPhotoUri);
-			allUris.add(uploadTempPhotoUri);
+			uploadPhotoUris.add(uploadTempPhotoUri.toString());
+			allUris.add(uploadTempPhotoUri.toString());
 			setGallerySelection(allUris.size() - 1);
 			break;
 		}
@@ -548,8 +545,8 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	}
 
 	protected void setupVars() {
-		uploadPhotoUris = new ArrayList<Uri>();
-		allUris = new ArrayList<Uri>();
+		uploadPhotoUris = new ArrayList<String>();
+		allUris = new ArrayList<String>();
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
 		locationUpdater = new LocationUpdater(this);
 		city = ServiceFactory.getCurrentCity();
@@ -635,7 +632,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 			}
 			else {
 				uploadPhotoTasks.remove(command.getId());
-				String filePath = uploadPhotoUris.get(left - 1).getPath();
+				String filePath = Uri.parse(uploadPhotoUris.get(left - 1)).getPath();
 				LoadingTask newTask = (LoadingTask) new LoadingTask(this, new UploadPhotoCommand(UPLOAD_PHOTO_TOKEN,
 						filePath, art.slug, filePath)).execute();
 				uploadPhotoTasks.put(filePath, newTask);
@@ -649,7 +646,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 			leftToUpload.set(size);
 
 			if (size > 0) {
-				String filePath = uploadPhotoUris.get(size - 1).getPath();
+				String filePath = Uri.parse(uploadPhotoUris.get(size - 1)).getPath();
 				LoadingTask newTask = (LoadingTask) new LoadingTask(this, new UploadPhotoCommand(UPLOAD_PHOTO_TOKEN,
 						filePath, art.slug, filePath)).execute();
 				uploadPhotoTasks.put(filePath, newTask);
@@ -736,7 +733,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	}
 
 	protected void addDraggablePin(GeoPoint geo) {
-		currentOverlay = new CurrentOverlay(this, getResources().getDrawable(R.drawable.ic_pin_current), geo, true);
+		currentOverlay = new CurrentOverlay(this, R.drawable.ic_pin, geo, R.id.minimap_drag);
 		miniMap.getOverlays().add(currentOverlay);
 		miniMap.getController().animateTo(geo);
 		miniMap.invalidate();
@@ -828,7 +825,7 @@ public class NewArtInfo extends MapActivity implements NotifyingAsyncQueryListen
 	}
 
 	protected static class Holder {
-		ArrayList<Uri> uploadPhotoUris, allUris;
+		ArrayList<String> uploadPhotoUris, allUris;
 		AtomicInteger leftToUpload;
 		HashMap<String, LoadingTask> uploadPhotoTasks;
 		LoadingTask submitArtTask;

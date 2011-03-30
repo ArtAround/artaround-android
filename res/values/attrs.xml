@@ -5,7 +5,6 @@
 		<attr
 			name="android:galleryItemBackground" />
 	</declare-styleable>
-
 	<declare-styleable
 		name="ArtField">
 		<attr
@@ -33,9 +32,31 @@
 			name="inputType"
 			format="enum">
 			<enum
-				name="text" value="1" />
+				name="text"
+				value="1" />
 			<enum
-				name="number" value="2" />
+				name="number"
+				value="2" />
 		</attr>
 	</declare-styleable>
+	<!-- =============================================================== -->
+	<!-- Theme Attributes -->
+	<!-- =============================================================== -->
+	<attr
+		name="Actionbar"
+		format="reference" />
+	<attr
+		name="ActionbarTitle"
+		format="reference" />		
+	<attr
+		name="ActionbarLoader"
+		format="reference" />	
+		
+	<attr
+		name="Activity"
+		format="reference" />
+	
+	<attr
+		name="ArtEditHintInputEmpty"
+		format="reference" />
 </resources>

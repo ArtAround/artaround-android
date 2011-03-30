@@ -3,7 +3,7 @@ package us.artaround.android.database;
 import java.util.ArrayList;
 import java.util.List;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.models.Art;
 import us.artaround.models.Artist;
 import android.content.ContentValues;

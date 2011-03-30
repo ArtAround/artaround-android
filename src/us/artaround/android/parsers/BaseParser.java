@@ -15,7 +15,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundDatabase.Categories;

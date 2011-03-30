@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import us.artaround.R;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.View;

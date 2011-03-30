@@ -1,6 +1,6 @@
 package us.artaround.android.ui;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.models.Art;
 import android.text.TextUtils;
 

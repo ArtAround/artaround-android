@@ -3,16 +3,16 @@ package us.artaround.android.ui;
 import java.util.List;
 
 import us.artaround.R;
-import us.artaround.android.commons.BackgroundCommand;
-import us.artaround.android.commons.LoadFlickrPhotosCommand;
-import us.artaround.android.commons.LoadingTask;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncDeleteListener;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncInsertListener;
-import us.artaround.android.commons.Utils;
-import us.artaround.android.commons.navigation.Navigation;
-import us.artaround.android.commons.navigation.Navigation.NavigationListener;
-import us.artaround.android.commons.navigation.Route;
-import us.artaround.android.commons.navigation.RouteLineOverlay;
+import us.artaround.android.common.BackgroundCommand;
+import us.artaround.android.common.LoadFlickrPhotosCommand;
+import us.artaround.android.common.LoadingTask;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncDeleteListener;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncInsertListener;
+import us.artaround.android.common.Utils;
+import us.artaround.android.common.navigation.Navigation;
+import us.artaround.android.common.navigation.Navigation.NavigationListener;
+import us.artaround.android.common.navigation.Route;
+import us.artaround.android.common.navigation.RouteLineOverlay;
 import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.services.FlickrService;
 import us.artaround.models.Art;
@@ -214,8 +214,7 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 		List<GeoPoint> points = route.getGeoPoints();
 		RouteLineOverlay rlo = new RouteLineOverlay(this, miniMap, points);
 		miniMap.getOverlays().add(rlo);
-		miniMap.getOverlays().add(
-				new CurrentOverlay(this, getResources().getDrawable(R.drawable.ic_pin_current), currentGeo, false));
+		miniMap.getOverlays().add(new CurrentOverlay(this, R.drawable.ic_pin, currentGeo, null));
 		miniMap.invalidate();
 
 		String dist = route.getTotalDistance();
@@ -252,7 +251,7 @@ public class ArtInfo extends NewArtInfo implements OverlayTapListener, Navigatio
 			showLoading(false);
 			Uri uri = (Uri) result;
 			if (uri != null) {
-				allUris.add(uri);
+				allUris.add(uri.toString());
 				setGallerySelection(allUris.size() - 1);
 			}
 		}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string
-		name="app_label">The Art Around Us</string>
+		name="app_label">ArtAround</string>
 
 	<string
 		name="ok">OK</string>
@@ -18,7 +18,8 @@
 	<string
 		name="submit">Submit</string>
 	<string
-		name="submit_successful">The art has been submitted.\n Please refresh in a while to retrieve it from server.</string>
+		name="submit_successful">The art has been submitted.\n Please refresh in a while to
+		retrieve it from server.</string>
 	<string
 		name="edit">Edit</string>
 	<string
@@ -39,9 +40,11 @@
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest and most accurate location
+		the fastest
+		and most accurate location
 		detection please turn on
-		GPS and wireless network.</string>
+		GPS and wireless
+		network.</string>
 	<string
 		name="location_update_failure">Your current location is temporary unavailable.</string>
 	<string
@@ -51,7 +54,8 @@
 	<string
 		name="connection_failure_title">Connection failure</string>
 	<string
-		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network connection to
+		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network
+		connection to
 		function properly.</string>
 	<string
 		name="connection_failure_ok">WiFi Options</string>
@@ -96,7 +100,8 @@
 	<string
 		name="preferences_change_city_title">Change city</string>
 	<string
-		name="preferences_change_city_summary">Change the current city for which to display the art around.</string>
+		name="preferences_change_city_summary">Change the current city for which to display the art around.
+	</string>
 	<string
 		name="clear_cache_progress">Clearing cache...</string>
 	<string
@@ -109,7 +114,8 @@
 	<!-- Art Map -->
 	<string
 		name="art_directions">Art Routes</string>
-	<string name="art_favorites">Favorites</string>
+	<string
+		name="art_favorites">Favorites</string>
 	<string
 		name="art_nearby">Art Nearby</string>
 	<string
@@ -133,7 +139,7 @@
 		name="share_art_title">Share art via:</string>
 	<string
 		name="share_art_header">Help us find more info about this urban art!</string>
-		
+
 	<string
 		name="add_favorite">Add Favorite</string>
 	<string
@@ -144,8 +150,51 @@
 		name="removed_favorite">%s is no longer favorite.</string>
 	<string
 		name="add_photo">Add Photo</string>
-	
+
 	<string
 		name="write_comment_hint">Write a Comment</string>
+
+	<!-- =============================================================== -->
+	<!-- Theme Strings -->
+	<!-- =============================================================== -->
+
+	<!-- General Errors -->
+	<string
+		name="load_categories_error">Could not load the category list from server. Please try again
+		later.</string>
+	<string
+		name="load_neighborhoods_error">Could not load the neighborhood list from server. Please try
+		again later.</string>
+	<string
+		name="load_photos_error">Could not load the photos from Flickr. Please try again later.
+	</string>
+
+	<!-- Art Edit -->
+	<string
+		name="art_edit_actionbar_title">Edit Art Details</string>
+	<string
+		name="art_edit_label_name">Name*</string>
+	<string
+		name="art_edit_label_artist">Artist</string>
+	<string
+		name="art_edit_label_year">Year</string>
+	<string
+		name="art_edit_label_category">Category*</string>
+	<string
+		name="art_edit_label_ward">Ward</string>
+	<string
+		name="art_edit_label_neighborhood">Neighborhood*</string>
+	<string
+		name="art_edit_label_minimap">Drag the pin to your location: </string>
+	<string
+		name="art_edit_label_minimap_loading">Updating your current location...</string>
+	<string
+		name="art_edit_hint_description">Enter a description of the piece of art...</string>
+	<string
+		name="art_edit_hint_location_description">Enter a description of the location...</string>
+	<string
+		name="art_edit_hint_input_empty">Cannot be empty</string>
+	<string
+		name="art_edit_btn_submit">Submit</string>
 
 </resources>

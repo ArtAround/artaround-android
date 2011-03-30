@@ -7,7 +7,7 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.android.parsers.BaseParser;
 import us.artaround.android.parsers.ParseResult;
 import us.artaround.android.parsers.StreamData;

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<style
+		name="ArtAround"
+		parent="android:Theme">
+		<item
+			name="android:windowNoTitle">true</item>
+		<item
+			name="android:windowSoftInputMode">stateHidden</item>
+	</style>
+	<style
+		name="ArtAround.Default">
+		<item
+			name="Actionbar">@style/Actionbar</item>
+		<item
+			name="ActionbarTitle">@style/ActionbarTitle</item>
+			
+		<item
+			name="ArtEditHintInputEmpty">@style/ArtEditHintInputEmpty</item>
+	</style>
+</resources>

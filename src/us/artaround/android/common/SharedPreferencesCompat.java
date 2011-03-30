@@ -1,4 +1,4 @@
-package us.artaround.android.commons;
+package us.artaround.android.common;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package us.artaround.android.commons;
+package us.artaround.android.common;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,15 +22,14 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
-import android.text.style.CharacterStyle;
 import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -53,6 +52,8 @@ public class Utils {
 	public static final long DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // one day
 	public static final int DEFAULT_CITY_CODE = 0; // Washington, DC
 
+	public static final int MINIMAP_ZOOM = 17;
+
 	public static final String KEY_CITY_CODE = "city_code";
 	public static final String KEY_LAST_UPDATE = "last_update";
 	public static final String KEY_UPDATE_INTERVAL = "update_interval";
@@ -62,6 +63,7 @@ public class Utils {
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
 	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(Utils.DATE_FORMAT);
 	public static final SimpleDateFormat titleDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
+
 
 	public static final NumberFormat coordinateFormatter = NumberFormat.getInstance();
 	{
@@ -73,6 +75,10 @@ public class Utils {
 	public static final boolean DEBUG_MODE = true;
 
 	public static String appVersion;
+
+	public static final int THEME_DEFAULT = 0;
+
+	private static int theme = THEME_DEFAULT;
 
 	//	private static final int OUTPUT_X = 800;
 	//	private static final int OUTPUT_Y = 600;
@@ -291,50 +297,45 @@ public class Utils {
 		return null;
 	}
 
-	/**
-	 * Given either a Spannable String or a regular String and a token, apply
-	 * the given CharacterStyle to the span between the tokens, and also remove
-	 * tokens.
-	 * <p>
-	 * For example, {@code setSpanBetweenTokens("Hello ##world##!", "##",
-	 * new ForegroundColorSpan(0xFFFF0000));} will return a CharSequence
-	 * {@code "Hello world!"} with {@code world} in red.
-	 * 
-	 * @param text
-	 *            The text, with the tokens, to adjust.
-	 * @param token
-	 *            The token string; there should be at least two instances of
-	 *            token in text.
-	 * @param cs
-	 *            The style to apply to the CharSequence. WARNING: You cannot
-	 *            send the same two instances of this parameter, otherwise the
-	 *            second call will remove the original span.
-	 * @return A Spannable CharSequence with the new style applied.
-	 * 
-	 * @see http
-	 *      ://developer.android.com/reference/android/text/style/CharacterStyle
-	 *      .html
-	 */
-	public static CharSequence setSpanBetweenTokens(CharSequence text, String token, CharacterStyle... cs) {
-		// Start and end refer to the points where the span will apply
-		int tokenLen = token.length();
-		int start = text.toString().indexOf(token) + tokenLen;
-		int end = text.toString().indexOf(token, start);
-
-		if (start > -1 && end > -1) {
-			// Copy the spannable string to a mutable spannable string
-			SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-			for (CharacterStyle c : cs)
-				ssb.setSpan(c, start, end, 0);
-
-			// Delete the tokens before and after the span
-			ssb.delete(end, end + tokenLen);
-			ssb.delete(start - tokenLen, start);
-
-			text = ssb;
+	public static void onActivityCreateSetTheme(Activity activity) {
+		switch (theme) {
+		default:
+		case THEME_DEFAULT:
+			activity.setTheme(R.style.ArtAround_Default);
+			break;
 		}
+	}
 
-		return text;
+	public static void closeCursor(Cursor cursor) {
+		if (cursor != null && !cursor.isClosed()) {
+			cursor.close();
+		}
+	}
+
+	public static AlertDialog.Builder locationSettingsDialog(final Activity activity) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+		builder.setTitle(activity.getString(R.string.location_suggest_settings_title));
+		builder.setMessage(activity.getString(R.string.location_suggest_settings_msg));
+		builder.setPositiveButton(activity.getString(R.string.ok), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+				activity.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+			}
+		});
+		builder.setNegativeButton(activity.getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		return builder;
+	}
+
+	public static String formatCoords(Location location) {
+		double lati = location.getLatitude();
+		double longi = location.getLongitude();
+		return coordinateFormatter.format(lati) + ", " + coordinateFormatter.format(longi);
 	}
 
 }

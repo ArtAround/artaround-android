@@ -9,7 +9,8 @@
 
 	<application
 		android:icon="@drawable/icon"
-		android:label="@string/app_label">
+		android:label="@string/app_label"
+		android:theme="@style/ArtAround.Default">
 
 		<activity
 			android:name=".android.ui.ArtMap"
@@ -23,6 +24,9 @@
 					android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		
+		<activity
+			android:name=".android.ui.ArtEdit" />
 
 		<activity
 			android:name=".android.ui.ArtFilters"
@@ -71,8 +75,8 @@
 		android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 	<uses-sdk
-		android:minSdkVersion="3"
-		android:targetSdkVersion="4" />
+		android:minSdkVersion="4"
+		android:targetSdkVersion="8" />
 
 	<supports-screens
 		android:smallScreens="true"

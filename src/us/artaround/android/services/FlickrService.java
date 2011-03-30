@@ -13,7 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import us.artaround.R;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.models.ArtAroundException;
 import android.content.Context;
 import android.content.res.Resources;
@@ -33,9 +33,10 @@ public class FlickrService {
 	public static final String HEIGHT_KEY = "height";
 
 	public final static String IMAGE_FORMAT = ".jpg";
+
 	public final static String SIZE_SMALL = "Small";
-	public final static String SIZE_LARGE = "Large";
 	public final static String SIZE_MEDIUM = "Medium";
+	public final static String SIZE_ORIGINAL = "Original";
 
 	public final static int THUMB_WIDTH = 320;
 	public final static int THUMB_HEIGHT = 250;
@@ -81,8 +82,8 @@ public class FlickrService {
 		if (SIZE_SMALL.equalsIgnoreCase(size)) {
 			return "s";
 		}
-		if (SIZE_LARGE.equalsIgnoreCase(size)) {
-			return "l";
+		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
+			return "o";
 		}
 		if (SIZE_MEDIUM.equalsIgnoreCase(size)) {
 			return "m";
@@ -152,12 +153,12 @@ public class FlickrService {
 					photo.sizes.put(FlickrService.SIZE_MEDIUM, mediumSize);
 				}
 
-				if (FlickrService.SIZE_LARGE.equals(size)) {
+				if (FlickrService.SIZE_ORIGINAL.equals(size)) {
 					FlickrPhotoSize originalSize = new FlickrPhotoSize();
 					originalSize.url = obj.getString(FlickrService.SOURCE_KEY);
 					originalSize.width = obj.getInt(FlickrService.WIDTH_KEY);
 					originalSize.height = obj.getInt(FlickrService.HEIGHT_KEY);
-					photo.sizes.put(FlickrService.SIZE_LARGE, originalSize);
+					photo.sizes.put(FlickrService.SIZE_ORIGINAL, originalSize);
 				}
 			}
 			return photo;

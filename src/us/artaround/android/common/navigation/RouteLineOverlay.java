@@ -1,4 +1,4 @@
-package us.artaround.android.commons.navigation;
+package us.artaround.android.common.navigation;
 
 import java.util.List;
 

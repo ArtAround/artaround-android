@@ -1,4 +1,4 @@
-package us.artaround.android.commons;
+package us.artaround.android.common;
 
 import us.artaround.android.services.FlickrService;
 import us.artaround.android.services.FlickrService.FlickrPhoto;

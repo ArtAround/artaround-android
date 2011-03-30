@@ -13,7 +13,7 @@
 		<item
 			name="android:background">@color/action_bar_bg</item>
 	</style>
-	
+
 	<style
 		name="ArtInfoValue"
 		parent="@android:style/Widget.TextView">
@@ -31,6 +31,217 @@
 			name="android:background">@drawable/edit_text</item>
 		<item
 			name="android:gravity">top|left</item>
+	</style>
+
+	<!-- =============================================================== -->
+	<!-- Theme Styles -->
+	<!-- =============================================================== -->
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- Actionbar -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<style
+		name="Actionbar">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:background">@color/Actionbar</item>
+		<item
+			name="android:gravity">center_vertical</item>
+	</style>
+
+	<style
+		name="ActionbarTitle"
+		parent="Actionbar">
+		<item
+			name="android:textColor">@color/ActionbarTitle</item>
+		<item
+			name="android:textSize">@dimen/ActionbarTitle</item>
+		<item
+			name="android:textStyle">bold</item>
+		<item
+			name="android:padding">10dp</item>
+	</style>
+
+	<style
+		name="ActionbarTitle.NoBack">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:background">@null</item>
+	</style>
+
+	<style
+		name="ActionbarLoader">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:src">@drawable/ic_loader</item>
+		<item
+			name="android:visibility">invisible</item>
+	</style>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- General -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<style
+		name="Activity">
+		<item
+			name="android:orientation">vertical</item>
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">fill_parent</item>
+		<item
+			name="android:background">@color/Activity</item>
+	</style>
+
+	<style
+		name="Scrollable">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">fill_parent</item>
+		<item
+			name="android:fillViewport">true</item>
+	</style>
+
+	<style
+		name="Button">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:gravity">center</item>
+		<item
+			name="android:minWidth">100dp</item>
+	</style>
+
+	<style
+		name="ArtMinimap">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">@dimen/ArtMinimapHeight</item>
+		<item
+			name="android:gravity">center</item>
+		<item
+			name="android:apiKey">@string/maps_api</item>
+	</style>
+
+	<style
+		name="ArtGallery">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">@dimen/ArtGalleryHeight</item>
+		<item
+			name="android:gravity">center</item>
+	</style>
+
+	<style
+		name="AutocompleteText">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:textSize">@dimen/ArtEditInput</item>
+		<item
+			name="android:textColor">@color/ArtEditInput</item>
+	</style>
+
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- Art Edit -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+	<style
+		name="ArtEditTable">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:stretchColumns">1</item>
+		<item
+			name="android:shrinkColumns">0</item>
+	</style>
+
+	<style
+		name="ArtEditTable.Row"></style>
+
+	<style
+		name="ArtEditLabel">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:gravity">left|center</item>
+		<item
+			name="android:layout_gravity">center_vertical</item>
+		<item
+			name="android:textSize">@dimen/ArtEditLabel</item>
+		<item
+			name="android:textColor">@color/ArtEditLabel</item>
+		<item
+			name="android:textStyle">bold|normal</item>
+		<item
+			name="android:lines">1</item>
+		<item
+			name="android:layout_marginLeft">5dp</item>
+		<item
+			name="android:layout_marginRight">5dp</item>
+		<item
+			name="android:layout_marginTop">5dp</item>
+	</style>
+	
+	<style
+		name="ArtEditInput.HintEmpty">
+		<item
+			name="android:textColorHint">@color/ArtEditHintInputEmpty</item>
+	</style>
+
+	<style
+		name="ArtEditInput">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:textSize">@dimen/ArtEditInput</item>
+		<item
+			name="android:textColor">@color/ArtEditInput</item>
+		<item
+			name="android:lines">1</item>
+		<item
+			name="android:cursorVisible">true</item>
+		<item
+			name="android:layout_marginLeft">5dp</item>
+		<item
+			name="android:layout_marginRight">5dp</item>
+		<item
+			name="android:layout_marginTop">5dp</item>
+	</style>
+
+	<style
+		name="ArtEditInput.Textarea">
+		<item
+			name="android:lines">4</item>
+		<item
+			name="android:gravity">left|top</item>
+	</style>
+	
+	<style
+		name="ArtEditHintInputEmpty">
+		<item
+			name="android:color">@color/ArtEditHintInputEmpty</item>
 	</style>
 
 </resources>

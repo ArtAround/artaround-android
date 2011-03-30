@@ -1,6 +1,6 @@
 package us.artaround.android.ui;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import us.artaround.R;
 import us.artaround.android.services.FlickrService;
@@ -13,12 +13,12 @@ import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
 
-public class ImageAdapter extends BaseAdapter {
-	private Context context;
-	private int itemBackground;
-	private List<Uri> photoUris;
+public class GalleryAdapter extends BaseAdapter {
+	private final Context context;
+	private final int itemBackground;
+	private final ArrayList<String> photoUris;
 
-	public ImageAdapter(Context context, List<Uri> photoUris) {
+	public GalleryAdapter(Context context, ArrayList<String> photoUris) {
 		this.context = context;
 		this.photoUris = photoUris;
 
@@ -46,7 +46,7 @@ public class ImageAdapter extends BaseAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ImageView imageView = new ImageView(context);
 
-		Uri realUri = photoUris.get(position);
+		Uri realUri = Uri.parse(photoUris.get(position));
 		if (null != realUri) {
 			imageView.setImageURI(realUri);
 		}

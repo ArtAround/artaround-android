@@ -1,9 +1,9 @@
 package us.artaround.android.ui;
 
 import us.artaround.R;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler;
-import us.artaround.android.commons.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.NotifyingAsyncQueryHandler;
+import us.artaround.android.common.Utils;
+import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Arts;

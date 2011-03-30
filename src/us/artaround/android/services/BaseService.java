@@ -19,7 +19,7 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.android.parsers.StreamData;
 import us.artaround.models.ArtAroundException;
 import android.net.http.AndroidHttpClient;

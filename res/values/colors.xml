@@ -20,7 +20,8 @@
 	<color
 		name="action_bar_txt">#FFFFFF</color>
 
-	<color name="dialog_bg">#DD494949</color>
+	<color
+		name="dialog_bg">#DD494949</color>
 	<color
 		name="dialog_text">#FFFFFF</color>
 
@@ -32,16 +33,32 @@
 		name="art_field_value_txt">#665C4F</color>
 	<color
 		name="art_field_value_editing_txt">#696969</color>
-		
+
 	<color
 		name="text_dimmed">#666666</color>
-		
-	<color 
+
+	<color
 		name="border">#C9C0BD</color>
-		
+
 	<color
 		name="art_nearby_distance">#3B7E42</color>
-		
-	
 
+	<!-- =============================================================== -->
+	<!-- Theme Colors -->
+	<!-- =============================================================== -->
+	<color
+		name="Actionbar">#696969</color>
+	<color
+		name="ActionbarTitle">#FFFFFF</color>
+
+	<color
+		name="Activity">#949599</color>
+		
+		
+	<color
+		name="ArtEditLabel">#FFFFFF</color>
+	<color
+		name="ArtEditInput">#000000</color>
+	<color
+		name="ArtEditHintInputEmpty">#FF0000</color>
 </resources>

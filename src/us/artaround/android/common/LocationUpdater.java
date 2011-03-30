@@ -1,4 +1,4 @@
-package us.artaround.android.commons;
+package us.artaround.android.common;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import us.artaround.android.commons.TimeoutTimer.Timeout.TimeoutCallback;
+import us.artaround.android.common.TimeoutTimer.Timeout.TimeoutCallback;
 import android.content.Context;
 import android.location.Address;
 import android.location.Criteria;
@@ -78,9 +78,9 @@ public class LocationUpdater implements TimeoutCallback {
 			return;
 		}
 
-		//if (!updateFromStoredLocation()) {
-		updateFromLocationListener();
-		//}
+		if (!updateFromStoredLocation()) {
+			updateFromLocationListener();
+		}
 	}
 
 	public boolean isUpdatingAddress() {
@@ -237,7 +237,6 @@ public class LocationUpdater implements TimeoutCallback {
 		return false;
 	}
 
-	@SuppressWarnings("unused")
 	private boolean updateFromStoredLocation() {
 		Location location = null;
 		String provider;

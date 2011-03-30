@@ -1,9 +1,9 @@
-package us.artaround.android.commons.navigation;
+package us.artaround.android.common.navigation;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import android.os.AsyncTask;
 
 import com.google.android.maps.GeoPoint;

@@ -9,7 +9,7 @@ import static us.artaround.android.database.ArtAroundDatabase.createNeighborhood
 
 import java.util.HashMap;
 
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;

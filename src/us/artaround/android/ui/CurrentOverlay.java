@@ -3,7 +3,6 @@ package us.artaround.android.ui;
 import java.util.ArrayList;
 
 import us.artaround.R;
-import us.artaround.android.commons.Utils;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Point;
@@ -12,7 +11,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -25,7 +23,6 @@ public class CurrentOverlay extends ItemizedOverlay<OverlayItem> {
 	private final Drawable marker;
 	private OverlayItem inDrag;
 	private ImageView dragImage;
-	private TextView tvCoordinates;
 	private final boolean draggable;
 
 	private int xDragImageOffset = 0;
@@ -35,24 +32,21 @@ public class CurrentOverlay extends ItemizedOverlay<OverlayItem> {
 
 	private final Activity context;
 
-	public CurrentOverlay(Activity context, Drawable defaultMarker, GeoPoint geo, boolean draggable) {
-		super(boundCenterBottom(defaultMarker));
-		this.marker = defaultMarker;
-		this.draggable = draggable;
+	public CurrentOverlay(Activity context, int defaultMarker, GeoPoint geo, Integer dragId) {
+		super(boundCenterBottom(context.getResources().getDrawable(defaultMarker)));
+		this.marker = context.getResources().getDrawable(defaultMarker);
+		this.draggable = (dragId != null);
 		this.context = context;
 
 		items.add(new OverlayItem(geo, context.getString(R.string.current_location), ""));
 		populate(); //do populate after constructor so it doen't crash when empty
 
 		if (draggable) {
-			dragImage = (ImageView) context.findViewById(R.id.drag);
+			dragImage = (ImageView) context.findViewById(dragId);
 			xDragImageOffset = dragImage.getDrawable().getIntrinsicWidth() / 2;
 			yDragImageOffset = dragImage.getDrawable().getIntrinsicHeight();
-
-			tvCoordinates = (TextView) context.findViewById(R.id.footer);
 		}
 	}
-
 
 	@Override
 	protected OverlayItem createItem(int i) {
@@ -128,17 +122,21 @@ public class CurrentOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	private void setDragImagePosition(int x, int y) {
-		RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) dragImage.getLayoutParams();
+		if (dragImage.getLayoutParams() instanceof RelativeLayout.LayoutParams) {
+			RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) dragImage.getLayoutParams();
 
-		lp.setMargins(x - xDragImageOffset - xDragTouchOffset, y - yDragImageOffset - yDragTouchOffset, 0, 0);
-		dragImage.setLayoutParams(lp);
+			lp.setMargins(x - xDragImageOffset - xDragTouchOffset, y - yDragImageOffset - yDragTouchOffset, 0, 0);
+			dragImage.setLayoutParams(lp);
+		}
 	}
 
 	private void updateCoordinatesView() {
 		GeoPoint point = items.get(0).getPoint();
-		String lat = Utils.coordinateFormatter.format(point.getLatitudeE6() / 1E6);
-		String longi = Utils.coordinateFormatter.format(point.getLongitudeE6() / 1E6);
-		tvCoordinates.setText(context.getString(R.string.reposition_pin) + ": " + lat + ", " + longi);
+
+		if (context instanceof CurrentOverlayDragListener) {
+			((CurrentOverlayDragListener) context).onDragOverlay(point.getLatitudeE6() / 1E6,
+					point.getLongitudeE6() / 1E6);
+		}
 	}
 
 	public double getCurrentLatitude() {
@@ -147,5 +145,9 @@ public class CurrentOverlay extends ItemizedOverlay<OverlayItem> {
 
 	public double getCurrentLongitude() {
 		return items.get(0).getPoint().getLongitudeE6() / 1E6;
+	}
+
+	public static interface CurrentOverlayDragListener {
+		void onDragOverlay(double latitude, double longitude);
 	}
 }

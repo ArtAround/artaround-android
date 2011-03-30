@@ -1,7 +1,7 @@
 package us.artaround.android.services;
 
 import us.artaround.R;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.Utils;
 import us.artaround.models.ArtAroundException;
 import us.artaround.models.City;
 import android.content.Context;

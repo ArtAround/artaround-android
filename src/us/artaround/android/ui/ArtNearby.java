@@ -7,10 +7,10 @@ import java.util.Comparator;
 import java.util.List;
 
 import us.artaround.R;
-import us.artaround.android.commons.LocationUpdater;
-import us.artaround.android.commons.LocationUpdater.AddressUpdaterCallback;
-import us.artaround.android.commons.LocationUpdater.LocationUpdaterCallback;
-import us.artaround.android.commons.Utils;
+import us.artaround.android.common.LocationUpdater;
+import us.artaround.android.common.Utils;
+import us.artaround.android.common.LocationUpdater.AddressUpdaterCallback;
+import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.models.Art;
 import android.app.ListActivity;
 import android.content.Context;

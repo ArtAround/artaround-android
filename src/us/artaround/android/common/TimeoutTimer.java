@@ -1,9 +1,9 @@
-package us.artaround.android.commons;
+package us.artaround.android.common;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-import us.artaround.android.commons.TimeoutTimer.Timeout.TimeoutCallback;
+import us.artaround.android.common.TimeoutTimer.Timeout.TimeoutCallback;
 import android.os.Handler;
 
 // Timer because it uses a background thread while CountDownTimer does not.
