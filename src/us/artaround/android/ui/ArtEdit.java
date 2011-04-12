@@ -1,8 +1,10 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
+import us.artaround.android.common.ImageDownloader;
 import us.artaround.android.common.LocationUpdater;
 import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.common.NotifyingAsyncQueryHandler;
@@ -17,10 +19,12 @@ import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
 import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
+import us.artaround.android.services.FlickrService;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
@@ -54,14 +58,13 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	public static final String SAVE_LOCATION = "location";
 	public static final String SAVE_SCROLL_Y = "scroll_y";
-	public static final String SAVE_ALL_PHOTO_URIS = "all_photo_uris";
 	public static final String SAVE_NEW_PHOTO_URIS = "new_photo_uris";
 
 	private static final int DIALOG_LOCATION_SETTINGS = 0;
 
 	private Art art;
 	private Location location;
-	private ArrayList<String> allPhotoUris, newPhotoUris;
+	private ArrayList<String> newPhotoUris;
 
 	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
@@ -81,7 +84,11 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	private ScrollView scrollView;
 	private Gallery gallery;
 	private ArtMapView minimap;
-	private CurrentOverlay currentOverlay;
+	private CurrentLocationOverlay currentOverlay;
+
+	private int scrollY;
+
+	private final AtomicInteger photosToLoad = new AtomicInteger(0);
 
 	@Override
 	protected void onChildCreate(Bundle savedInstanceState) {
@@ -108,21 +115,11 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		}
 	}
 
-	@Override
-	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
+	private void restoreState(Bundle savedInstanceState) {
 		if (savedInstanceState != null) {
-			final int scrollY = savedInstanceState.getInt(SAVE_SCROLL_Y, 0);
-			if (scrollY > 0) {
-				Utils.d(TAG, "saved scrollY=" + scrollY);
-				scrollView.post(new Runnable() {
-					@Override
-					public void run() {
-						scrollView.scrollTo(0, scrollY);
-					}
-				});
-			}
+			scrollY = savedInstanceState.getInt(SAVE_SCROLL_Y, 0);
 			location = savedInstanceState.getParcelable(SAVE_LOCATION);
+			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
 		}
 	}
 
@@ -130,7 +127,6 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
 		outState.putParcelable(SAVE_LOCATION, location);
-		outState.putStringArrayList(SAVE_ALL_PHOTO_URIS, allPhotoUris);
 		outState.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
 		super.onSaveInstanceState(outState);
 	}
@@ -147,14 +143,8 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
 		locationUpdater = new LocationUpdater(this);
 
-		if (savedInstanceState != null) {
-			allPhotoUris = savedInstanceState.getStringArrayList(SAVE_ALL_PHOTO_URIS);
-			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
-		}
+		restoreState(savedInstanceState);
 
-		if (allPhotoUris == null) {
-			allPhotoUris = new ArrayList<String>();
-		}
 		if (newPhotoUris == null) {
 			newPhotoUris = new ArrayList<String>();
 		}
@@ -182,6 +172,16 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		});
 
 		scrollView = (ScrollView) findViewById(R.id.scroll_view);
+		if (scrollY > 0) {
+			Utils.d(TAG, "saved scrollY=" + scrollY);
+			scrollView.post(new Runnable() {
+				@Override
+				public void run() {
+					scrollView.scrollTo(0, scrollY);
+					scrollY = 0;
+				}
+			});
+		}
 
 		setupArtFields();
 		setupMiniMap();
@@ -215,6 +215,12 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
 			tvArtist.setText(art.artist.name);
 		}
+		tvArtist.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				tvArtist.showDropDown();
+			}
+		});
 
 		EditText tvYear = (EditText) findViewById(R.id.art_edit_input_year);
 		if (art.year > 0) {
@@ -256,7 +262,8 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	private void setupGallery() {
 		gallery = (Gallery) findViewById(R.id.gallery);
-		gallery.setAdapter(new GalleryAdapter(this, allPhotoUris));
+		gallery.setAdapter(new GalleryAdapter(this, hasPhotosToLoad()));
+		gallery.setSelection(1);
 		gallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -287,14 +294,27 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		queryHandler.startQuery(QUERY_NEIGHBORHOODS, null, Neighborhoods.CONTENT_URI,
 				ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null, null, null);
 
-		// load art photos from server/cache, if necessary
-		int size = 0;
-		if (art != null && art.photoIds != null && (size = art.photoIds.size()) > 0 && allPhotoUris.isEmpty()
-				&& !hasRunningTasks(LOAD_PHOTOS)) {
+		// load art photos from server/cache, if necessary	
+		if (hasPhotosToLoad() && !hasRunningTasks(LOAD_PHOTOS)) {
+
+			Resources res = getResources();
+			Bundle args = new Bundle();
+			args.putBoolean(ImageDownloader.EXTRA_EXTRACT_THUMB, true);
+			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_ORIGINAL);
+			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
+			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
+
+			int size = art.photoIds.size();
 			for (int i = 0; i < size; i++) {
-				startTask(new LoadFlickrPhotosCommand(LOAD_PHOTOS, art.photoIds.get(i)));
+				String id = art.photoIds.get(i);
+				args.putString(ImageDownloader.EXTRA_PHOTO_ID, id + ImageDownloader.THUMB_SUFFIX);
+				startTask(new LoadFlickrPhotosCommand(LOAD_PHOTOS, id, args));
 			}
 		}
+	}
+
+	private boolean hasPhotosToLoad() {
+		return art != null && art.photoIds != null && art.photoIds.size() > 0;
 	}
 
 	@Override
@@ -396,17 +416,18 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 			}
 			break;
 		case LOAD_PHOTOS:
-			if (exception != null) {
-				Uri[] uris = (Uri[]) result;
-				if (uris != null && uris.length == 2) {
-					allPhotoUris.add(uris[0].toString());
-					((GalleryAdapter) gallery.getAdapter()).notifyDataSetChanged();
+			if (exception == null) {
+				if (photosToLoad.incrementAndGet() == art.photoIds.size()) {
+					((GalleryAdapter) gallery.getAdapter()).hideLoaders();
+				}
+				Uri uri = (Uri) result;
+				if (uri != null) {
+					((GalleryAdapter) gallery.getAdapter()).addItem(uri);
 				}
 			}
 			else {
 				Utils.showToast(this, R.string.load_photos_error);
 			}
-
 			break;
 		}
 	}
@@ -434,7 +455,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		ctrl.animateTo(geo);
 		ctrl.setZoom(Utils.MINIMAP_ZOOM);
 
-		currentOverlay = new CurrentOverlay(this, R.drawable.ic_pin, geo, R.id.minimap_drag);
+		currentOverlay = new CurrentLocationOverlay(this, R.drawable.ic_pin_art, geo, R.id.minimap_drag);
 		minimap.getOverlays().add(currentOverlay);
 		minimap.invalidate();
 

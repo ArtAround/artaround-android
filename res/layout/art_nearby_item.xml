@@ -14,7 +14,6 @@
 		android:layout_marginBottom="6dp"
 		android:textStyle="bold"
 		android:singleLine="false"
-		android:textColor="@color/art_field_label_txt"
 		android:text="Art Title Here" />
 		
 	<ImageView
@@ -22,8 +21,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignTop="@+id/art_title"
-		android:layout_alignParentRight="true"
-		android:src="@drawable/ic_ne" />
+		android:layout_alignParentRight="true" />
 		
 	<TextView
 		android:id="@+id/art_description"
@@ -44,7 +42,6 @@
 		android:layout_alignParentRight="true"
 		android:layout_alignTop="@+id/description"
 		android:textStyle="bold"
-		android:textColor="@color/art_nearby_distance"
 		android:text="550 m" />
 
 </RelativeLayout>

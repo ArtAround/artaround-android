@@ -1,40 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<style
-		name="ActionBar">
-		<item
-			name="android:padding">6dp</item>
-		<item
-			name="android:layout_width">fill_parent</item>
-		<item
-			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:gravity">center_vertical</item>
-		<item
-			name="android:background">@color/action_bar_bg</item>
-	</style>
-
-	<style
-		name="ArtInfoValue"
-		parent="@android:style/Widget.TextView">
-		<item
-			name="android:textColor">@color/art_field_value_txt</item>
-		<item
-			name="android:textStyle">normal</item>
-		<item
-			name="android:imeOptions">actionDone</item>
-		<item
-			name="android:cursorVisible">false</item>
-		<item
-			name="android:paddingRight">5dp</item>
-		<item
-			name="android:background">@drawable/edit_text</item>
-		<item
-			name="android:gravity">top|left</item>
-	</style>
 
 	<!-- =============================================================== -->
-	<!-- Theme Styles -->
+	<!-- Default Theme Styles -->
 	<!-- =============================================================== -->
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -47,9 +15,23 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:background">@color/Actionbar</item>
+			name="android:background">@drawable/actionbar_background</item>
 		<item
 			name="android:gravity">center_vertical</item>
+		<item
+			name="android:paddingBottom">4.5dp</item>
+	</style>
+
+	<style
+		name="Logo">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:src">@drawable/logo</item>
+		<item
+			name="android:layout_marginLeft">6dp</item>
 	</style>
 
 	<style
@@ -74,15 +56,62 @@
 	</style>
 
 	<style
-		name="ActionbarLoader">
+		name="ActionbarLoaderDark">
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:src">@drawable/ic_loader</item>
+			name="android:layout_marginRight">10dp</item>
 		<item
-			name="android:visibility">invisible</item>
+			name="android:layout_gravity">center</item>
+		<item
+			name="android:src">@drawable/ic_loading_dark</item>
+		<item
+			name="android:visibility">visible</item>
+	</style>
+
+	<style
+		name="ActionbarButton">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:padding">6dp</item>
+		<item
+			name="android:scaleType">center</item>
+	</style>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- Bottombar -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<style
+		name="Bottombar">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:background">@drawable/bottombar_bkg</item>
+		<item
+			name="android:gravity">center</item>
+	</style>
+
+	<style
+		name="AddArtButton">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:background">@drawable/add_art_background</item>
+		<item
+			name="android:gravity">center</item>
+		<item
+			name="android:textStyle">bold</item>
+		<item
+			name="android:textColor">#FFFFFF</item>
 	</style>
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -127,7 +156,7 @@
 		<item
 			name="android:layout_width">fill_parent</item>
 		<item
-			name="android:layout_height">@dimen/ArtMinimapHeight</item>
+			name="android:layout_height">@dimen/MinimapHeight</item>
 		<item
 			name="android:gravity">center</item>
 		<item
@@ -135,13 +164,33 @@
 	</style>
 
 	<style
+		name="ArtGalleryContainer">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:gravity">center</item>
+		<item
+			name="android:background">@color/GalleryBorder</item>
+		<item
+			name="android:paddingTop">6dp</item>
+		<item
+			name="android:paddingBottom">6dp</item>
+	</style>
+
+	<style
 		name="ArtGallery">
 		<item
 			name="android:layout_width">fill_parent</item>
 		<item
-			name="android:layout_height">@dimen/ArtGalleryHeight</item>
+			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:gravity">center</item>
+			name="android:background">@color/GalleryBackground</item>
+		<item
+			name="android:paddingTop">10dp</item>
+		<item
+			name="android:paddingBottom">10dp</item>
 	</style>
 
 	<style
@@ -156,6 +205,55 @@
 			name="android:textColor">@color/ArtEditInput</item>
 	</style>
 
+	<style
+		name="ArtBubbleOuter">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:paddingTop">10dp</item>
+		<item
+			name="android:paddingRight">15dp</item>
+		<item
+			name="android:paddingLeft">15dp</item>
+		<item
+			name="android:paddingBottom">35dp</item>
+		<item
+			name="android:minWidth">200dp</item>
+		<item
+			name="android:background">@drawable/bubble_background</item>
+	</style>
+
+	<style
+		name="ArtBubbleText">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:textSize">14sp</item>
+		<item
+			name="android:textColor">@color/ArtBubbleText</item>
+		<item
+			name="android:visibility">gone</item>
+	</style>
+
+	<style
+		name="ArtBubbleText.Bold">
+		<item
+			name="android:textSize">14sp</item>
+		<item
+			name="android:textStyle">bold</item>
+	</style>
+	
+	<style
+		name="ArtBubbleText.Italic">
+		<item
+			name="android:textSize">12sp</item>
+		<item
+			name="android:textStyle">normal</item>
+	</style>
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<!-- Art Edit -->
@@ -201,7 +299,7 @@
 		<item
 			name="android:layout_marginTop">5dp</item>
 	</style>
-	
+
 	<style
 		name="ArtEditInput.HintEmpty">
 		<item
@@ -223,11 +321,9 @@
 		<item
 			name="android:cursorVisible">true</item>
 		<item
-			name="android:layout_marginLeft">5dp</item>
+			name="android:layout_margin">6dp</item>
 		<item
-			name="android:layout_marginRight">5dp</item>
-		<item
-			name="android:layout_marginTop">5dp</item>
+			name="android:background">@drawable/edit_text</item>
 	</style>
 
 	<style
@@ -237,11 +333,23 @@
 		<item
 			name="android:gravity">left|top</item>
 	</style>
-	
+
+	<style
+		name="ArtEditInput.Autocomplete">
+		<item
+			name="android:drawableRight">@drawable/ic_arrow_dropdown</item>
+	</style>
+
+	<style
+		name="ArtEditInput.Autocomplete.HintEmpty">
+	</style>
+
 	<style
 		name="ArtEditHintInputEmpty">
 		<item
 			name="android:color">@color/ArtEditHintInputEmpty</item>
 	</style>
+
+
 
 </resources>

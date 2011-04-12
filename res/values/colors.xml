@@ -1,47 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color
-		name="btn_bg_enabled">#2F2A27</color>
-	<color
-		name="btn_bg_disabled">#808080</color>
-	<color
-		name="btn_bg_selected">#E3681A</color>
-	<color
-		name="btn_bg_pressed">#A3612A</color>
-	<color
-		name="btn_text_color">#FFFFFF</color>
-	<color
-		name="btn_text_color_disabled">#666666</color>
-	<color
-		name="btn_stroke">#4A4644</color>
-
-	<color
-		name="action_bar_bg">#36312E</color>
-	<color
-		name="action_bar_txt">#FFFFFF</color>
+	
 
 	<color
 		name="dialog_bg">#DD494949</color>
 	<color
 		name="dialog_text">#FFFFFF</color>
-
-	<color
-		name="art_details_bg">#EAEAEA</color>
-	<color
-		name="art_field_label_txt">#665C4F</color>
-	<color
-		name="art_field_value_txt">#665C4F</color>
-	<color
-		name="art_field_value_editing_txt">#696969</color>
-
-	<color
-		name="text_dimmed">#666666</color>
-
-	<color
-		name="border">#C9C0BD</color>
-
-	<color
-		name="art_nearby_distance">#3B7E42</color>
 
 	<!-- =============================================================== -->
 	<!-- Theme Colors -->
@@ -54,11 +18,28 @@
 	<color
 		name="Activity">#949599</color>
 		
+	<!-- Gallery, Minimap -->
+	<color
+		name="ItemBorderNormal">#FFFFFF</color>
+	<color 
+		name="ItemBorderSelected">#584E4F</color>
+	<color
+		name="ItemBorderPressed">#C4C62F</color>
+	<color
+		name="ItemBackground">#C1B9B7</color>
+	<color
+		name="GalleryBackground">#706667</color>
+	<color
+		name="GalleryBorder">#52494A</color>
 		
+	<color
+		name="ArtBubbleText">#332F2E</color>
+		
+	<!-- Art Edit -->
 	<color
 		name="ArtEditLabel">#FFFFFF</color>
 	<color
-		name="ArtEditInput">#000000</color>
+		name="ArtEditInput">#312d2d</color>
 	<color
 		name="ArtEditHintInputEmpty">#FF0000</color>
 </resources>

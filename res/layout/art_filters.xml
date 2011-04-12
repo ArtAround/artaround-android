@@ -19,8 +19,7 @@
 		android:drawableLeft="@drawable/ic_search"
 		android:drawablePadding="6dp"
 		android:imeOptions="actionSearch"
-		android:hint="@string/search_hint"
-		android:background="@drawable/textfield_selected" />
+		android:hint="@string/search_hint" />
 
 	<include
 		android:id="@+id/loading"
@@ -50,9 +49,7 @@
 
 			android:scrollbarStyle="outsideOverlay"
 			android:scrollingCache="false"
-	 		android:listSelector="@drawable/list_selector_background"
 			android:cacheColorHint="@color/dialog_bg"
-			android:divider="@drawable/divider"
 			android:dividerHeight="1px"
 			android:descendantFocusability="blocksDescendants" />
 			

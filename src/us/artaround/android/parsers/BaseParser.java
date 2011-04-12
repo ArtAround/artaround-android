@@ -100,7 +100,6 @@ public class BaseParser {
 			ArrayList<ContentValues> artists = new ArrayList<ContentValues>();
 
 			ParseResult result = new ParseResult();
-			ArrayList<Art> list = new ArrayList<Art>();
 
 			String city = ServiceFactory.getCurrentCity().name;
 
@@ -264,7 +263,6 @@ public class BaseParser {
 							arts.add(art);
 							
 							artObj.city = city;
-							list.add(artObj);
 						}
 
 					} // end arts parsing
@@ -279,8 +277,8 @@ public class BaseParser {
 			Utils.d(Utils.TAG, "Parsed arts =" + arts.size());
 			Utils.d(Utils.TAG, "Parsed artists =" + artists.size());
 
-			//			ArtAroundProvider.contentResolver
-			//					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
+			ArtAroundProvider.contentResolver
+					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
 
 			// save artists
 			ArtAroundProvider.contentResolver.bulkInsert(Artists.CONTENT_URI,
@@ -288,11 +286,10 @@ public class BaseParser {
 
 			Boolean notifyMe = (Boolean) data.getAuxData()[0];
 			if (notifyMe != null && notifyMe) {
-				//ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
+				ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
 				ArtAroundProvider.contentResolver.notifyChange(Artists.CONTENT_URI, null);
 			}
 
-			result.art = list;
 			data.setAuxData(result);
 		}
 		catch (JsonParseException e) {

@@ -16,7 +16,7 @@ import android.view.View;
 import com.google.android.maps.MapActivity;
 
 public abstract class ArtAroundMapActivity extends MapActivity implements ArtAroundAsyncTaskListener {
-	protected static final String TAG = "ArtAroundMapActivity";
+	protected static final String TAG = "ArtAround.MapActivity";
 
 	protected static class SavedState {
 		List<ArtAroundAsyncTask> tasks;
@@ -24,6 +24,8 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 
 	protected List<ArtAroundAsyncTask> tasks;
 	protected SavedState savedState;
+
+	protected View actionbar;
 
 	protected abstract void onChildCreate(Bundle savedInstanceState);
 	protected abstract void onChildEndCreate(Bundle savedInstanceState);
@@ -51,7 +53,7 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 	}
 
 	protected void initActionbarUi() {
-		View actionbar = findViewById(android.R.id.content).getRootView().findViewById(R.id.actionbar);
+		actionbar = findViewById(android.R.id.content).getRootView().findViewById(R.id.actionbar);
 		if (actionbar == null) {
 			Utils.d(TAG, "Could not find the actionbar view in your activity layout!");
 		}

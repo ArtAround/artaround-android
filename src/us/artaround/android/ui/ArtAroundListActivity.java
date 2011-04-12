@@ -15,7 +15,7 @@ import android.os.Bundle;
 import android.view.View;
 
 public abstract class ArtAroundListActivity extends ListActivity implements ArtAroundAsyncTaskListener {
-	protected static final String TAG = "ArtAroundActivity";
+	protected static final String TAG = "ArtAround.ListActivity";
 
 	protected static class SavedState {
 		List<ArtAroundAsyncTask> tasks;

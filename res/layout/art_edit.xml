@@ -13,7 +13,7 @@
 			android:text="@string/art_edit_actionbar_title" />
 
 		<ImageView
-			style="@style/ActionbarLoader"
+			style="@style/ActionbarLoaderDark"
 			android:id="@+id/actionbar_loader" />
 	</LinearLayout>
 	<!-- ============================================= -->
@@ -48,7 +48,7 @@
 					android:text="@string/art_edit_label_artist" />
 
 				<AutoCompleteTextView
-					style="@style/ArtEditInput"
+					style="@style/ArtEditInput.Autocomplete"
 					android:id="@+id/art_edit_input_artist" />
 			</TableRow>
 			<!-- ============================================= -->
@@ -76,7 +76,7 @@
 						android:layout_width="wrap_content" />
 
 					<AutoCompleteTextView
-						style="@style/ArtEditInput.HintEmpty"
+						style="@style/ArtEditInput.Autocomplete.HintEmpty"
 						android:id="@+id/art_edit_input_category"
 						android:layout_width="0dp"
 						android:layout_weight="1" />
@@ -101,9 +101,8 @@
 			<TableRow
 				style="@style/ArtEditTable.Row">
 
-				<Gallery
-					style="@style/ArtGallery"
-					android:id="@+id/gallery"
+				<include
+					layout="@layout/art_gallery"
 					android:layout_span="2" />
 			</TableRow>
 			<!-- ============================================= -->
@@ -187,7 +186,7 @@
 							android:id="@+id/minimap_drag"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:src="@drawable/ic_pin"
+							android:src="@drawable/ic_pin_art"
 							android:visibility="gone" />
 					</RelativeLayout>
 				</LinearLayout>

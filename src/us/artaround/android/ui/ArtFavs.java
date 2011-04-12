@@ -2,14 +2,13 @@ package us.artaround.android.ui;
 
 import us.artaround.R;
 import us.artaround.android.common.NotifyingAsyncQueryHandler;
-import us.artaround.android.common.Utils;
 import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundProvider;
 import android.app.ListActivity;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.ContextMenu;
@@ -74,8 +73,8 @@ public class ArtFavs extends ListActivity implements NotifyingAsyncQueryListener
 				listView.setOnItemClickListener(new OnItemClickListener() {
 					@Override
 					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-						startActivity(new Intent(ArtFavs.this, ArtInfo.class).putExtra("art", ArtAroundDatabase
-								.artFromCursor(((SimpleCursorAdapter) getListView().getAdapter()).getCursor())));
+						//						startActivity(new Intent(ArtFavs.this, ArtInfo.class).putExtra("art", ArtAroundDatabase
+						//								.artFromCursor(((SimpleCursorAdapter) getListView().getAdapter()).getCursor())));
 					}
 				});
 			}

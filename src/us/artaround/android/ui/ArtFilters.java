@@ -4,20 +4,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import us.artaround.R;
-import us.artaround.android.common.BackgroundCommand;
-import us.artaround.android.common.LoadCategoriesCommand;
-import us.artaround.android.common.LoadNeighborhoodsCommand;
-import us.artaround.android.common.LoadingTask;
 import us.artaround.android.common.NotifyingAsyncQueryHandler;
-import us.artaround.android.common.Utils;
-import us.artaround.android.common.LoadingTask.LoadingTaskCallback;
 import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
 import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
-import us.artaround.models.ArtAroundException;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Context;
@@ -40,8 +34,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-public class ArtFilters extends ListActivity implements OnItemClickListener, NotifyingAsyncQueryListener,
-		LoadingTaskCallback {
+public class ArtFilters extends ListActivity implements OnItemClickListener, NotifyingAsyncQueryListener {
 	private static final String TAG = "ArtAround.ArtFilters";
 
 	public static final String[] FILTER_NAMES = { "category", "neighborhood", "artist" };
@@ -68,7 +61,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 	private int currentToken;
 	private int currentInputLength;
 
-	private LoadingTask loadCTask, loadNTask;
+	//private LoadingTask loadCTask, loadNTask;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +75,7 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 
 		initVars();
 		setupUi();
-		restoreState();
+		//restoreState();
 		setupState();
 	}
 
@@ -99,19 +92,19 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		super.onSaveInstanceState(outState);
 	}
 
-	@Override
-	public Object onRetainNonConfigurationInstance() {
-		Holder holder = new Holder();
-		holder.loadCTask = loadCTask;
-		holder.loadNTask = loadNTask;
-		return holder;
-	}
+	//	@Override
+	//	public Object onRetainNonConfigurationInstance() {
+	//		Holder holder = new Holder();
+	//		//holder.loadCTask = loadCTask;
+	//		//holder.loadNTask = loadNTask;
+	//		return holder;
+	//	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if (loadCTask != null) loadCTask.detachCallback();
-		if (loadNTask != null) loadNTask.detachCallback();
+		//		if (loadCTask != null) loadCTask.detachCallback();
+		//		if (loadNTask != null) loadNTask.detachCallback();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -127,16 +120,16 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
 	}
 
-	private void restoreState() {
-		Holder holder = (Holder) getLastNonConfigurationInstance();
-		if (holder != null) {
-			loadCTask = holder.loadCTask;
-			loadNTask = holder.loadNTask;
-
-			if (loadCTask != null) loadCTask.attachCallback(this);
-			if (loadNTask != null) loadNTask.attachCallback(this);
-		}
-	}
+	//	private void restoreState() {
+	//		Holder holder = (Holder) getLastNonConfigurationInstance();
+	//		if (holder != null) {
+	//			loadCTask = holder.loadCTask;
+	//			loadNTask = holder.loadNTask;
+	//
+	//			if (loadCTask != null) loadCTask.attachCallback(this);
+	//			if (loadNTask != null) loadNTask.attachCallback(this);
+	//		}
+	//	}
 
 	private void setupState() {
 		currentToken = 0;
@@ -198,14 +191,14 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 	private void startServerLoad(int token) {
 		Utils.d(TAG, "startServerLoad() for token " + token);
 		switch (token) {
-		case FILTER_CATEGORY:
-			loadCTask = (LoadingTask) new LoadingTask(this, new LoadCategoriesCommand(FILTER_CATEGORY)).execute();
-			break;
-
-		case FILTER_NEIGHBORHOOD:
-			loadNTask = (LoadingTask) new LoadingTask(this, new LoadNeighborhoodsCommand(FILTER_NEIGHBORHOOD))
-					.execute();
-			break;
+		//		case FILTER_CATEGORY:
+		//			loadCTask = (LoadingTask) new LoadingTask(this, new LoadCategoriesCommand(FILTER_CATEGORY)).execute();
+		//			break;
+		//
+		//		case FILTER_NEIGHBORHOOD:
+		//			loadNTask = (LoadingTask) new LoadingTask(this, new LoadNeighborhoodsCommand(FILTER_NEIGHBORHOOD))
+		//					.execute();
+		//			break;
 		}
 	}
 
@@ -387,36 +380,36 @@ public class ArtFilters extends ListActivity implements OnItemClickListener, Not
 		spinner.setEnabled(!isLoading);
 	}
 
-	@Override
-	public void beforeLoadingTask(BackgroundCommand command) {
-		showLoading(true);
-	}
+	//	@Override
+	//	public void beforeLoadingTask(BackgroundCommand command) {
+	//		showLoading(true);
+	//	}
+	//
+	//	@Override
+	//	public void afterLoadingTask(BackgroundCommand command, Object result) {
+	//		finishTask(command.getToken());
+	//	}
+	//
+	//	@Override
+	//	public void onLoadingTaskError(BackgroundCommand command, ArtAroundException exception) {
+	//		finishTask(command.getToken());
+	//	}
 
-	@Override
-	public void afterLoadingTask(BackgroundCommand command, Object result) {
-		finishTask(command.getToken());
-	}
-
-	@Override
-	public void onLoadingTaskError(BackgroundCommand command, ArtAroundException exception) {
-		finishTask(command.getToken());
-	}
-
-	private void finishTask(int token) {
-		Utils.d(TAG, "finishTask() " + token);
-
-		switch (token) {
-		case FILTER_CATEGORY:
-			loadCTask = null;
-			break;
-		case FILTER_NEIGHBORHOOD:
-			loadNTask = null;
-			break;
-		}
-		showLoading(false);
-	}
-
-	private static class Holder {
-		LoadingTask loadCTask, loadNTask;
-	}
+	//	private void finishTask(int token) {
+	//		Utils.d(TAG, "finishTask() " + token);
+	//
+	//		switch (token) {
+	//		case FILTER_CATEGORY:
+	//			loadCTask = null;
+	//			break;
+	//		case FILTER_NEIGHBORHOOD:
+	//			loadNTask = null;
+	//			break;
+	//		}
+	//		showLoading(false);
+	//	}
+	//
+	//	private static class Holder {
+	//		LoadingTask loadCTask, loadNTask;
+	//	}
 }

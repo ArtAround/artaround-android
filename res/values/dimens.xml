@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<dimen
-		name="ActionbarTitle">18dp</dimen>
+		name="ActionbarTitle">18sp</dimen>
 
 	<dimen
-		name="ArtEditLabel">14dp</dimen>
+		name="ArtEditLabel">17sp</dimen>
 	<dimen
-		name="ArtEditInput">16dp</dimen>
+		name="ArtEditInput">17sp</dimen>
 	<dimen
-		name="ArtMinimapHeight">200dp</dimen>
+		name="MinimapHeight">200dp</dimen>
 	<dimen
-		name="ArtGalleryHeight">200dp</dimen>
+		name="GalleryItemWidth">200dp</dimen>
+	<dimen
+		name="GalleryItemHeight">150dp</dimen>
+		
+	<dimen
+		name="BubblePreviewWidth">100dp</dimen>
+	<dimen
+		name="BubblePreviewHeight">100dp</dimen>
 
 </resources>

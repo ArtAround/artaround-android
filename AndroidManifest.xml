@@ -13,9 +13,7 @@
 		android:theme="@style/ArtAround.Default">
 
 		<activity
-			android:name=".android.ui.ArtMap"
-
-			android:theme="@android:style/Theme.NoTitleBar">
+			android:name=".android.ui.ArtMap">
 
 			<intent-filter>
 				<action
@@ -34,24 +32,13 @@
 			android:label="@string/art_filters" />
 
 		<activity
-			android:name=".android.ui.ArtNearby"
-			android:theme="@android:style/Theme.NoTitleBar" />
+			android:name=".android.ui.ArtNearby" />
 
 		<activity
-			android:name=".android.ui.ArtFavs"
-			android:theme="@android:style/Theme.NoTitleBar" />
+			android:name=".android.ui.ArtFavs" />
 
 		<activity
-			android:name=".android.ui.ArtInfo"
-			android:theme="@android:style/Theme.NoTitleBar" />
-
-		<activity
-			android:name=".android.ui.NewArtInfo"
-			android:theme="@android:style/Theme.NoTitleBar" />
-
-		<activity
-			android:name=".android.ui.Preferences"
-			android:theme="@android:style/Theme.NoTitleBar" />
+			android:name=".android.ui.Preferences" />
 
 		<provider
 			android:name=".android.database.ArtAroundProvider"

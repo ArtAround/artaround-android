@@ -84,7 +84,7 @@ public class LocationUpdater implements TimeoutCallback {
 	}
 
 	public boolean isUpdatingAddress() {
-		return addressUpdater != null && addressUpdater.getStatus() == LoadingTask.Status.RUNNING;
+		return addressUpdater != null && addressUpdater.getStatus() == AsyncTask.Status.RUNNING;
 	}
 
 	public void removeUpdates() {

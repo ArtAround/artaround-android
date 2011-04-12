@@ -1,7 +1,6 @@
 package us.artaround.android.database;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import us.artaround.android.common.Utils;
 import us.artaround.models.Art;
@@ -236,8 +235,8 @@ public class ArtAroundDatabase {
 		return art;
 	}
 
-	public static List<Art> artsFromCursor(Cursor c) {
-		List<Art> results = new ArrayList<Art>();
+	public static ArrayList<Art> artsFromCursor(Cursor c) {
+		ArrayList<Art> results = new ArrayList<Art>();
 		if (c != null && c.moveToFirst()) {
 			int count = c.getCount();
 			for (int i = 0; i < count; i++) {
@@ -248,8 +247,8 @@ public class ArtAroundDatabase {
 		return results;
 	}
 
-	public static List<String> categoriesFromCursor(Cursor c) {
-		List<String> results = new ArrayList<String>();
+	public static ArrayList<String> categoriesFromCursor(Cursor c) {
+		ArrayList<String> results = new ArrayList<String>();
 		if (c != null && c.moveToFirst()) {
 			int count = c.getCount();
 			for (int i = count - 1; i >= 0; i--) {
@@ -260,8 +259,8 @@ public class ArtAroundDatabase {
 		return results;
 	}
 
-	public static List<String> neighborhoodsFromCursor(Cursor c) {
-		List<String> results = new ArrayList<String>();
+	public static ArrayList<String> neighborhoodsFromCursor(Cursor c) {
+		ArrayList<String> results = new ArrayList<String>();
 		if (c != null && c.moveToFirst()) {
 			int count = c.getCount();
 			for (int i = count - 1; i >= 0; i--) {
@@ -272,8 +271,8 @@ public class ArtAroundDatabase {
 		return results;
 	}
 
-	public static List<String> artistsFromCursor(Cursor c) {
-		List<String> results = new ArrayList<String>();
+	public static ArrayList<String> artistsFromCursor(Cursor c) {
+		ArrayList<String> results = new ArrayList<String>();
 		if (c != null && c.moveToFirst()) {
 			int count = c.getCount();
 			for (int i = count - 1; i >= 0; i--) {
@@ -305,7 +304,7 @@ public class ArtAroundDatabase {
 		return cv;
 	}
 
-	public static ContentValues[] artsToValues(List<Art> arts) {
+	public static ContentValues[] artsToValues(ArrayList<Art> arts) {
 		int size = arts.size();
 		ContentValues[] values = new ContentValues[size];
 		for (int i = 0; i < size; i++)

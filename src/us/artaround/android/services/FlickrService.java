@@ -32,14 +32,8 @@ public class FlickrService {
 	public static final String WIDTH_KEY = "width";
 	public static final String HEIGHT_KEY = "height";
 
-	public final static String IMAGE_FORMAT = ".jpg";
-
-	public final static String SIZE_SMALL = "Small";
-	public final static String SIZE_MEDIUM = "Medium";
+	public final static String SIZE_THUMB = "Thumbnail";
 	public final static String SIZE_ORIGINAL = "Original";
-
-	public final static int THUMB_WIDTH = 320;
-	public final static int THUMB_HEIGHT = 250;
 
 	// these needs to be set before calling any methods
 	public String apiKey;
@@ -79,14 +73,11 @@ public class FlickrService {
 	}
 
 	private String getSizeLetter(String size) throws ArtAroundException {
-		if (SIZE_SMALL.equalsIgnoreCase(size)) {
-			return "s";
+		if (SIZE_THUMB.equalsIgnoreCase(size)) {
+			return "t";
 		}
 		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
 			return "o";
-		}
-		if (SIZE_MEDIUM.equalsIgnoreCase(size)) {
-			return "m";
 		}
 		throw new ArtAroundException("Size " + size + " not supported!");
 	}
@@ -137,20 +128,12 @@ public class FlickrService {
 				String size = obj.getString(FlickrService.LABEL_KEY);
 
 				// multiple sizes!
-				if (FlickrService.SIZE_SMALL.equals(size)) {
+				if (FlickrService.SIZE_THUMB.equals(size)) {
 					FlickrPhotoSize thumbSize = new FlickrPhotoSize();
 					thumbSize.url = obj.getString(FlickrService.SOURCE_KEY);
 					thumbSize.width = obj.getInt(FlickrService.WIDTH_KEY);
 					thumbSize.height = obj.getInt(FlickrService.HEIGHT_KEY);
-					photo.sizes.put(FlickrService.SIZE_SMALL, thumbSize);
-				}
-
-				if (FlickrService.SIZE_MEDIUM.equals(size)) {
-					FlickrPhotoSize mediumSize = new FlickrPhotoSize();
-					mediumSize.url = obj.getString(FlickrService.SOURCE_KEY);
-					mediumSize.width = obj.getInt(FlickrService.WIDTH_KEY);
-					mediumSize.height = obj.getInt(FlickrService.HEIGHT_KEY);
-					photo.sizes.put(FlickrService.SIZE_MEDIUM, mediumSize);
+					photo.sizes.put(FlickrService.SIZE_THUMB, thumbSize);
 				}
 
 				if (FlickrService.SIZE_ORIGINAL.equals(size)) {

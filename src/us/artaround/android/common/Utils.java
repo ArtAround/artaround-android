@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -24,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Environment;
@@ -31,6 +33,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
@@ -63,7 +66,6 @@ public class Utils {
 	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
 	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(Utils.DATE_FORMAT);
 	public static final SimpleDateFormat titleDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
-
 
 	public static final NumberFormat coordinateFormatter = NumberFormat.getInstance();
 	{
@@ -270,11 +272,7 @@ public class Utils {
 	}
 
 	public static Intent getStreetViewIntent(double latitude, double longitude) {
-		// 1
-		// yaw - direction you look
-		// pitch - degrees from level where up is negative
-		// zoom - is a zoom multiplier
-		// mz - map zoom
+		//FIXME find better values for the params
 		return new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("google.streetview:cbll=" + latitude + ","
 				+ longitude + "&cbp=1,99.56,,1,-5.27&mz=21"));
 	}
@@ -301,6 +299,8 @@ public class Utils {
 		switch (theme) {
 		default:
 		case THEME_DEFAULT:
+			activity.getWindow().setFormat(PixelFormat.RGBA_8888);
+			activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DITHER);
 			activity.setTheme(R.style.ArtAround_Default);
 			break;
 		}
@@ -332,10 +332,33 @@ public class Utils {
 		return builder;
 	}
 
+	public static AlertDialog.Builder wifiSettingsDialog(final Activity activity) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+		builder.setTitle(R.string.connection_failure_title);
+		builder.setMessage(R.string.connection_failure_msg);
+		builder.setPositiveButton(R.string.connection_failure_ok, new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+				activity.startActivity(new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS));
+			}
+		});
+		builder.setNegativeButton(R.string.cancel, new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		return builder;
+	}
+
 	public static String formatCoords(Location location) {
 		double lati = location.getLatitude();
 		double longi = location.getLongitude();
 		return coordinateFormatter.format(lati) + ", " + coordinateFormatter.format(longi);
 	}
 
+	public static int dip(Context context, int dim) {
+		return (int) (context.getResources().getDisplayMetrics().density * dim + 0.5f);
+	}
 }

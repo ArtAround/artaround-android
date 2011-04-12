@@ -8,13 +8,12 @@ import java.util.List;
 
 import us.artaround.R;
 import us.artaround.android.common.LocationUpdater;
-import us.artaround.android.common.Utils;
 import us.artaround.android.common.LocationUpdater.AddressUpdaterCallback;
 import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
+import us.artaround.android.common.Utils;
 import us.artaround.models.Art;
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
@@ -188,8 +187,8 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Art a = arts.get(position);
-				startActivity(new Intent(ArtNearby.this, ArtInfo.class).putExtra("art", a).putExtra("location",
-						location));
+				//				startActivity(new Intent(ArtNearby.this, ArtInfo.class).putExtra("art", a).putExtra("location",
+				//						location));
 			}
 		});
 	}
@@ -256,32 +255,32 @@ public class ArtNearby extends ListActivity implements LocationUpdaterCallback, 
 			//SOUTH is +/-180deg
 			//NORTH is 0deg
 
-			double ang = a._bearingFromCurrentPosition;
-			if (between(-22.5, 22.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_n);
-			}
-			else if (between(22.5, 67.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_ne);
-			}
-			else if (between(67.5, 112.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_e);
-			}
-			else if (between(112.5, 157.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_se);
-			}
-			else if (between(157.5, 180, ang) || between(-180, -157.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_s);
-			}
-			else if (between(-157.5, -112.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_sw);
-			}
-			else if (between(-112.5, -67.5, ang)) {
-				holder.imgDirection.setImageResource(R.drawable.ic_w);
-			}
-			else {
-				holder.imgDirection.setImageResource(R.drawable.ic_nw);
-			}
-			
+			//			double ang = a._bearingFromCurrentPosition;
+			//			if (between(-22.5, 22.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_n);
+			//			}
+			//			else if (between(22.5, 67.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_ne);
+			//			}
+			//			else if (between(67.5, 112.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_e);
+			//			}
+			//			else if (between(112.5, 157.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_se);
+			//			}
+			//			else if (between(157.5, 180, ang) || between(-180, -157.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_s);
+			//			}
+			//			else if (between(-157.5, -112.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_sw);
+			//			}
+			//			else if (between(-112.5, -67.5, ang)) {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_w);
+			//			}
+			//			else {
+			//				holder.imgDirection.setImageResource(R.drawable.ic_nw);
+			//			}
+			//			
 			return convertView;
 		}
 

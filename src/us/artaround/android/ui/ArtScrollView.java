@@ -41,8 +41,8 @@ public class ArtScrollView extends ScrollView {
 	public boolean onTouchEvent(MotionEvent ev) {
 		boolean result = true;
 
-		Utils.d(Utils.TAG, ev.getX() + " " + ev.getY());
-		Utils.d(Utils.TAG, ev.getRawX() + " " + ev.getRawY());
+		//Utils.d(Utils.TAG, ev.getX() + " " + ev.getY());
+		//Utils.d(Utils.TAG, ev.getRawX() + " " + ev.getRawY());
 
 		// fresh click
 		if (doneClick) {
@@ -58,11 +58,11 @@ public class ArtScrollView extends ScrollView {
 		if ((gestureRecipient == NONE) && (lastX != ev.getX() || lastY != ev.getY())) {
 			if (touchInsideMinimap((int) ev.getX(), (int) ev.getY())) {
 				gestureRecipient = MAPVIEW;
-				Utils.d(Utils.TAG, "1");
+				//Utils.d(Utils.TAG, "1");
 			}
 			else {
 				gestureRecipient = SCROLLVIEW;
-				Utils.d(Utils.TAG, "1");
+				//Utils.d(Utils.TAG, "1");
 			}
 		}
 		if (gestureRecipient == MAPVIEW) {
@@ -73,7 +73,7 @@ public class ArtScrollView extends ScrollView {
 //				ev.offsetLocation(offsetX, offsetY);
 //			}
 			if (touchInsideMinimap((int) ev.getX(), (int) ev.getY())) {
-			Utils.d(Utils.TAG, "3");
+				//Utils.d(Utils.TAG, "3");
 			result = getMap().onTouchEvent(ev);
 			}
 			else {
@@ -84,13 +84,13 @@ public class ArtScrollView extends ScrollView {
 		}
 		else if (gestureRecipient == SCROLLVIEW) {
 			result = super.onTouchEvent(ev);
-			Utils.d(Utils.TAG, "4");
+			//Utils.d(Utils.TAG, "4");
 		}
 		if (ev.getAction() == MotionEvent.ACTION_UP) {
 			if (((firstX == ev.getX()) && (firstY == ev.getY()))) {
 				//no movement, it's a click
 				super.onTouchEvent(ev);
-				Utils.d(Utils.TAG, "5");
+				//Utils.d(Utils.TAG, "5");
 			}
 			doneClick = true;
 			gestureRecipient = NONE;

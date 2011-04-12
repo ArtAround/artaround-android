@@ -3,6 +3,7 @@
 	<string
 		name="app_label">ArtAround</string>
 
+	<!-- Generic -->
 	<string
 		name="ok">OK</string>
 	<string
@@ -10,7 +11,7 @@
 	<string
 		name="loading">Loading...</string>
 	<string
-		name="empty">No items yet.</string>
+		name="empty">No items.</string>
 	<string
 		name="by">By</string>
 	<string
@@ -21,46 +22,33 @@
 		name="submit_successful">The art has been submitted.\n Please refresh in a while to
 		retrieve it from server.</string>
 	<string
-		name="edit">Edit</string>
-	<string
-		name="directions">Directions\n</string>
-	<string
 		name="streetview">Street View</string>
-	<string
-		name="media_source_title">Add Photo</string>
-	<string
-		name="media_source_camera">Take a new photo</string>
-	<string
-		name="media_source_gallery">Select photo from gallery</string>
 
-	<!-- Location & connectivity -->
+	<!-- Location  -->
 	<string
 		name="current_location">Current location: </string>
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest
-		and most accurate location
-		detection please turn on
-		GPS and wireless
-		network.</string>
+		the fastest	and most accurate location detection please turn on	GPS and wireless network.</string>
 	<string
 		name="location_update_failure">Your current location is temporary unavailable.</string>
 	<string
-		name="waiting_location">Waiting for location.</string>
-	<string
-		name="update_location">Please refresh your current location.</string>
+		name="waiting_location">Waiting for location...</string>
+
+	<!-- Wifi and connectivity -->
 	<string
 		name="connection_failure_title">Connection failure</string>
 	<string
 		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network
-		connection to
-		function properly.</string>
+		connection to function properly.</string>
 	<string
 		name="connection_failure_ok">WiFi Options</string>
 	<string
 		name="load_data_failure">Could not retrieve data from server.</string>
+		
+	
 
 	<!-- Search -->
 	<string
@@ -98,18 +86,16 @@
 	<string
 		name="preferences_clear_cache_summary">Clear cached data.</string>
 	<string
-		name="preferences_change_city_title">Change city</string>
-	<string
-		name="preferences_change_city_summary">Change the current city for which to display the art around.
-	</string>
-	<string
 		name="clear_cache_progress">Clearing cache...</string>
 	<string
 		name="clear_cache_success">Cleared cache successfully.</string>
 	<string
-		name="clear_cache_failure">Cannot clear the cache.</string>
+		name="clear_cache_failure">Clearing the cache failed.</string>
 	<string
 		name="choose_city">Choose city</string>
+		
+	<string
+		name="update_cache_progress">Updating cached data...</string>
 
 	<!-- Art Map -->
 	<string
@@ -168,6 +154,13 @@
 	<string
 		name="load_photos_error">Could not load the photos from Flickr. Please try again later.
 	</string>
+	<string
+		name="load_arts_error">Could not load the arts from server. Please try again later.
+	</string>
+
+	<!-- Art Map -->
+	<string
+		name="add_new_art">Add New Art</string>
 
 	<!-- Art Edit -->
 	<string
@@ -196,5 +189,7 @@
 		name="art_edit_hint_input_empty">Cannot be empty</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
+	<string
+		name="art_edit_add_photo">Add Photo*</string>
 
 </resources>

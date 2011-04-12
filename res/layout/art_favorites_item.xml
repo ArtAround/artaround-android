@@ -10,7 +10,6 @@
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:textStyle="bold"
-		android:textColor="@color/art_field_label_txt"
 		android:text="Art Title Here" />
 	<TextView
 		android:id="@+id/art_description"

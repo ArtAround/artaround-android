@@ -3,14 +3,12 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:orientation="vertical"
-	android:background="@color/art_details_bg">
+	android:orientation="vertical">
 
 	<LinearLayout
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:orientation="horizontal"
-		android:background="@color/action_bar_bg"
 		android:padding="6dp">
 
 		<TextView
@@ -31,15 +29,13 @@
 			android:layout_height="wrap_content"
 			android:layout_marginRight="6dp"
 			android:layout_gravity="center"
-			android:src="@drawable/ic_refresh_white"
 			android:visibility="invisible" />
 
 		<ImageButton
 			android:id="@+id/btn_location"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:background="@drawable/btn_default_small"
-			android:src="@drawable/ic_location" />
+			android:src="@drawable/ic_locate" />
 	</LinearLayout>
 
 	<include
@@ -65,7 +61,5 @@
 		android:layout_weight="1"
 		android:scrollbarStyle="outsideOverlay"
 		android:scrollingCache="false"
-		android:cacheColorHint="@color/art_details_bg"
-		android:divider="@drawable/divider_dark"
 		android:dividerHeight="1px" />
 </LinearLayout>
