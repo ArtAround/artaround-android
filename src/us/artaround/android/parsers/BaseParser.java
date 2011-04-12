@@ -98,6 +98,8 @@ public class BaseParser {
 
 			ArrayList<ContentValues> arts = new ArrayList<ContentValues>();
 			ArrayList<ContentValues> artists = new ArrayList<ContentValues>();
+			ArrayList<ContentValues> categories = new ArrayList<ContentValues>();
+			ArrayList<ContentValues> neighborhoods = new ArrayList<ContentValues>();
 
 			ParseResult result = new ParseResult();
 
@@ -137,8 +139,6 @@ public class BaseParser {
 						ContentValues category = new ContentValues();
 						ContentValues neighborhood = new ContentValues();
 
-						Art artObj = new Art();
-
 						while (jp.nextToken() != JsonToken.END_OBJECT) {
 							String artKey = jp.getCurrentName();
 							jp.nextValue();
@@ -146,27 +146,26 @@ public class BaseParser {
 							if (SLUG_KEY.equalsIgnoreCase(artKey)) {
 								String slug = jp.getText().trim();
 								art.put(Arts.SLUG, slug);
-								artObj.slug = slug;
 							}
 							else if (TITLE_KEY.equalsIgnoreCase(artKey)) {
 								String title = jp.getText().trim();
 								art.put(Arts.TITLE, title);
-								artObj.title = title;
 							}
 							else if (CATEGORY_KEY.equalsIgnoreCase(artKey)) {
 								String cat = jp.getText().trim();
+								art.put(Arts.CATEGORY, cat);
 								category.put(Categories.NAME, cat);
-								artObj.category = cat;
+								categories.add(category);
 							}
 							else if (NEIGHBORHOOD_KEY.equalsIgnoreCase(artKey)) {
 								String nbhd = jp.getText().trim();
+								art.put(Arts.NEIGHBORHOOD, nbhd);
 								neighborhood.put(Neighborhoods.NAME, nbhd);
-								artObj.neighborhood = nbhd;
+								neighborhoods.add(neighborhood);
 							}
 							else if (LOCATION_DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
 								String desc = jp.getText().trim();
 								art.put(Arts.LOCATION_DESCRIPTION, desc);
-								artObj.locationDesc = desc;
 							}
 							else if (LOCATION_KEY.equalsIgnoreCase(artKey)) {
 								int index = 0;
@@ -176,12 +175,10 @@ public class BaseParser {
 										if (index == 0) {
 											float lat = jp.getFloatValue();
 											art.put(Arts.LATITUDE, lat);
-											artObj.latitude = lat;
 										}
 										else if (index == 1) {
 											float lon = jp.getFloatValue();
 											art.put(Arts.LONGITUDE, lon);
-											artObj.longitude = lon;
 										}
 										index++;
 									}
@@ -190,7 +187,6 @@ public class BaseParser {
 							else if (WARD_KEY.equalsIgnoreCase(artKey)) {
 								String ward = jp.getText().trim();
 								try {
-									artObj.ward = Integer.parseInt(ward);
 									art.put(Arts.WARD, ward);
 								}
 								catch (NumberFormatException e) {
@@ -200,7 +196,6 @@ public class BaseParser {
 							else if (YEAR_KEY.equalsIgnoreCase(artKey)) {
 								String year = jp.getText().trim();
 								try {
-									artObj.year = Integer.parseInt(year);
 									art.put(Arts.YEAR, year);
 								}
 								catch (NumberFormatException e) {
@@ -210,12 +205,10 @@ public class BaseParser {
 							else if (CREATED_AT_KEY.equalsIgnoreCase(artKey)) {
 								String date = jp.getText().trim();
 								art.put(Arts.CREATED_AT, date);
-								artObj.createdAt = date;
 							}
 							else if (UPDATED_AT_KEY.equalsIgnoreCase(artKey)) {
 								String date = jp.getText().trim();
 								art.put(Arts.UPDATED_AT, date);
-								artObj.updatedAt = date;
 							}
 							else if (PHOTO_IDS_KEY.equalsIgnoreCase(artKey)) {
 								List<String> photoIds = new ArrayList<String>();
@@ -224,19 +217,16 @@ public class BaseParser {
 									photoIds.add(jp.getText());
 								}
 								art.put(Arts.PHOTO_IDS, TextUtils.join(Utils.STR_SEP, photoIds));
-								artObj.photoIds = photoIds;
 							}
 							else if (ARTIST_KEY.equalsIgnoreCase(artKey)) {
 								String name = jp.getText().trim();
 
 								if (temp.containsKey(name)) { // we already parsed this artist
-									artObj.artist = temp.get(name);
 									art.put(Arts.ARTIST, temp.get(name).uuid);
 								}
 								else if (!TextUtils.isEmpty(name)) {
 									String artistUUID = UUID.randomUUID().toString();
 									Artist newArtist = new Artist(artistUUID, name);
-									artObj.artist = newArtist;
 									temp.put(name, newArtist);
 
 									ContentValues artist = new ContentValues();
@@ -250,7 +240,6 @@ public class BaseParser {
 							else if (DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
 								String desc = jp.getText().trim();
 								art.put(Arts.DESCRIPTION, desc);
-								artObj.description = desc;
 							}
 							else {
 								jp.skipChildren();
@@ -261,8 +250,6 @@ public class BaseParser {
 						if (art.size() > 0) {
 							art.put(Arts.CITY, city);
 							arts.add(art);
-							
-							artObj.city = city;
 						}
 
 					} // end arts parsing
@@ -284,10 +271,20 @@ public class BaseParser {
 			ArtAroundProvider.contentResolver.bulkInsert(Artists.CONTENT_URI,
 					artists.toArray(new ContentValues[artists.size()]));
 
+			// save categories
+			ArtAroundProvider.contentResolver.bulkInsert(Categories.CONTENT_URI,
+					categories.toArray(new ContentValues[categories.size()]));
+
+			// save neighborhoods
+			ArtAroundProvider.contentResolver.bulkInsert(Neighborhoods.CONTENT_URI,
+					neighborhoods.toArray(new ContentValues[neighborhoods.size()]));
+
 			Boolean notifyMe = (Boolean) data.getAuxData()[0];
 			if (notifyMe != null && notifyMe) {
 				ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
 				ArtAroundProvider.contentResolver.notifyChange(Artists.CONTENT_URI, null);
+				ArtAroundProvider.contentResolver.notifyChange(Categories.CONTENT_URI, null);
+				ArtAroundProvider.contentResolver.notifyChange(Neighborhoods.CONTENT_URI, null);
 			}
 
 			data.setAuxData(result);

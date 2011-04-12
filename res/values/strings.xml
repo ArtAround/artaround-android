@@ -54,27 +54,8 @@
 	<string
 		name="search_hint">Enter search here...</string>
 
-	<!-- Art info -->
-	<string
-		name="label_title">Title</string>
-	<string
-		name="label_artist">Artist(s)</string>
-	<string
-		name="label_year">Year</string>
-	<string
-		name="label_location_desc">Location Description</string>
-	<string
-		name="label_art_description">Art Description</string>
-	<string
-		name="label_ward">Ward</string>
-	<string
-		name="label_neighborhood">Neighborhood</string>
-	<string
-		name="label_category">Category</string>
 	<string
 		name="value_unset">Not Set</string>
-	<string
-		name="no_photo">No art photos</string>
 
 	<!-- Preferences -->
 	<string
@@ -149,7 +130,7 @@
 		name="load_categories_error">Could not load the category list from server. Please try again
 		later.</string>
 	<string
-		name="load_neighborhoods_error">Could not load the neighborhood list from server. Please try
+		name="load_neighborhoods_error">Could not load the area list from server. Please try
 		again later.</string>
 	<string
 		name="load_photos_error">Could not load the photos from Flickr. Please try again later.
@@ -176,7 +157,7 @@
 	<string
 		name="art_edit_label_ward">Ward</string>
 	<string
-		name="art_edit_label_neighborhood">Neighborhood*</string>
+		name="art_edit_label_neighborhood">Area*</string>
 	<string
 		name="art_edit_label_minimap">Drag the pin to your location: </string>
 	<string

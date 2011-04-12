@@ -25,6 +25,10 @@
 		
 		<activity
 			android:name=".android.ui.ArtEdit" />
+			
+		<activity
+			android:name=".android.ui.Gallery"
+			android:screenOrientation="landscape" />
 
 		<activity
 			android:name=".android.ui.ArtFilters"
@@ -62,7 +66,7 @@
 		android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 	<uses-sdk
-		android:minSdkVersion="4"
+		android:minSdkVersion="3"
 		android:targetSdkVersion="8" />
 
 	<supports-screens

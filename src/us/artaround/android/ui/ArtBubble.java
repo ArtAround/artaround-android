@@ -2,6 +2,7 @@ package us.artaround.android.ui;
 
 import us.artaround.R;
 import us.artaround.android.common.ImageDownloader;
+import us.artaround.android.common.Utils;
 import us.artaround.android.common.task.ArtAroundAsyncCommand;
 import us.artaround.android.common.task.ArtAroundAsyncTask;
 import us.artaround.android.common.task.ArtAroundAsyncTask.ArtAroundAsyncTaskListener;
@@ -12,6 +13,7 @@ import us.artaround.models.ArtAroundException;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -25,6 +27,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener {
+	private final static String TAG = "ArtAround.ArtBubble";
+
 	private final LinearLayout layout;
 	private final TextView title;
 	private final TextView author;
@@ -33,6 +37,8 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 	private final ProgressBar progress;
 	private final ImageView imgView;
 	private final Context ctx;
+
+	private ArtAroundAsyncTask task;
 
 	public ArtBubble(Context context, int bubbleBottomOffset) {
 		super(context);
@@ -49,7 +55,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		category = (TextView) rootView.findViewById(R.id.bubble_category);
 		description = (TextView) rootView.findViewById(R.id.bubble_description);
 		progress = (ProgressBar) rootView.findViewById(R.id.progress);
-		imgView = (ImageView) rootView.findViewById(R.id.img_add_photo);
+		imgView = (ImageView) rootView.findViewById(R.id.preview);
 
 		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
 				LayoutParams.WRAP_CONTENT);
@@ -89,52 +95,55 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 
 		if (art.photoIds != null && art.photoIds.size() > 0) {
 			String id = art.photoIds.get(0);
-			
 			Resources res = ctx.getResources();
 			Bundle args = new Bundle();
 			args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
-			args.putBoolean(ImageDownloader.EXTRA_EXTRACT_THUMB, true);
-			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_ORIGINAL);
+			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
+			args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
 			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
 
-			new ArtAroundAsyncTask(new LoadFlickrPhotosCommand(0, id, args), this).execute();
+			task = new ArtAroundAsyncTask(new LoadFlickrPhotosCommand(0, id, args), this);
+			task.execute();
+			Utils.d(TAG, "setData(): start task " + task.getCommandId());
 		}
 	}
 
 	public void clearData() {
+		Utils.d(TAG, "clearData()");
 		progress.setVisibility(View.VISIBLE);
 		imgView.setVisibility(View.GONE);
 		imgView.setImageURI(null);
-	}
-
-	@Override
-	public void onPreExecute(ArtAroundAsyncCommand command) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onPostExecute(ArtAroundAsyncCommand command, Object result, ArtAroundException exception) {
-		progress.setVisibility(View.GONE);
-
-		if (exception == null) {
-			Uri uri = (Uri) result;
-			if (uri != null) {
-				imgView.setScaleType(ScaleType.FIT_XY);
-				imgView.setImageURI(uri);
-				imgView.setVisibility(View.VISIBLE);
-
-			}
-			else {
-				imgView.setVisibility(View.VISIBLE);
-			}
+		if(task != null && task.getStatus() == AsyncTask.Status.RUNNING) {
+			task.cancel(true);
 		}
 	}
 
-	@Override
-	public void onPublishProgress(ArtAroundAsyncCommand command, Object progress) {
-		// TODO Auto-generated method stub
 
+	@Override
+	public void onPostExecute(ArtAroundAsyncCommand command, Object result, ArtAroundException exception) {
+		if (exception == null) {
+			Uri uri = (Uri) result;
+			// if we show another bubble while the first one is not loaded yet
+			// we need to show only the last task result
+			if (task.getCommandId().equals(command.id)) {
+				if (uri != null) {
+					imgView.setScaleType(ScaleType.FIT_XY);
+					imgView.setImageURI(uri);
+					imgView.setVisibility(View.VISIBLE);
+					progress.setVisibility(View.GONE);
+				}
+				else {
+					imgView.setVisibility(View.GONE);
+				}
+			}
+		}
+		task = null;
 	}
+
+	@Override
+	public void onPreExecute(ArtAroundAsyncCommand command) {}
+
+	@Override
+	public void onPublishProgress(ArtAroundAsyncCommand command, Object progress) {}
 }

@@ -15,7 +15,6 @@ import org.apache.http.client.methods.HttpGet;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.net.http.AndroidHttpClient;
 import android.os.Bundle;
@@ -29,14 +28,10 @@ public class ImageDownloader {
 	public static final String EXTRA_PHOTO_URL = "photo_url";
 	public static final String EXTRA_PHOTO_SIZE = "photo_size";
 
-	public static final String EXTRA_EXTRACT_THUMB = "extract_thumb";
-	public static final String EXTRA_EXTRACT_PREVIEW = "extract_preview";
+	public static final String EXTRA_DENSITY = "density";
+	public static final String EXTRA_WIDTH = "width";
+	public static final String EXTRA_HEIGHT = "height";
 
-	public static final String EXTRA_WIDTH = "thumb_width";
-	public static final String EXTRA_HEIGHT = "thumb_height";
-
-	public static final String THUMB_SUFFIX = "_thumb";
-	public static final String PREVIEW_SUFFIX = "_preview";
 	public final static String IMAGE_FORMAT = ".png";
 
 	public static int THUMB_WIDTH = 200;
@@ -94,23 +89,16 @@ public class ImageDownloader {
 			return;
 		}
 
-		BitmapDrawable drawable = null;
-		String originalId = photoId;
+		BitmapDrawable photo = null;
+		float density = args.getFloat(EXTRA_DENSITY);
+		int width = args.getInt(EXTRA_WIDTH);
+		int height = args.getInt(EXTRA_HEIGHT);
 
-		// if it's a thumbnail, verify if the full-size picture exists already
-		if (originalId.indexOf(THUMB_SUFFIX) > -1) {
-			originalId = originalId.replace(THUMB_SUFFIX, "");
-		}
-		if (originalId.indexOf(PREVIEW_SUFFIX) > -1) {
-			originalId = originalId.replace(PREVIEW_SUFFIX, "");
-		}
-
-		Uri originalUri = quickGetImage(photoId);
-		if (originalUri != null) {
-			drawable = (BitmapDrawable) Drawable.createFromPath(originalUri.toString());
+		Uri photoUri = quickGetImage(photoId);
+		if (photoUri != null) {
+			photo = (BitmapDrawable) Drawable.createFromPath(photoUri.toString());
 		}
 		else {
-			// download the file
 			AndroidHttpClient client = AndroidHttpClient.newInstance(Utils.USER_AGENT);
 			HttpGet request = null;
 			InputStream is = null;
@@ -130,7 +118,27 @@ public class ImageDownloader {
 				entity = response.getEntity();
 				if (entity != null) {
 					is = entity.getContent();
-					drawable = (BitmapDrawable) Drawable.createFromStream(new FlushedInputStream(is), null);
+					photo = (BitmapDrawable) Drawable.createFromStream(new FlushedInputStream(is), null);
+
+					if (photo != null) {
+						int myWidth = (int) (density * density * photo.getIntrinsicWidth() + 0.5f);
+						int myHeight = (int) (density * density * photo.getIntrinsicHeight() + 0.5f);
+
+						if (myWidth > width || myHeight > height) {
+							final float ratio = (float) myWidth / (float) myHeight;
+
+							if (ratio > 1) {
+								myWidth = width;
+								myHeight = (int) (height / ratio);
+							}
+							else {
+								myWidth = (int) (width * ratio);
+								myHeight = height;
+							}
+						}
+						photo.setBounds(0, 0, myWidth, myHeight);
+						cacheImage(photoId, photo.getBitmap());
+					}
 				}
 			}
 			catch (Throwable e) {
@@ -156,32 +164,6 @@ public class ImageDownloader {
 				catch (IOException e) {
 					Utils.w(TAG, "Could not download and/or cache image!", e);
 				}
-			}
-
-			extractExtra(drawable, originalId, args, EXTRA_EXTRACT_PREVIEW);
-			extractExtra(drawable, originalId, args, EXTRA_EXTRACT_THUMB);
-		}
-	}
-
-	private static void extractExtra(BitmapDrawable drawable, String originalId, Bundle args, String type) {
-		// type is THUMB or PREVIEW
-		boolean extract = args.getBoolean(type, false);
-		String suffix = type.equalsIgnoreCase(EXTRA_EXTRACT_THUMB) ? THUMB_SUFFIX : PREVIEW_SUFFIX;
-		int width = args.getInt(EXTRA_WIDTH);
-		int height = args.getInt(EXTRA_HEIGHT);
-
-		if (extract && width > 0 && height > 0) {
-			if (width > 0 && height > 0) {
-				Bitmap bitmap = ThumbnailUtils.extractThumbnail(drawable.getBitmap(), width, height);
-				cacheImage(originalId + suffix, bitmap);
-
-				// save the original image when extracting a thumbnail
-				if (type.equalsIgnoreCase(EXTRA_EXTRACT_THUMB)) {
-					cacheImage(originalId, drawable.getBitmap());
-				}
-			}
-			else {
-				Utils.w(TAG, "Could not extract extra " + suffix + " from image!");
 			}
 		}
 	}

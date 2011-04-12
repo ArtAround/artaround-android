@@ -22,15 +22,18 @@
 	<color
 		name="ItemBorderNormal">#FFFFFF</color>
 	<color 
-		name="ItemBorderSelected">#584E4F</color>
+		name="ItemBorderSelected">#C4C62F</color>
 	<color
-		name="ItemBorderPressed">#C4C62F</color>
+		name="ItemBorderPressed">#76C3B6</color>
 	<color
 		name="ItemBackground">#C1B9B7</color>
 	<color
-		name="GalleryBackground">#706667</color>
+		name="ContainerBackground">#706667</color>
 	<color
-		name="GalleryBorder">#52494A</color>
+		name="ContainerBorder">#52494A</color>
+	<color
+		name="MinimapContainerBorder">#FFFFFF</color>	
+	
 		
 	<color
 		name="ArtBubbleText">#332F2E</color>

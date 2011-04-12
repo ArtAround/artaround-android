@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -697,6 +698,26 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		showDialog(DIALOG_LOCATION_SETTINGS);
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+			doOnBackKey();
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	public void onBackPressed() {
+		doOnBackKey();
+	}
+
+	private void doOnBackKey() {
+		if (!artsOverlay.hideBubble()) {
+			finish();
+		}
+	}
+
 	private final Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -740,6 +761,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			if (allArt.size() > 0) {
 				handler.sendEmptyMessage(MSG_PROCESS_ARTS);
 
+				//FIXME fix the case where not all arts could be parsed
 				if (totalCount.get() == allArt.size()) {
 					Utils.d(TAG, "onChange(): finished loading arts!");
 					handler.sendEmptyMessage(MSG_LOAD_ARTS_FINISHED);

@@ -79,7 +79,6 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	private Animation rotateAnim;
 
 	private Button btnSubmit;
-	private Button btnCancel;
 
 	private ScrollView scrollView;
 	private Gallery gallery;
@@ -151,7 +150,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	}
 
 	protected void setupUi() {
-		imgLoader = (ImageView) findViewById(R.id.actionbar_loader);
+		imgLoader = (ImageView) findViewById(R.id.bottombar_loader);
 		rotateAnim = Utils.getRoateAnim(this);
 
 		btnSubmit = (Button) findViewById(R.id.btn_submit);
@@ -161,13 +160,6 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 				if (validateTexts()) {
 					//TODO submit to server
 				}
-			}
-		});
-		btnCancel = (Button) findViewById(R.id.btn_cancel);
-		btnCancel.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				//TODO go back to main screen
 			}
 		});
 
@@ -206,6 +198,13 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	}
 
 	private void setupArtFields() {
+		View.OnClickListener listener = new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				((AutoCompleteTextView) v).showDropDown();
+			}
+		};
+
 		tvName = (EditText) findViewById(R.id.art_edit_input_name);
 		if (!TextUtils.isEmpty(art.title)) {
 			tvName.setText(art.title);
@@ -215,12 +214,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
 			tvArtist.setText(art.artist.name);
 		}
-		tvArtist.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				tvArtist.showDropDown();
-			}
-		});
+		tvArtist.setOnClickListener(listener);
 
 		EditText tvYear = (EditText) findViewById(R.id.art_edit_input_year);
 		if (art.year > 0) {
@@ -231,6 +225,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		if (!TextUtils.isEmpty(art.category)) {
 			tvCategory.setText(art.category);
 		}
+		tvCategory.setOnClickListener(listener);
 
 		EditText tvDesc = (EditText) findViewById(R.id.art_edit_input_description);
 		if (!TextUtils.isEmpty(art.description)) {
@@ -246,6 +241,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		if (!TextUtils.isEmpty(art.neighborhood)) {
 			tvNeighborhood.setText(art.neighborhood);
 		}
+		tvNeighborhood.setOnClickListener(listener);
 
 		EditText tvLocDesc = (EditText) findViewById(R.id.art_edit_input_location_description);
 		if (!TextUtils.isEmpty(art.locationDesc)) {
@@ -299,15 +295,15 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 			Resources res = getResources();
 			Bundle args = new Bundle();
-			args.putBoolean(ImageDownloader.EXTRA_EXTRACT_THUMB, true);
-			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_ORIGINAL);
+			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
+			args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
 			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
 
 			int size = art.photoIds.size();
 			for (int i = 0; i < size; i++) {
 				String id = art.photoIds.get(i);
-				args.putString(ImageDownloader.EXTRA_PHOTO_ID, id + ImageDownloader.THUMB_SUFFIX);
+				args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
 				startTask(new LoadFlickrPhotosCommand(LOAD_PHOTOS, id, args));
 			}
 		}

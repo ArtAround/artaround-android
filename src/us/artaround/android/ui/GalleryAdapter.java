@@ -4,12 +4,10 @@ import java.util.ArrayList;
 
 import us.artaround.R;
 import android.content.Context;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
@@ -84,12 +82,7 @@ public class GalleryAdapter extends BaseAdapter {
 		if ((position == 0 && photoUris.get(0).equals(PLACEHOLDER)) || position == 1
 				|| (position == 2 && photoUris.get(2).equals(PLACEHOLDER))) {
 
-			View view = LayoutInflater.from(context).inflate(R.layout.gallery_add_item, parent, false);
-			LayoutParams params = view.getLayoutParams();
-			Resources res = context.getResources();
-			params.width = res.getDimensionPixelSize(R.dimen.GalleryItemWidth);
-			params.height = res.getDimensionPixelSize(R.dimen.GalleryItemHeight);
-			view.setLayoutParams(params);
+			View view = LayoutInflater.from(context).inflate(R.layout.gallery_add_thumb, parent, false);
 
 			if (position == 1) {
 				view.findViewById(R.id.img_add_photo).setVisibility(View.VISIBLE);
@@ -102,7 +95,7 @@ public class GalleryAdapter extends BaseAdapter {
 			return view;
 		}
 		else {
-			ImageView imageView = (ImageView) LayoutInflater.from(context).inflate(R.layout.gallery_image_view, parent,
+			ImageView imageView = (ImageView) LayoutInflater.from(context).inflate(R.layout.gallery_thumb, parent,
 					false);
 			Uri uri = photoUris.get(position);
 			if (uri != null) {

@@ -4,9 +4,9 @@
 		name="ActionbarTitle">18sp</dimen>
 
 	<dimen
-		name="ArtEditLabel">17sp</dimen>
+		name="ArtEditLabel">14sp</dimen>
 	<dimen
-		name="ArtEditInput">17sp</dimen>
+		name="ArtEditInput">14sp</dimen>
 	<dimen
 		name="MinimapHeight">200dp</dimen>
 	<dimen
@@ -15,8 +15,8 @@
 		name="GalleryItemHeight">150dp</dimen>
 		
 	<dimen
-		name="BubblePreviewWidth">100dp</dimen>
+		name="BubbleItemWidth">100dp</dimen>
 	<dimen
-		name="BubblePreviewHeight">100dp</dimen>
+		name="BubbleItemHeight">100dp</dimen>
 
 </resources>

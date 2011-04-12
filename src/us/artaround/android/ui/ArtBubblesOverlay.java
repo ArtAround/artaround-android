@@ -35,7 +35,7 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 		super(boundCenterBottom(defaultMarker));
 
 		this.mapView = mapView;
-		viewOffset = 0;
+		//viewOffset = 0;
 		setBubbleBottomOffset(defaultMarker.getIntrinsicHeight());
 		mapController = mapView.getController();
 
@@ -117,6 +117,7 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 			hideOtherBubbles(mapOverlays);
 		}
 
+		bubbleView.clearData();
 		bubbleView.setData(createItem(index));
 
 		MapView.LayoutParams params = new MapView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT,
@@ -129,7 +130,6 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 
 		if (isRecycled) {
 			bubbleView.setLayoutParams(params);
-			bubbleView.clearData();
 		}
 		else {
 			mapView.addView(bubbleView, params);
@@ -139,10 +139,12 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 		return true;
 	}
 
-	public void hideBubble() {
-		if (bubbleView != null) {
+	public boolean hideBubble() {
+		if (bubbleView != null && bubbleView.getVisibility() == View.VISIBLE) {
 			bubbleView.setVisibility(View.GONE);
+			return true;
 		}
+		return false;
 	}
 
 	private void hideOtherBubbles(List<Overlay> overlays) {

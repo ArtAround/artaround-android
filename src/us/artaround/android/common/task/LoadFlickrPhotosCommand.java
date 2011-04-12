@@ -3,7 +3,6 @@ package us.artaround.android.common.task;
 import us.artaround.android.common.ImageDownloader;
 import us.artaround.android.services.FlickrService;
 import us.artaround.android.services.FlickrService.FlickrPhoto;
-import us.artaround.android.services.FlickrService.FlickrPhotoSize;
 import us.artaround.models.ArtAroundException;
 import android.os.Bundle;
 
@@ -18,12 +17,10 @@ public class LoadFlickrPhotosCommand extends ArtAroundAsyncCommand {
 	@Override
 	public Object execute() throws ArtAroundException {
 		FlickrService srv = FlickrService.getInstance();
-		FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(id));
+		FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(id), args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
 
-		String photoSize = args.getString(ImageDownloader.EXTRA_PHOTO_SIZE);
-		FlickrPhotoSize size = photo.sizes.get(photoSize);
-		if (size != null) {
-			args.putString(ImageDownloader.EXTRA_PHOTO_URL, size.url);
+		if (photo != null) {
+			args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
 			return ImageDownloader.getImage(args);
 		}
 		return null;

@@ -162,6 +162,26 @@
 		<item
 			name="android:apiKey">@string/maps_api</item>
 	</style>
+	
+	<style
+		name="ArtMinimapContainer" parent="ArtGalleryContainer">
+		<item
+			name="android:background">@drawable/container_bkg</item>
+		<item
+			name="android:padding">6dp</item>
+	</style>
+	
+	<style
+		name="ArtMinimapBorder">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:background">@color/MinimapContainerBorder</item>
+		<item
+			name="android:padding">6dp</item>
+	</style>
 
 	<style
 		name="ArtGalleryContainer">
@@ -172,11 +192,11 @@
 		<item
 			name="android:gravity">center</item>
 		<item
-			name="android:background">@color/GalleryBorder</item>
+			name="android:background">@drawable/container2_bkg</item>
 		<item
-			name="android:paddingTop">6dp</item>
+			name="android:paddingTop">16dp</item>
 		<item
-			name="android:paddingBottom">6dp</item>
+			name="android:paddingBottom">16dp</item>
 	</style>
 
 	<style
@@ -185,12 +205,6 @@
 			name="android:layout_width">fill_parent</item>
 		<item
 			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:background">@color/GalleryBackground</item>
-		<item
-			name="android:paddingTop">10dp</item>
-		<item
-			name="android:paddingBottom">10dp</item>
 	</style>
 
 	<style
@@ -232,7 +246,7 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:textSize">14sp</item>
+			name="android:textSize">12sp</item>
 		<item
 			name="android:textColor">@color/ArtBubbleText</item>
 		<item
@@ -252,7 +266,7 @@
 		<item
 			name="android:textSize">12sp</item>
 		<item
-			name="android:textStyle">normal</item>
+			name="android:textStyle">italic</item>
 	</style>
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -279,7 +293,7 @@
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
-			name="android:layout_height">wrap_content</item>
+			name="android:layout_height">fill_parent</item>
 		<item
 			name="android:gravity">left|center</item>
 		<item
@@ -291,13 +305,13 @@
 		<item
 			name="android:textStyle">bold|normal</item>
 		<item
+			name="android:ellipsize">end</item>
+		<item
 			name="android:lines">1</item>
 		<item
-			name="android:layout_marginLeft">5dp</item>
+			name="android:layout_marginLeft">6dp</item>
 		<item
-			name="android:layout_marginRight">5dp</item>
-		<item
-			name="android:layout_marginTop">5dp</item>
+			name="android:layout_marginRight">6dp</item>
 	</style>
 
 	<style
@@ -313,9 +327,13 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
+			name="android:minHeight">30dp</item>
+		<item
 			name="android:textSize">@dimen/ArtEditInput</item>
 		<item
 			name="android:textColor">@color/ArtEditInput</item>
+		<item
+			name="android:ellipsize">end</item>
 		<item
 			name="android:lines">1</item>
 		<item

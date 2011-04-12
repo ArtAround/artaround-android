@@ -1,8 +1,5 @@
 package us.artaround.android.services;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -17,7 +14,6 @@ import us.artaround.android.common.Utils;
 import us.artaround.models.ArtAroundException;
 import android.content.Context;
 import android.content.res.Resources;
-import android.util.Log;
 
 public class FlickrService {
 	public static final String FORMAT = "json";
@@ -33,6 +29,7 @@ public class FlickrService {
 	public static final String HEIGHT_KEY = "height";
 
 	public final static String SIZE_THUMB = "Thumbnail";
+	public final static String SIZE_SMALL = "Small";
 	public final static String SIZE_ORIGINAL = "Original";
 
 	// these needs to be set before calling any methods
@@ -76,7 +73,10 @@ public class FlickrService {
 		if (SIZE_THUMB.equalsIgnoreCase(size)) {
 			return "t";
 		}
-		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
+		if (SIZE_SMALL.equalsIgnoreCase(size)) {
+			return "s";
+		}
+ 		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
 			return "o";
 		}
 		throw new ArtAroundException("Size " + size + " not supported!");
@@ -111,8 +111,8 @@ public class FlickrService {
 		}
 	}
 
-	public FlickrPhoto parsePhoto(String json) throws ArtAroundException {
-		Log.i(Utils.TAG, "Flickr response is " + json);
+	public FlickrPhoto parsePhoto(String json, String desiredSize) throws ArtAroundException {
+		Utils.i(Utils.TAG, "Flickr response is " + json);
 
 		try {
 			json = json.replace("jsonFlickrApi(", "");
@@ -120,28 +120,16 @@ public class FlickrService {
 
 			JSONArray arr = new JSONObject(json).getJSONObject(SIZES_KEY).getJSONArray(SIZE_KEY);
 			FlickrPhoto photo = new FlickrPhoto();
-			photo.sizes = new HashMap<String, FlickrService.FlickrPhotoSize>();
 
 			int length = arr.length();
 			for (int i = 0; i < length; i++) {
 				JSONObject obj = arr.getJSONObject(i);
 				String size = obj.getString(FlickrService.LABEL_KEY);
 
-				// multiple sizes!
-				if (FlickrService.SIZE_THUMB.equals(size)) {
-					FlickrPhotoSize thumbSize = new FlickrPhotoSize();
-					thumbSize.url = obj.getString(FlickrService.SOURCE_KEY);
-					thumbSize.width = obj.getInt(FlickrService.WIDTH_KEY);
-					thumbSize.height = obj.getInt(FlickrService.HEIGHT_KEY);
-					photo.sizes.put(FlickrService.SIZE_THUMB, thumbSize);
-				}
-
-				if (FlickrService.SIZE_ORIGINAL.equals(size)) {
-					FlickrPhotoSize originalSize = new FlickrPhotoSize();
-					originalSize.url = obj.getString(FlickrService.SOURCE_KEY);
-					originalSize.width = obj.getInt(FlickrService.WIDTH_KEY);
-					originalSize.height = obj.getInt(FlickrService.HEIGHT_KEY);
-					photo.sizes.put(FlickrService.SIZE_ORIGINAL, originalSize);
+				if (desiredSize.equals(size)) {
+					photo.url = obj.getString(FlickrService.SOURCE_KEY);
+					photo.width = obj.getInt(FlickrService.WIDTH_KEY);
+					photo.height = obj.getInt(FlickrService.HEIGHT_KEY);
 				}
 			}
 			return photo;
@@ -152,10 +140,6 @@ public class FlickrService {
 	}
 
 	public static class FlickrPhoto {
-		public Map<String, FlickrPhotoSize> sizes;
-	}
-
-	public static class FlickrPhotoSize {
 		public String size, url;
 		public int width, height;
 	}

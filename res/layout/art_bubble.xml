@@ -10,15 +10,13 @@
 		android:layout_height="wrap_content">
 
 		<include
-			layout="@layout/gallery_add_item"
-			android:layout_width="@dimen/BubblePreviewWidth"
-			android:layout_height="@dimen/BubblePreviewHeight"
-			android:layout_marginRight="10dp" />
+			layout="@layout/bubble_thumb"/>
 
 		<LinearLayout
 			android:layout_width="wrap_content"
 			android:layout_height="fill_parent"
-			android:orientation="vertical">
+			android:orientation="vertical"			
+			android:layout_marginLeft="10dp" >
 
 			<TextView
 				style="@style/ArtBubbleText.Bold"
@@ -34,11 +32,11 @@
 				android:id="@+id/bubble_category" />
 
 			<TextView
-				style="@style/ArtBubbleText.Italic"
+				style="@style/ArtBubbleText"
 				android:id="@+id/bubble_description"
 				android:layout_marginTop="4dp"
-				android:ellipsize="marquee"
-				android:maxLines="3" />
+				android:maxLines="3"
+				android:ellipsize="end" />
 		</LinearLayout>
 
 	</LinearLayout>
