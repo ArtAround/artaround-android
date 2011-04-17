@@ -172,5 +172,13 @@
 		name="art_edit_btn_submit">Submit</string>
 	<string
 		name="art_edit_add_photo">Add Photo*</string>
+	<string
+		name="art_edit_media_source_camera">Take a new photo</string>
+	<string
+		name="art_edit_media_source_gallery">Select photo from gallery</string>
+	<string
+		name="art_edit_media_source">Add New Photo</string>
+	<string
+		name="art_edit_remove_photo">Remove Photo</string>
 
 </resources>

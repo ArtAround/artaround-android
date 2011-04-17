@@ -34,7 +34,7 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Utils.onActivityCreateSetTheme(this);
+		Utils.onSetTheme(this);
 		onChildCreate(savedInstanceState);
 
 		initActionbarUi();

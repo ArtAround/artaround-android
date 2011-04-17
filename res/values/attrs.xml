@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
 	<!-- =============================================================== -->
 	<!-- Theme Attributes -->
 	<!-- =============================================================== -->
 
-	
 	<attr
 		name="Actionbar"
 		format="reference" />
 	<attr
 		name="ActionbarTitle"
-		format="reference" />		
+		format="reference" />
 	<attr
 		name="ActionbarLoader"
-		format="reference" />	
-		
+		format="reference" />
+
 	<attr
 		name="Activity"
 		format="reference" />
-	
+
 	<attr
 		name="ArtEditHintInputEmpty"
 		format="reference" />

@@ -27,7 +27,7 @@
 			android:name=".android.ui.ArtEdit" />
 			
 		<activity
-			android:name=".android.ui.Gallery"
+			android:name=".android.ui.ArtGallery"
 			android:screenOrientation="landscape" />
 
 		<activity

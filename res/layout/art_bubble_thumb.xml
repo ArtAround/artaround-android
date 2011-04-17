@@ -3,7 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="@dimen/BubbleItemWidth"
 	android:layout_height="@dimen/BubbleItemHeight"
-	android:background="@drawable/art_bubble_thumb_bkg"
+	android:background="@drawable/bubble_thumb"
 	android:orientation="vertical"
 	android:gravity="center">
 	<ImageView

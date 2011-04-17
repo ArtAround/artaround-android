@@ -4,9 +4,9 @@
 		name="ActionbarTitle">18sp</dimen>
 
 	<dimen
-		name="ArtEditLabel">14sp</dimen>
+		name="ArtEditLabel">17sp</dimen>
 	<dimen
-		name="ArtEditInput">14sp</dimen>
+		name="ArtEditInput">17sp</dimen>
 	<dimen
 		name="MinimapHeight">200dp</dimen>
 	<dimen

@@ -6,12 +6,12 @@
 	<!-- When the window does not have focus. -->
 
 	<item
-		android:drawable="@drawable/gallery_item_normal"
+		android:drawable="@drawable/mini_gallery_item"
 		android:state_selected="true"
 		android:state_window_focused="false" />
 
 	<item
-		android:drawable="@drawable/gallery_item_normal"
+		android:drawable="@drawable/mini_gallery_item"
 		android:state_selected="false"
 		android:state_window_focused="false" />
 
@@ -19,25 +19,25 @@
 	<!-- When the window does have focus. -->
 
 	<item
-		android:drawable="@drawable/gallery_item_pressed"
+		android:drawable="@drawable/mini_gallery_item_pressed"
 		android:state_selected="true"
 		android:state_pressed="true" />
 
 	<item
-		android:drawable="@drawable/gallery_item_normal"
+		android:drawable="@drawable/mini_gallery_item"
 		android:state_selected="true"
 		android:state_focused="true" />
 
 	<item
-		android:drawable="@drawable/gallery_item_selected"
+		android:drawable="@drawable/mini_gallery_item_selected"
 		android:state_selected="true" />
 
 	<item
-		android:drawable="@drawable/gallery_item_pressed"
+		android:drawable="@drawable/mini_gallery_item_pressed"
 		android:state_selected="false"
 		android:state_pressed="true" />
 
 	<item
-		android:drawable="@drawable/gallery_item_normal" />
+		android:drawable="@drawable/mini_gallery_item" />
 
 </selector>

@@ -274,7 +274,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		mapView.setZoomLevel(newZoom);
 		mapView.setZoomListener(this);
 
-		artsOverlay = new ArtBubblesOverlay(getResources().getDrawable(R.drawable.ic_pin_art), this, mapView);
+		artsOverlay = new ArtBubblesOverlay(getResources().getDrawable(R.drawable.ic_pin), this, mapView);
 		mapView.getOverlays().add(artsOverlay);
 	}
 

@@ -9,10 +9,11 @@ import us.artaround.android.common.LocationUpdater;
 import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.common.NotifyingAsyncQueryHandler;
 import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
+import us.artaround.android.common.PhotoWrapper;
 import us.artaround.android.common.Utils;
 import us.artaround.android.common.task.ArtAroundAsyncCommand;
 import us.artaround.android.common.task.LoadCategoriesCommand;
-import us.artaround.android.common.task.LoadFlickrPhotosCommand;
+import us.artaround.android.common.task.LoadFlickrPhotoThumbCommand;
 import us.artaround.android.common.task.LoadNeighborhoodsCommand;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -22,17 +23,26 @@ import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.services.FlickrService;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.Html;
 import android.text.TextUtils;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -48,6 +58,8 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 
 public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQueryListener, LocationUpdaterCallback {
+	private static final String TAG = "ArtAround.ArtEdit";
+
 	public static final String EXTRA_ART = "art";
 
 	private static final int QUERY_CATEGORIES = 0;
@@ -58,13 +70,26 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	public static final String SAVE_LOCATION = "location";
 	public static final String SAVE_SCROLL_Y = "scroll_y";
-	public static final String SAVE_NEW_PHOTO_URIS = "new_photo_uris";
+	public static final String SAVE_PHOTOS = "photo";
+	public static final String SAVE_NEW_PHOTOS = "new_photos";
+	public static final String SAVE_LOADING_STATUS = "loading_status";
 
 	private static final int DIALOG_LOCATION_SETTINGS = 0;
+	private static final int DIALOG_ADD_PHOTO = 1;
+
+	private static final int REQUEST_CODE_CAMERA = 0;
+	private static final int REQUEST_CODE_GALLERY = 1;
+	private static final int REQUEST_CODE_CROP_FROM_CAMERA = 2;
+
+	private enum LoadingStatus {
+		NOT_LOADING, LOADING, DONE;
+	}
 
 	private Art art;
 	private Location location;
+	private ArrayList<PhotoWrapper> photos;
 	private ArrayList<String> newPhotoUris;
+	private Uri tempUri;
 
 	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
@@ -86,6 +111,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	private CurrentLocationOverlay currentOverlay;
 
 	private int scrollY;
+	private LoadingStatus loadingStatus = LoadingStatus.NOT_LOADING;
 
 	private final AtomicInteger photosToLoad = new AtomicInteger(0);
 
@@ -109,16 +135,26 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	@Override
 	protected void onResume() {
 		super.onResume();
+
 		if (location == null) {
 			startLocationUpdate();
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void restoreState(Bundle savedInstanceState) {
 		if (savedInstanceState != null) {
 			scrollY = savedInstanceState.getInt(SAVE_SCROLL_Y, 0);
 			location = savedInstanceState.getParcelable(SAVE_LOCATION);
-			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
+			photos = (ArrayList<PhotoWrapper>) savedInstanceState.getSerializable(SAVE_PHOTOS);
+			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTOS);
+			loadingStatus = LoadingStatus.valueOf(savedInstanceState.getString(SAVE_LOADING_STATUS));
+		}
+		if (photos == null) {
+			photos = new ArrayList<PhotoWrapper>();
+		}
+		if (newPhotoUris == null) {
+			newPhotoUris = new ArrayList<String>();
 		}
 	}
 
@@ -126,7 +162,9 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
 		outState.putParcelable(SAVE_LOCATION, location);
-		outState.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
+		outState.putSerializable(SAVE_PHOTOS, photos);
+		outState.putStringArrayList(SAVE_NEW_PHOTOS, newPhotoUris);
+		outState.putString(SAVE_LOADING_STATUS, loadingStatus.name());
 		super.onSaveInstanceState(outState);
 	}
 
@@ -143,10 +181,6 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		locationUpdater = new LocationUpdater(this);
 
 		restoreState(savedInstanceState);
-
-		if (newPhotoUris == null) {
-			newPhotoUris = new ArrayList<String>();
-		}
 	}
 
 	protected void setupUi() {
@@ -229,7 +263,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 		EditText tvDesc = (EditText) findViewById(R.id.art_edit_input_description);
 		if (!TextUtils.isEmpty(art.description)) {
-			tvDesc.setText(art.description);
+			tvDesc.setText(Html.fromHtml(art.description)); // for special UTF-8 characters
 		}
 
 		EditText tvWard = (EditText) findViewById(R.id.art_edit_input_ward);
@@ -245,7 +279,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 		EditText tvLocDesc = (EditText) findViewById(R.id.art_edit_input_location_description);
 		if (!TextUtils.isEmpty(art.locationDesc)) {
-			tvLocDesc.setText(art.locationDesc);
+			tvLocDesc.setText(Html.fromHtml(art.locationDesc));
 		}
 
 		tvLabelMinimap = (TextView) findViewById(R.id.art_edit_label_minimap);
@@ -258,17 +292,45 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	private void setupGallery() {
 		gallery = (Gallery) findViewById(R.id.gallery);
-		gallery.setAdapter(new GalleryAdapter(this, hasPhotosToLoad()));
+		registerForContextMenu(gallery);
+
+		MiniGalleryAdapter adapter = new MiniGalleryAdapter(this, hasPhotosToLoad());
+		gallery.setAdapter(adapter);
 		gallery.setSelection(1);
 		gallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				//TODO open up the full-screen gallery
+				if (position == 1) {
+					addNewPhoto();
+				}
+				else {
+					PhotoWrapper pw = ((PhotoWrapper) ((MiniGalleryAdapter) gallery.getAdapter()).getItem(position));
+					if (pw != null) {
+						gotoGallery();
+					}
+				}
 			}
 		});
+
+		// re-populate adapter from saved instance
+		int size = photos.size();
+		for (int i = 0; i < size; i++) {
+			adapter.addItem(photos.get(i));
+		}
 	}
 
-	protected void toggleActionbarLoader(boolean show) {
+	protected void addNewPhoto() {
+		showDialog(DIALOG_ADD_PHOTO);
+	}
+
+	protected void gotoGallery() {
+		Intent iGallery = new Intent(ArtEdit.this, ArtGallery.class);
+		iGallery.putExtra(ArtGallery.EXTRAS_PHOTOS, photos);
+		iGallery.putExtra(ArtGallery.EXTRAS_TITLE, art.title);
+		startActivity(iGallery);
+	}
+
+	protected void showLoading(boolean show) {
 		if (show) {
 			imgLoader.setVisibility(View.VISIBLE);
 			imgLoader.startAnimation(rotateAnim);
@@ -280,7 +342,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 	}
 
 	private void setupState() {
-		toggleActionbarLoader(true);
+		showLoading(true);
 
 		// load artists, categories, neighborhoods from database
 		queryHandler.startQuery(QUERY_ARTISTS, null, Artists.CONTENT_URI, ArtAroundDatabase.ARTISTS_PROJECTION, null,
@@ -291,7 +353,9 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 				ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null, null, null);
 
 		// load art photos from server/cache, if necessary	
-		if (hasPhotosToLoad() && !hasRunningTasks(LOAD_PHOTOS)) {
+		if (hasPhotosToLoad() && loadingStatus == LoadingStatus.NOT_LOADING) {
+			gallery.setClickable(false);
+			loadingStatus = LoadingStatus.LOADING;
 
 			Resources res = getResources();
 			Bundle args = new Bundle();
@@ -304,13 +368,14 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 			for (int i = 0; i < size; i++) {
 				String id = art.photoIds.get(i);
 				args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
-				startTask(new LoadFlickrPhotosCommand(LOAD_PHOTOS, id, args));
+				startTask(new LoadFlickrPhotoThumbCommand(LOAD_PHOTOS, id, args));
+				Utils.d(TAG, "setupState(): started task for id " + id);
 			}
 		}
 	}
 
 	private boolean hasPhotosToLoad() {
-		return art != null && art.photoIds != null && art.photoIds.size() > 0;
+		return art != null && art.photoIds != null && art.photoIds.size() > 0 && loadingStatus != LoadingStatus.DONE;
 	}
 
 	@Override
@@ -328,7 +393,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 			loadFromServer(token);
 		}
 
-		toggleActionbarLoader(false);
+		showLoading(false);
 
 		SimpleCursorAdapter adapter = null;
 		switch (token) {
@@ -400,26 +465,33 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 		switch (command.token) {
 		case QUERY_CATEGORIES:
-			toggleActionbarLoader(false);
+			showLoading(false);
 			if (exception != null) {
 				Utils.showToast(this, R.string.load_categories_error);
 			}
 			break;
 		case QUERY_NEIGHBORHOODS:
-			toggleActionbarLoader(false);
+			showLoading(false);
 			if (exception != null) {
 				Utils.showToast(this, R.string.load_neighborhoods_error);
 			}
 			break;
 		case LOAD_PHOTOS:
 			if (exception == null) {
+				MiniGalleryAdapter adapter = ((MiniGalleryAdapter) gallery.getAdapter());
+
 				if (photosToLoad.incrementAndGet() == art.photoIds.size()) {
-					((GalleryAdapter) gallery.getAdapter()).hideLoaders();
+					loadingStatus = LoadingStatus.DONE;
+					adapter.hideLoaders();
+					gallery.setClickable(true);
 				}
 				Uri uri = (Uri) result;
 				if (uri != null) {
-					((GalleryAdapter) gallery.getAdapter()).addItem(uri);
+					PhotoWrapper pw = new PhotoWrapper(command.id, uri.toString());
+					adapter.addItem(pw);
+					photos.add(pw);
 				}
+				Utils.d(TAG, "onPostExecute(): loaded image with id " + command.id);
 			}
 			else {
 				Utils.showToast(this, R.string.load_photos_error);
@@ -428,22 +500,89 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		}
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode != RESULT_OK) {
+			Utils.d(TAG, "Could not take/select photo! Activity result code is " + resultCode);
+			return;
+		}
+
+		switch (requestCode) {
+		case REQUEST_CODE_CAMERA:
+			Intent intent = new Intent("com.android.camera.action.CROP");
+			Uri uri = null;
+			if (data != null && (uri = data.getData()) != null) {
+				Utils.d(TAG, "Uri is " + uri.toString());
+			}
+			else {
+				uri = tempUri;
+			}
+			intent.setDataAndType(uri, "image/*");
+
+			// start crop image activity
+			Utils.getCropImageIntent(intent, uri);
+			startActivityForResult(intent, REQUEST_CODE_CROP_FROM_CAMERA);
+			break;
+		case REQUEST_CODE_GALLERY:
+		case REQUEST_CODE_CROP_FROM_CAMERA:
+			// FIXME delete temp file after submitting
+			MiniGalleryAdapter adapter = (MiniGalleryAdapter) gallery.getAdapter();
+			String uriStr = tempUri.toString();
+			PhotoWrapper pw = new PhotoWrapper(newPhotoUri(uriStr), uriStr);
+			adapter.addItem(pw);
+			photos.add(pw);
+			newPhotoUris.add(uriStr);
+			break;
+		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		View view = gallery.getSelectedView();
+		if (view != null) {
+			String id = (String) view.getTag();
+			if (!TextUtils.isEmpty(id) && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
+				MenuInflater inflater = getMenuInflater();
+				inflater.inflate(R.menu.mini_gallery_menu, menu);
+			}
+		}
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.context_remove_photo:
+			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+			if (info != null) {
+				View view = info.targetView;
+				String id = (String) view.getTag();
+				if (!TextUtils.isEmpty(id) && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
+					MiniGalleryAdapter adapter = (MiniGalleryAdapter) gallery.getAdapter();
+					adapter.removeItem(id);
+				}
+			}
+			break;
+		}
+		return super.onContextItemSelected(item);
+	}
+
 	private void startLocationUpdate() {
-		toggleActionbarLoader(true);
-		locationUpdater.updateLocation();
+		//showLoading(true);
 		tvLabelMinimap.setText(R.string.art_edit_label_minimap_loading);
+		locationUpdater.updateLocation();
 	}
 
 	@Override
 	public void onSuggestLocationSettings() {
-		toggleActionbarLoader(false);
+		//showLoading(false);
 		showDialog(DIALOG_LOCATION_SETTINGS);
 	}
 
 	@Override
 	public void onLocationUpdate(Location location) {
 		this.location = location;
-		toggleActionbarLoader(false);
+		//showLoading(false);
 
 		// position the minimap on the user
 		MapController ctrl = minimap.getController();
@@ -451,7 +590,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		ctrl.animateTo(geo);
 		ctrl.setZoom(Utils.MINIMAP_ZOOM);
 
-		currentOverlay = new CurrentLocationOverlay(this, R.drawable.ic_pin_art, geo, R.id.minimap_drag);
+		currentOverlay = new CurrentLocationOverlay(this, R.drawable.ic_pin, geo, R.id.minimap_drag);
 		minimap.getOverlays().add(currentOverlay);
 		minimap.invalidate();
 
@@ -462,7 +601,7 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	@Override
 	public void onLocationUpdateError() {
-		toggleActionbarLoader(false);
+		//showLoading(false);
 		tvLabelMinimap.setText(R.string.location_update_failure);
 	}
 
@@ -471,8 +610,44 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 		switch (id) {
 		case DIALOG_LOCATION_SETTINGS:
 			return Utils.locationSettingsDialog(this).create();
+		case DIALOG_ADD_PHOTO:
+			CharSequence[] items = new CharSequence[] { getString(R.string.art_edit_media_source_camera),
+					getString(R.string.art_edit_media_source_gallery) };
+
+			AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+					.setTitle(getString(R.string.art_edit_media_source));
+			dialog.setItems(items, new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(final DialogInterface dialog, final int which) {
+					tempUri = Utils.getNewPhotoUri();
+					if (tempUri == null) {
+						return;
+					}
+
+					switch (which) {
+					case 0:
+						final Intent iCamera = new Intent("android.media.action.IMAGE_CAPTURE");
+						iCamera.putExtra(MediaStore.EXTRA_OUTPUT, tempUri);
+						startActivityForResult(iCamera, REQUEST_CODE_CAMERA);
+						break;
+					case 1:
+						final Intent iGallery = new Intent(Intent.ACTION_PICK);
+						iGallery.setType("image/*");
+						iGallery.putExtra(MediaStore.EXTRA_OUTPUT, tempUri);
+						Utils.getCropImageIntent(iGallery, tempUri);
+						startActivityForResult(iGallery, REQUEST_CODE_GALLERY);
+						break;
+					}
+				}
+			});
+			return dialog.create();
 		default:
 			return super.onCreateDialog(id);
 		}
+	}
+
+	private String newPhotoUri(String uri) {
+		return uri + "_" + MiniGalleryAdapter.NEW_PHOTO;
 	}
 }

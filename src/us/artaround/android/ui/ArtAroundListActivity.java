@@ -32,7 +32,7 @@ public abstract class ArtAroundListActivity extends ListActivity implements ArtA
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Utils.onActivityCreateSetTheme(this);
+		Utils.onSetTheme(this);
 		onChildCreate(savedInstanceState);
 
 		initActionbarUi();

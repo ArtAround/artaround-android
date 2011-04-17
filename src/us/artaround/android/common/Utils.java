@@ -69,7 +69,7 @@ public class Utils {
 
 	public static final NumberFormat coordinateFormatter = NumberFormat.getInstance();
 	{
-		coordinateFormatter.setMaximumFractionDigits(4);
+		coordinateFormatter.setMaximumFractionDigits(6);
 	}
 
 	public static final int TIMEOUT = 30000; // 30 seconds
@@ -79,13 +79,12 @@ public class Utils {
 	public static String appVersion;
 
 	public static final int THEME_DEFAULT = 0;
-
 	private static int theme = THEME_DEFAULT;
 
 	//	private static final int OUTPUT_X = 800;
 	//	private static final int OUTPUT_Y = 600;
-	private static final int ASPECT_X = 1;
-	private static final int ASPECT_Y = 1;
+	//private static final int ASPECT_X = 1;
+	//private static final int ASPECT_Y = 1;
 	private static final boolean SCALE = true;
 	private static final boolean FACE_DETECTION = true;
 	private static final String OUTPUT_FORMAT = Bitmap.CompressFormat.JPEG.toString();
@@ -260,8 +259,8 @@ public class Utils {
 
 	public static Intent getCropImageIntent(Intent intent, Uri output) {
 		intent.putExtra("crop", "true");
-		intent.putExtra("aspectX", ASPECT_X);
-		intent.putExtra("aspectY", ASPECT_Y);
+		//intent.putExtra("aspectX", ASPECT_X);
+		//intent.putExtra("aspectY", ASPECT_Y);
 		//intent.putExtra("outputX", OUTPUT_X);
 		//intent.putExtra("outputY", OUTPUT_Y);
 		intent.putExtra("scale", SCALE);
@@ -295,7 +294,7 @@ public class Utils {
 		return null;
 	}
 
-	public static void onActivityCreateSetTheme(Activity activity) {
+	public static void onSetTheme(Activity activity) {
 		switch (theme) {
 		default:
 		case THEME_DEFAULT:

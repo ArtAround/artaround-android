@@ -6,11 +6,12 @@ import us.artaround.android.common.Utils;
 import us.artaround.android.common.task.ArtAroundAsyncCommand;
 import us.artaround.android.common.task.ArtAroundAsyncTask;
 import us.artaround.android.common.task.ArtAroundAsyncTask.ArtAroundAsyncTaskListener;
-import us.artaround.android.common.task.LoadFlickrPhotosCommand;
+import us.artaround.android.common.task.LoadFlickrPhotoThumbCommand;
 import us.artaround.android.services.FlickrService;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -31,6 +32,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 
 	private final LinearLayout layout;
 	private final TextView title;
+	private final TextView year;
 	private final TextView author;
 	private final TextView category;
 	private final TextView description;
@@ -52,6 +54,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		View rootView = inflater.inflate(R.layout.art_bubble, layout);
 		title = (TextView) rootView.findViewById(R.id.bubble_title);
 		author = (TextView) rootView.findViewById(R.id.bubble_author);
+		year = (TextView) rootView.findViewById(R.id.bubble_year);
 		category = (TextView) rootView.findViewById(R.id.bubble_category);
 		description = (TextView) rootView.findViewById(R.id.bubble_description);
 		progress = (ProgressBar) rootView.findViewById(R.id.progress);
@@ -65,6 +68,12 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 
 	}
 
+	@Override
+	protected void onConfigurationChanged(Configuration newConfig) {
+		task.cancel(true);
+		super.onConfigurationChanged(newConfig);
+	}
+
 	public void setData(ArtOverlayItem item) {
 		layout.setVisibility(VISIBLE);
 		Art art = item.art;
@@ -75,12 +84,13 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		}
 
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			StringBuilder bld = new StringBuilder(art.artist.name);
-			if (art.year > 0) {
-				bld.append(" - ").append(art.year);
-			}
-			author.setText(bld);
+			author.setText(art.artist.name);
 			author.setVisibility(View.VISIBLE);
+		}
+
+		if (art.year > 0) {
+			year.setText(" - " + art.year);
+			year.setVisibility(View.VISIBLE);
 		}
 
 		if (!TextUtils.isEmpty(art.category)) {
@@ -103,7 +113,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
 
-			task = new ArtAroundAsyncTask(new LoadFlickrPhotosCommand(0, id, args), this);
+			task = new ArtAroundAsyncTask(new LoadFlickrPhotoThumbCommand(0, id, args), this);
 			task.execute();
 			Utils.d(TAG, "setData(): start task " + task.getCommandId());
 		}

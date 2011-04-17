@@ -16,15 +16,15 @@
 		name="ActionbarTitle">#FFFFFF</color>
 
 	<color
-		name="Activity">#949599</color>
+		name="Activity"> #C0B9B7</color>
 		
 	<!-- Gallery, Minimap -->
 	<color
 		name="ItemBorderNormal">#FFFFFF</color>
 	<color 
-		name="ItemBorderSelected">#C4C62F</color>
+		name="ItemBorderSelected">#C4C72F</color>
 	<color
-		name="ItemBorderPressed">#76C3B6</color>
+		name="ItemBorderPressed">#72C2B5</color>
 	<color
 		name="ItemBackground">#C1B9B7</color>
 	<color

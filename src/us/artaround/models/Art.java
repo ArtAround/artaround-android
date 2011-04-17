@@ -1,7 +1,7 @@
 package us.artaround.models;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.ArrayList;
 
 public class Art implements Serializable
 {
@@ -28,8 +28,8 @@ public class Art implements Serializable
 	public String neighborhood;
 
 	public Artist artist;
-	public List<String> photoIds;
-	public List<Comment> comments;
+	public ArrayList<String> photoIds;
+	public ArrayList<Comment> comments;
 
 	public transient double _distanceFromCurrentPosition;
 	public transient double _bearingFromCurrentPosition;

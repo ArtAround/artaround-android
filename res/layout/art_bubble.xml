@@ -6,21 +6,35 @@
 
 	<LinearLayout
 		android:id="@+id/bubble_inner"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content">
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
 
 		<include
-			layout="@layout/bubble_thumb"/>
+			layout="@layout/art_bubble_thumb" />
 
 		<LinearLayout
 			android:layout_width="wrap_content"
 			android:layout_height="fill_parent"
-			android:orientation="vertical"			
-			android:layout_marginLeft="10dp" >
+			android:orientation="vertical"
+			android:layout_marginLeft="10dp">
 
 			<TextView
-				style="@style/ArtBubbleText.Bold"
+				style="@style/ArtBubbleText.Title"
 				android:id="@+id/bubble_title" />
+
+			<LinearLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content">
+
+				<TextView
+					style="@style/ArtBubbleText"
+					android:id="@+id/bubble_author" />
+
+				<TextView
+					style="@style/ArtBubbleText"
+					android:id="@+id/bubble_year"
+					android:textStyle="bold" />
+			</LinearLayout>
 
 			<TextView
 				style="@style/ArtBubbleText"
@@ -29,14 +43,14 @@
 
 			<TextView
 				style="@style/ArtBubbleText"
-				android:id="@+id/bubble_category" />
+				android:id="@+id/bubble_category"
+				android:textStyle="bold"
+				android:textSize="11sp" />
 
 			<TextView
 				style="@style/ArtBubbleText"
 				android:id="@+id/bubble_description"
-				android:layout_marginTop="4dp"
-				android:maxLines="3"
-				android:ellipsize="end" />
+				android:layout_marginTop="4dp" />
 		</LinearLayout>
 
 	</LinearLayout>

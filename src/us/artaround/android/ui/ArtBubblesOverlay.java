@@ -94,7 +94,7 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 	 */
 	@Override
 	protected final boolean onTap(int index) {
-		boolean isRecycled;
+		boolean recycled;
 		final int thisIndex;
 		GeoPoint point;
 
@@ -104,12 +104,11 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 		if (bubbleView == null) {
 			bubbleView = new ArtBubble(mapView.getContext(), viewOffset);
 			clickRegion = bubbleView.findViewById(R.id.bubble_inner);
-			isRecycled = false;
+			recycled = false;
 		}
 		else {
-			isRecycled = true;
+			recycled = true;
 		}
-
 		bubbleView.setVisibility(View.GONE);
 
 		List<Overlay> mapOverlays = mapView.getOverlays();
@@ -128,7 +127,7 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 
 		bubbleView.setVisibility(View.VISIBLE);
 
-		if (isRecycled) {
+		if (recycled) {
 			bubbleView.setLayoutParams(params);
 		}
 		else {
@@ -165,8 +164,8 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
 
-					View l = ((View) v.getParent()).findViewById(R.id.bubble_outer);
-					Drawable d = l.getBackground();
+					View view = ((View) v.getParent()).findViewById(R.id.bubble_outer);
+					Drawable d = view.getBackground();
 
 					if (event.getAction() == MotionEvent.ACTION_DOWN) {
 						int[] states = { android.R.attr.state_pressed };

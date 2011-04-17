@@ -87,7 +87,7 @@
 				style="@style/ArtEditTable.Row">
 
 				<include
-					layout="@layout/gallery_view"
+					layout="@layout/mini_gallery_view"
 					android:layout_span="2" />
 			</TableRow>
 			<!-- ============================================= -->
@@ -139,7 +139,7 @@
 			<!-- ============================================= -->
 			<!-- Minimap -->
 			<TableRow
-				style="@style/ArtMinimapContainer">
+				style="@style/MinimapContainer">
 
 				<LinearLayout
 					android:orientation="vertical"
@@ -157,12 +157,13 @@
 						android:text="coords" />
 
 					<RelativeLayout
-						style="@style/ArtMinimapBorder"
+						style="@style/MinimapBorder"
 						android:layout_width="fill_parent"
-						android:layout_height="wrap_content">
+						android:layout_height="wrap_content"
+						android:layout_marginTop="5dp">
 
 						<us.artaround.android.ui.ArtMapView
-							style="@style/ArtMinimap"
+							style="@style/Minimap"
 							android:id="@+id/minimap"
 							android:layout_below="@+id/minimap_coords"
 							android:clickable="true" />
@@ -171,7 +172,7 @@
 							android:id="@+id/minimap_drag"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:src="@drawable/ic_pin_art"
+							android:src="@drawable/ic_pin"
 							android:visibility="gone" />
 					</RelativeLayout>
 				</LinearLayout>
@@ -187,15 +188,17 @@
 					android:layout_span="2">
 
 					<ImageView
-						style="@style/ActionbarLoaderDark"
+						style="@style/BottombarLoaderDark"
 						android:id="@+id/bottombar_loader"
-						android:layout_alignParentLeft="true" />
+						android:layout_alignParentLeft="true"
+						android:layout_marginLeft="12dp" />
 
 					<Button
 						style="@style/Button"
 						android:id="@+id/btn_submit"
 						android:text="@string/submit"
-						android:layout_alignParentRight="true" />
+						android:layout_alignParentRight="true"
+						android:layout_marginRight="12dp" />
 				</RelativeLayout>
 			</TableRow>
 			<!-- ============================================= -->

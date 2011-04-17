@@ -6,10 +6,10 @@ import us.artaround.android.services.FlickrService.FlickrPhoto;
 import us.artaround.models.ArtAroundException;
 import android.os.Bundle;
 
-public class LoadFlickrPhotosCommand extends ArtAroundAsyncCommand {
+public class LoadFlickrPhotoThumbCommand extends ArtAroundAsyncCommand {
 	private final Bundle args;
 
-	public LoadFlickrPhotosCommand(int token, String id, Bundle args) {
+	public LoadFlickrPhotoThumbCommand(int token, String id, Bundle args) {
 		super(token, id);
 		this.args = args;
 	}
@@ -21,7 +21,7 @@ public class LoadFlickrPhotosCommand extends ArtAroundAsyncCommand {
 
 		if (photo != null) {
 			args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
-			return ImageDownloader.getImage(args);
+			return ImageDownloader.getImageUri(args);
 		}
 		return null;
 	}

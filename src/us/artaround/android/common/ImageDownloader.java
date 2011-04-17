@@ -40,25 +40,28 @@ public class ImageDownloader {
 	public static int PREVIEW_WIDTH = 100;
 	public static int PREVIEW_HEIGHT = 100;
 
-	// should be called from within a background task, it performs a network call
-	public static Uri getImage(Bundle args) {
-		String photoId = args.getString(EXTRA_PHOTO_ID);
-		String url = args.getString(EXTRA_PHOTO_URL);
+	public static Drawable getImageDrawable(String url) {
+		return downloadImage(url);
+	}
 
-		Uri uri = quickGetImage(photoId);
+	// should be called from within a background task, it performs a network call
+	public static Uri getImageUri(Bundle args) {
+		String photoId = args.getString(EXTRA_PHOTO_ID);
+
+		Uri uri = quickGetImageUri(photoId);
 		if (uri == null) {
-			downloadAndCacheImage(photoId, url, args);
-			uri = quickGetImage(photoId);
-			Utils.i(TAG, "Fetched image " + args + " from server uri=" + uri);
+			downloadAndCacheImage(args);
+			uri = quickGetImageUri(photoId);
+			Utils.i(TAG, "Fetched image " + photoId + " from server.");
 		}
 		else {
-			Utils.i(TAG, "Fetched image " + args + " from cache uri=" + uri);
+			Utils.i(TAG, "Fetched image " + photoId + " from cache.");
 		}
 		return uri;
 	}
 
 	// will not make a network call, if file exists on disk
-	public static Uri quickGetImage(String photoId) {
+	private static Uri quickGetImageUri(String photoId) {
 		File imageFile = getFile(photoId);
 		if (imageFile == null || !imageFile.exists())
 			return null;
@@ -83,7 +86,10 @@ public class ImageDownloader {
 		return new File(dir.getAbsolutePath(), photoId + IMAGE_FORMAT);
 	}
 
-	public static void downloadAndCacheImage(String photoId, String url, Bundle args) {
+	private static void downloadAndCacheImage(Bundle args) {
+		String photoId = args.getString(EXTRA_PHOTO_ID);
+		String url = args.getString(EXTRA_PHOTO_URL);
+
 		if (TextUtils.isEmpty(url)) {
 			Utils.w(TAG, "Could not download and/or cache image! Url is null.");
 			return;
@@ -94,81 +100,75 @@ public class ImageDownloader {
 		int width = args.getInt(EXTRA_WIDTH);
 		int height = args.getInt(EXTRA_HEIGHT);
 
-		Uri photoUri = quickGetImage(photoId);
-		if (photoUri != null) {
-			photo = (BitmapDrawable) Drawable.createFromPath(photoUri.toString());
+		AndroidHttpClient client = AndroidHttpClient.newInstance(Utils.USER_AGENT);
+		HttpGet request = null;
+		InputStream is = null;
+		HttpEntity entity = null;
+
+		try {
+			request = new HttpGet((new URI(url)).toASCIIString());
+			HttpResponse response = client.execute(request);
+
+			final int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode != HttpStatus.SC_OK) {
+				Utils.w(TAG, "Could not download image! Status code " + statusCode + " while retrieving bitmap from "
+						+ url);
+				return;
+			}
+
+			entity = response.getEntity();
+			if (entity != null) {
+				is = entity.getContent();
+				photo = (BitmapDrawable) Drawable.createFromStream(new FlushedInputStream(is), null);
+
+				if (photo != null) {
+					int myWidth = (int) (density * density * photo.getIntrinsicWidth() + 0.5f);
+					int myHeight = (int) (density * density * photo.getIntrinsicHeight() + 0.5f);
+
+					if (myWidth > width || myHeight > height) {
+						final float ratio = (float) myWidth / (float) myHeight;
+
+						if (ratio > 1) {
+							myWidth = width;
+							myHeight = (int) (height / ratio);
+						}
+						else {
+							myWidth = (int) (width * ratio);
+							myHeight = height;
+						}
+					}
+					photo.setBounds(0, 0, myWidth, myHeight);
+					cacheImage(photoId, photo.getBitmap());
+				}
+			}
 		}
-		else {
-			AndroidHttpClient client = AndroidHttpClient.newInstance(Utils.USER_AGENT);
-			HttpGet request = null;
-			InputStream is = null;
-			HttpEntity entity = null;
+		catch (Throwable e) {
+			if (request != null) {
+				request.abort();
+			}
+			Utils.w(TAG, "Could not download and/or cache image!", e);
+		}
+		finally {
+			if (client != null) {
+				client.close();
+			}
 
 			try {
-				request = new HttpGet((new URI(url)).toASCIIString());
-				HttpResponse response = client.execute(request);
-
-				final int statusCode = response.getStatusLine().getStatusCode();
-				if (statusCode != HttpStatus.SC_OK) {
-					Utils.w(TAG, "Could not download image! Status code " + statusCode
-							+ " while retrieving bitmap from " + url);
-					return;
+				if (is != null) {
+					is.close();
 				}
 
-				entity = response.getEntity();
 				if (entity != null) {
-					is = entity.getContent();
-					photo = (BitmapDrawable) Drawable.createFromStream(new FlushedInputStream(is), null);
-
-					if (photo != null) {
-						int myWidth = (int) (density * density * photo.getIntrinsicWidth() + 0.5f);
-						int myHeight = (int) (density * density * photo.getIntrinsicHeight() + 0.5f);
-
-						if (myWidth > width || myHeight > height) {
-							final float ratio = (float) myWidth / (float) myHeight;
-
-							if (ratio > 1) {
-								myWidth = width;
-								myHeight = (int) (height / ratio);
-							}
-							else {
-								myWidth = (int) (width * ratio);
-								myHeight = height;
-							}
-						}
-						photo.setBounds(0, 0, myWidth, myHeight);
-						cacheImage(photoId, photo.getBitmap());
-					}
+					entity.consumeContent();
 				}
 			}
-			catch (Throwable e) {
-				if (request != null) {
-					request.abort();
-				}
+			catch (IOException e) {
 				Utils.w(TAG, "Could not download and/or cache image!", e);
-			}
-			finally {
-				if (client != null) {
-					client.close();
-				}
-
-				try {
-					if (is != null) {
-						is.close();
-					}
-
-					if (entity != null) {
-						entity.consumeContent();
-					}
-				}
-				catch (IOException e) {
-					Utils.w(TAG, "Could not download and/or cache image!", e);
-				}
 			}
 		}
 	}
 
-	public static void cacheImage(String photoId, Bitmap bitmap) {
+	private static void cacheImage(String photoId, Bitmap bitmap) {
 		try {
 			File file = getFile(photoId);
 			final FileOutputStream out = new FileOutputStream(file);
@@ -180,6 +180,61 @@ public class ImageDownloader {
 		catch (final Throwable e) {
 			Utils.w(TAG, "Could not download and/or cache image!", e);
 		}
+	}
+
+	private static Drawable downloadImage(String url) {
+		if (TextUtils.isEmpty(url)) {
+			Utils.w(TAG, "Could not download image! Url is null.");
+			return null;
+		}
+
+		AndroidHttpClient client = AndroidHttpClient.newInstance(Utils.USER_AGENT);
+		HttpGet request = null;
+		InputStream is = null;
+		HttpEntity entity = null;
+
+		try {
+			request = new HttpGet((new URI(url)).toASCIIString());
+			HttpResponse response = client.execute(request);
+
+			final int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode != HttpStatus.SC_OK) {
+				Utils.w(TAG, "Could not download image! Status code " + statusCode + " while retrieving bitmap from "
+						+ url);
+				return null;
+			}
+
+			entity = response.getEntity();
+			if (entity != null) {
+				is = entity.getContent();
+				return Drawable.createFromStream(new FlushedInputStream(is), null);
+			}
+		}
+		catch (Throwable e) {
+			if (request != null) {
+				request.abort();
+			}
+			Utils.w(TAG, "Could not download image!", e);
+		}
+		finally {
+			if (client != null) {
+				client.close();
+			}
+
+			try {
+				if (is != null) {
+					is.close();
+				}
+
+				if (entity != null) {
+					entity.consumeContent();
+				}
+			}
+			catch (IOException e) {
+				Utils.w(TAG, "Could not download image!", e);
+			}
+		}
+		return null;
 	}
 
 	// A bug in the previous versions of BitmapFactory.decodeStream may prevent it from working over a slow
