@@ -615,14 +615,15 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	@Override
 	public void onTap(Object item) {
 		if (item instanceof ArtOverlayItem) {
-			gotoArtPage(((ArtOverlayItem) item).art);
+			gotoArtDetail(((ArtOverlayItem) item).art);
 		}
 	}
 
-	private void gotoArtPage(Art art) {
+	private void gotoArtDetail(Art art) {
 		// save the current state of the map
-		Intent iArtPage = new Intent(this, ArtEdit.class).putExtra("art", art);
-		startActivity(iArtPage);
+		//Intent iArtPage = new Intent(this, ArtEdit.class).putExtra("art", art);
+		Intent iArtDetail = new Intent(this, ArtDetail.class).putExtra(ArtDetail.EXTRA_ART, art);
+		startActivity(iArtDetail);
 		finish(); // call finish to save memory because of the 2 map views
 	}
 
@@ -650,13 +651,13 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	private void startLocationUpdate() {
 		Utils.showToast(this, R.string.waiting_location);
-		showLoading(true);
+		//showLoading(true);
 		btnLocation.setEnabled(false);
 		locationUpdater.updateLocation();
 	}
 
 	private void endLocationUpdate() {
-		showLoading(false);
+		//showLoading(false);
 		btnLocation.setEnabled(true);
 		locationUpdater.removeUpdates();
 	}

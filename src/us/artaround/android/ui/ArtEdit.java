@@ -325,8 +325,8 @@ public class ArtEdit extends ArtAroundMapActivity implements NotifyingAsyncQuery
 
 	protected void gotoGallery() {
 		Intent iGallery = new Intent(ArtEdit.this, ArtGallery.class);
-		iGallery.putExtra(ArtGallery.EXTRAS_PHOTOS, photos);
-		iGallery.putExtra(ArtGallery.EXTRAS_TITLE, art.title);
+		iGallery.putExtra(ArtGallery.EXTRA_PHOTOS, photos);
+		iGallery.putExtra(ArtGallery.EXTRA_TITLE, art.title);
 		startActivity(iGallery);
 	}
 

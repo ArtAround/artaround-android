@@ -294,7 +294,7 @@ public class Utils {
 		return null;
 	}
 
-	public static void onSetTheme(Activity activity) {
+	public static void setTheme(Activity activity) {
 		switch (theme) {
 		default:
 		case THEME_DEFAULT:

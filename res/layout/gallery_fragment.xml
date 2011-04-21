@@ -2,17 +2,21 @@
 <RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+	android:layout_height="fill_parent"
+	android:gravity="center">
 
 	<android.widget.Gallery
 		android:id="@+id/gallery"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:background="#2B2728" />
-		
+
 	<RelativeLayout
-		style="@style/ArtGalleryActionbar"
-		android:layout_alignParentTop="true">
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentTop="true"
+		android:background="@drawable/gallery_actionbar_background"
+		android:gravity="center">
 
 		<ImageButton
 			android:id="@+id/btn_comment"
@@ -22,10 +26,14 @@
 			android:layout_alignParentLeft="true" />
 
 		<TextView
-			style="@style/ArtGalleryActionbarTitle"
 			android:id="@+id/title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textColor="#FFFFFF"
+			android:textStyle="bold"
+			android:typeface="serif"
 			android:layout_centerInParent="true" />
-			
+
 		<ImageView
 			android:id="@+id/img_loader"
 			android:layout_width="wrap_content"
@@ -34,8 +42,8 @@
 			android:layout_centerVertical="true"
 			android:layout_toLeftOf="@+id/btn_add_image"
 			android:src="@drawable/ic_gallery_loading"
-			android:visibility="gone"	/>
-				
+			android:visibility="gone" />
+
 		<ImageButton
 			android:id="@+id/btn_add_image"
 			android:background="@drawable/ic_gallery_add_image_background"
@@ -43,5 +51,6 @@
 			android:layout_height="wrap_content"
 			android:layout_alignParentRight="true" />
 	</RelativeLayout>
-	
+
 </RelativeLayout>
+	

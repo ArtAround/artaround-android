@@ -33,7 +33,7 @@ public abstract class ArtAroundActivity extends Activity implements ArtAroundAsy
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Utils.onSetTheme(this);
+		Utils.setTheme(this);
 		onChildCreate(savedInstanceState);
 
 		initActionbarUi();

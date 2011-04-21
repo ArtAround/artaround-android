@@ -50,15 +50,15 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		return 2;
 	}
 
-	public void addItem(PhotoWrapper pw) {
+	public void addItem(PhotoWrapper wrapper) {
 		if (photos.get(0) == null) {
-			photos.set(0, pw);
+			photos.set(0, wrapper);
 		}
 		else if (photos.get(2) == null) {
-			photos.set(2, pw);
+			photos.set(2, wrapper);
 		}
 		else {
-			photos.add(pw);
+			photos.add(wrapper);
 		}
 		notifyDataSetChanged();
 	}
@@ -112,12 +112,11 @@ public class MiniGalleryAdapter extends BaseAdapter {
 				imageView = (ImageView) LayoutInflater.from(context)
 						.inflate(R.layout.mini_gallery_thumb, parent, false);
 			}
-			PhotoWrapper pw = photos.get(position);
-			Uri uri = Uri.parse(pw.uri);
-			if (uri != null) {
-				imageView.setImageURI(uri);
+			PhotoWrapper wrapper = photos.get(position);
+			if (wrapper.uri != null) {
+				imageView.setImageURI(Uri.parse(wrapper.uri));
 			}
-			imageView.setTag(pw.id);
+			imageView.setTag(wrapper.id);
 			return imageView;
 		}
 	}

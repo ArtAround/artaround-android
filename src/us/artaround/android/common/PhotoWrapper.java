@@ -7,7 +7,8 @@ import android.graphics.drawable.Drawable;
 
 public class PhotoWrapper implements Serializable {
 	private static final long serialVersionUID = -662225757938609228L;
-	public String id, uri;
+	public String id;
+	public String uri;
 	public Drawable drawable;
 
 	public PhotoWrapper(String id, String uri) {
@@ -25,7 +26,6 @@ public class PhotoWrapper implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((uri == null) ? 0 : uri.hashCode());
 		return result;
 	}
 
@@ -39,10 +39,6 @@ public class PhotoWrapper implements Serializable {
 			if (other.id != null) return false;
 		}
 		else if (!id.equals(other.id)) return false;
-		if (uri == null) {
-			if (other.uri != null) return false;
-		}
-		else if (!uri.equals(other.uri)) return false;
 		return true;
 	}
 }

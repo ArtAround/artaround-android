@@ -14,6 +14,7 @@ import us.artaround.android.common.Utils;
 import us.artaround.models.ArtAroundException;
 import android.content.Context;
 import android.content.res.Resources;
+import android.text.TextUtils;
 
 public class FlickrService {
 	public static final String FORMAT = "json";
@@ -126,7 +127,7 @@ public class FlickrService {
 				JSONObject obj = arr.getJSONObject(i);
 				String size = obj.getString(FlickrService.LABEL_KEY);
 
-				if (desiredSize.equals(size)) {
+				if (!TextUtils.isEmpty(desiredSize) && desiredSize.equals(size)) {
 					photo.url = obj.getString(FlickrService.SOURCE_KEY);
 					photo.width = obj.getInt(FlickrService.WIDTH_KEY);
 					photo.height = obj.getInt(FlickrService.HEIGHT_KEY);
