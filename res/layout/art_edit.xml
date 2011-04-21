@@ -86,9 +86,13 @@
 			<TableRow
 				style="@style/ArtEditTable.Row">
 
-				<include
-					layout="@layout/mini_gallery_view"
-					android:layout_span="2" />
+<!-- 				<include -->
+<!-- 					layout="@layout/mini_gallery_view" -->
+<!-- 					android:layout_span="2" /> -->
+			     <FrameLayout
+			     	android:id="@+id/mini_gallery_placeholder"
+			     	android:layout_width="fill_parent"
+			     	android:layout_height="wrap_content" />
 			</TableRow>
 			<!-- ============================================= -->
 

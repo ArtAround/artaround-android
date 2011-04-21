@@ -46,6 +46,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	private static final String TAG = "ArtAround.MiniGalleryFragment";
 
+	public static final String ARG_EDIT_MODE = "edit_mode";
 	public static final String ARG_TITLE = "title";
 	public static final String ARG_PHOTOS = "photos";
 	public static final String ARG_PHOTO = "photo";
@@ -60,6 +61,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	private MiniGalleryAdapter adapter;
 
 	private String title;
+	private boolean editMode;
 	private ArrayList<String> photoIds;
 	private ArrayList<PhotoWrapper> photos;
 	private ArrayList<String> newPhotos;
@@ -74,6 +76,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		setRetainInstance(true);
 
 		photoIds = getArguments().getStringArrayList(ARG_PHOTOS);
+		editMode = getArguments().getBoolean(ARG_EDIT_MODE);
 		title = getArguments().getString(ARG_TITLE);
 	}
 
@@ -83,13 +86,13 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		View view = inflater.inflate(R.layout.mini_gallery_fragment, container, false);
 		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
 		registerForContextMenu(miniGallery);
-		adapter = new MiniGalleryAdapter(getActivity(), true);
+		adapter = new MiniGalleryAdapter(getActivity(), editMode);
 		miniGallery.setAdapter(adapter);
 		miniGallery.setSelection(1);
 		miniGallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				if (position == 1) {
+				if (editMode && position == 1) {
 					addNewPhoto();
 				}
 				else if (getPhotoCount() > 0) {

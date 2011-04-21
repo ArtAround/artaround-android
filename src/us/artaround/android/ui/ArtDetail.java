@@ -45,6 +45,7 @@ public class ArtDetail extends FragmentActivity {
 		Bundle args = new Bundle();
 		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTOS, art.photoIds);
 		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
+		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, true);
 		f.setArguments(args);
 		FragmentManager fm = getSupportFragmentManager();
 		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f).commit();

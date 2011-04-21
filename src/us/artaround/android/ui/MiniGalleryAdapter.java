@@ -18,11 +18,12 @@ public class MiniGalleryAdapter extends BaseAdapter {
 
 	private final Context context;
 	private final ArrayList<PhotoWrapper> photos;
-	private boolean hideLoaders;
+	private final boolean editMode;
+	private boolean showLoaders = true;
 
-	public MiniGalleryAdapter(Context context, boolean showLoaders) {
+	public MiniGalleryAdapter(Context context, boolean editMode) {
 		this.context = context;
-		this.hideLoaders = !showLoaders;
+		this.editMode = editMode;
 
 		this.photos = new ArrayList<PhotoWrapper>();
 		photos.add(null); // empty placeholder
@@ -50,10 +51,16 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		return 2;
 	}
 
+	//FIXME find a better way of "filling-in" the gallery from center
 	public void addItem(PhotoWrapper wrapper) {
-		if (photos.get(0) == null) {
+		if (!editMode && photos.get(1) == null) {
+			photos.set(1, wrapper);
+		}
+
+		else if (photos.get(0) == null) {
 			photos.set(0, wrapper);
 		}
+
 		else if (photos.get(2) == null) {
 			photos.set(2, wrapper);
 		}
@@ -84,7 +91,8 @@ public class MiniGalleryAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		if ((position == 0 && photos.get(0) == null || position == 1 || (position == 2 && photos.get(2) == null))) {
+		if (editMode
+				&& (position == 0 && photos.get(0) == null || position == 1 || (position == 2 && photos.get(2) == null))) {
 			View view = null;
 			if (convertView instanceof LinearLayout) {
 				view = convertView;
@@ -98,7 +106,7 @@ public class MiniGalleryAdapter extends BaseAdapter {
 				view.findViewById(R.id.txt_add_photo).setVisibility(View.VISIBLE);
 				view.findViewById(R.id.progress).setVisibility(View.GONE);
 			}
-			else if (hideLoaders) {
+			else if (!showLoaders) {
 				view.findViewById(R.id.progress).setVisibility(View.GONE);
 			}
 			return view;
@@ -113,16 +121,18 @@ public class MiniGalleryAdapter extends BaseAdapter {
 						.inflate(R.layout.mini_gallery_thumb, parent, false);
 			}
 			PhotoWrapper wrapper = photos.get(position);
-			if (wrapper.uri != null) {
-				imageView.setImageURI(Uri.parse(wrapper.uri));
+			if (wrapper != null) {
+				if (wrapper.uri != null) {
+					imageView.setImageURI(Uri.parse(wrapper.uri));
+				}
+				imageView.setTag(wrapper.id);
 			}
-			imageView.setTag(wrapper.id);
 			return imageView;
 		}
 	}
 
 	public void hideLoaders() {
-		hideLoaders = true;
+		showLoaders = false;
 		notifyDataSetChanged();
 	}
 }
