@@ -19,7 +19,7 @@ public class MiniGalleryAdapter extends BaseAdapter {
 	private final Context context;
 	private final ArrayList<PhotoWrapper> photos;
 	private final boolean editMode;
-	private boolean showLoaders = true;
+	private boolean showLoaders;
 
 	public MiniGalleryAdapter(Context context, boolean editMode) {
 		this.context = context;
@@ -131,8 +131,15 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		}
 	}
 
-	public void hideLoaders() {
-		showLoaders = false;
+	public void toggleLoaders(boolean show) {
+		showLoaders = show;
 		notifyDataSetChanged();
+	}
+
+	public void addItems(ArrayList<PhotoWrapper> photos) {
+		if (photos == null) return;
+		for (int i = 0; i < photos.size(); i++) {
+			addItem(photos.get(i));
+		}
 	}
 }

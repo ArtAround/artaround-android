@@ -111,7 +111,7 @@ public class ArtScrollView extends ScrollView {
 
 	private ArtMapView getMap() {
 		if (mapView == null) {
-			mapView = (ArtMapView) this.findViewById(R.id.minimap);
+			mapView = (ArtMapView) this.findViewById(R.id.mini_map);
 		}
 		return mapView;
 	}

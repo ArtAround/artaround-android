@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -67,9 +67,9 @@ public class Utils {
 	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(Utils.DATE_FORMAT);
 	public static final SimpleDateFormat titleDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
 
-	public static final NumberFormat coordinateFormatter = NumberFormat.getInstance();
-	{
-		coordinateFormatter.setMaximumFractionDigits(6);
+	public static final DecimalFormat coordinateFormatter = new DecimalFormat();
+	static {
+		coordinateFormatter.setMinimumFractionDigits(4);
 	}
 
 	public static final int TIMEOUT = 30000; // 30 seconds
@@ -352,9 +352,11 @@ public class Utils {
 	}
 
 	public static String formatCoords(Location location) {
-		double lati = location.getLatitude();
-		double longi = location.getLongitude();
-		return coordinateFormatter.format(lati) + ", " + coordinateFormatter.format(longi);
+		return formatCoords(location.getLatitude(), location.getLongitude());
+	}
+
+	public static String formatCoords(double latitude, double longitude) {
+		return coordinateFormatter.format(latitude) + ", " + coordinateFormatter.format(longitude);
 	}
 
 	public static int dip(Context context, int dim) {

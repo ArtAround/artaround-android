@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -51,22 +52,28 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	public static final String ARG_PHOTOS = "photos";
 	public static final String ARG_PHOTO = "photo";
 
+	private static final String SAVE_PHOTOS = "photos";
+	private static final String SAVE_NEW_PHOTO_URIS = "new_photo_uris";
+	private static final String SAVE_LOADED_PHOTOS_COUNT = "loaded_photos_count";
+
 	private static final int REQUEST_CODE_CAMERA = 0;
 	private static final int REQUEST_CODE_GALLERY = 1;
 	private static final int REQUEST_CODE_CROP_FROM_CAMERA = 2;
 
 	private static final String DIALOG_ADD_PHOTO = "add_photo";
 
+	private static final int TIMEOUT = 20000;
+
 	private Gallery miniGallery;
 	private MiniGalleryAdapter adapter;
 
-	private String title;
-	private boolean editMode;
+	private String artTitle;
+	private boolean isEditMode;
 	private ArrayList<String> photoIds;
 	private ArrayList<PhotoWrapper> photos;
-	private ArrayList<String> newPhotos;
-	private Uri tempUri;
-	private final AtomicInteger loadedCount = new AtomicInteger(0);
+	private ArrayList<String> newPhotoUris;
+	private Uri tempPhotoUri;
+	private AtomicInteger loadedPhotosCount;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -76,23 +83,27 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		setRetainInstance(true);
 
 		photoIds = getArguments().getStringArrayList(ARG_PHOTOS);
-		editMode = getArguments().getBoolean(ARG_EDIT_MODE);
-		title = getArguments().getString(ARG_TITLE);
+		isEditMode = getArguments().getBoolean(ARG_EDIT_MODE);
+		artTitle = getArguments().getString(ARG_TITLE);
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		Utils.d(TAG, "onCreateView()");
 		View view = inflater.inflate(R.layout.mini_gallery_fragment, container, false);
+
 		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
-		registerForContextMenu(miniGallery);
-		adapter = new MiniGalleryAdapter(getActivity(), editMode);
+
+		adapter = new MiniGalleryAdapter(getActivity(), isEditMode);
 		miniGallery.setAdapter(adapter);
+
 		miniGallery.setSelection(1);
+		registerForContextMenu(miniGallery);
+
 		miniGallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				if (editMode && position == 1) {
+				if (isEditMode && position == 1) {
 					addNewPhoto();
 				}
 				else if (getPhotoCount() > 0) {
@@ -108,7 +119,15 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		super.onActivityCreated(savedInstanceState);
 		Utils.d(TAG, "onActivityCreated()");
 
-		setupState();
+		setupState(savedInstanceState);
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle args) {
+		args.putSerializable(SAVE_PHOTOS, photos);
+		args.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
+		args.putInt(SAVE_LOADED_PHOTOS_COUNT, loadedPhotosCount.get());
+		super.onSaveInstanceState(args);
 	}
 
 	private int getPhotoCount() {
@@ -116,17 +135,41 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		return photoIds.size();
 	}
 
-	private void setupState() {
+	@SuppressWarnings("unchecked")
+	private void setupState(Bundle savedInstanceState) {
+		if (savedInstanceState != null) {
+			photos = (ArrayList<PhotoWrapper>) savedInstanceState.getSerializable(SAVE_PHOTOS);
+			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
+			loadedPhotosCount = new AtomicInteger(savedInstanceState.getInt(SAVE_LOADED_PHOTOS_COUNT, 0));
+
+			adapter.addItems(photos);
+		}
+		else {
+			photos = new ArrayList<PhotoWrapper>();
+			newPhotoUris = new ArrayList<String>();
+			loadedPhotosCount = new AtomicInteger(0);
+		}
+
 		int size = getPhotoCount();
 		if (size == 0) {
 			return;
 		}
-		photos = new ArrayList<PhotoWrapper>();
-		newPhotos = new ArrayList<String>();
 
 		// load photos from Flick or from cache (sdcard)
+		adapter.toggleLoaders(true);
+		new CountDownTimer(TIMEOUT, 1) {
+			@Override
+			public void onTick(long millisUntilFinished) {}
+
+			@Override
+			public void onFinish() {
+				adapter.toggleLoaders(false);
+			}
+		}.start();
+
 		LoaderManager lm = getLoaderManager();
 		Resources res = getResources();
+
 		Bundle args = new Bundle();
 		args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
 		args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
@@ -135,9 +178,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 		for (int i = 0; i < size; ++i) {
 			String id = photoIds.get(i);
-			if (TextUtils.isEmpty(id)) {
-				continue;
-			}
+			if (TextUtils.isEmpty(id)) continue;
+
 			args.putString(ARG_PHOTO, id);
 
 			int hashCode = id.hashCode();
@@ -153,7 +195,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	protected void gotoGallery() {
 		Intent iGallery = new Intent(getActivity(), ArtGallery.class);
 		iGallery.putExtra(ArtGallery.EXTRA_PHOTOS, photos);
-		iGallery.putExtra(ArtGallery.EXTRA_TITLE, title);
+		iGallery.putExtra(ArtGallery.EXTRA_TITLE, artTitle);
 		startActivity(iGallery);
 	}
 
@@ -173,7 +215,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	public Loader<PhotoWrapper> onCreateLoader(int id, final Bundle args) {
 		Utils.d(TAG, "onCreateLoader(): id=" + id + ", args=" + args);
 
-		loadedCount.incrementAndGet();
+		loadedPhotosCount.incrementAndGet();
 		miniGallery.setClickable(false);
 
 		return new AsyncLoader<PhotoWrapper>(getActivity()) {
@@ -209,8 +251,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			return;
 		}
 
-		if (loadedCount.get() == photoIds.size()) {
-			adapter.hideLoaders();
+		if (loadedPhotosCount.get() == photoIds.size()) {
+			adapter.toggleLoaders(false);
 			miniGallery.setClickable(true);
 		}
 		if (wrapper.uri != null) {
@@ -226,8 +268,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
 		if (resultCode != FragmentActivity.RESULT_OK) {
 			Utils.d(TAG, "Could not take/select photo! Activity result code is " + resultCode);
 			return;
@@ -241,7 +281,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 				Utils.d(TAG, "Uri is " + uri.toString());
 			}
 			else {
-				uri = tempUri;
+				uri = tempPhotoUri;
 			}
 			intent.setDataAndType(uri, "image/*");
 
@@ -252,8 +292,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		case REQUEST_CODE_GALLERY:
 		case REQUEST_CODE_CROP_FROM_CAMERA:
 			// FIXME delete temp file after submitting
-			String uriStr = tempUri.toString();
-			newPhotos.add(uriStr);
+			String uriStr = tempPhotoUri.toString();
+			newPhotoUris.add(uriStr);
 
 			PhotoWrapper wrapper = new PhotoWrapper(newPhotoUri(uriStr), uriStr);
 			adapter.addItem(wrapper);
@@ -299,7 +339,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 							it.remove();
 						}
 					}
-					newPhotos.remove(newUri);
+					newPhotoUris.remove(newUri);
 				}
 			}
 			break;
@@ -325,22 +365,22 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 				@Override
 				public void onClick(final DialogInterface dialog, final int which) {
-					f.tempUri = Utils.getNewPhotoUri();
-					if (f.tempUri == null) {
+					f.tempPhotoUri = Utils.getNewPhotoUri();
+					if (f.tempPhotoUri == null) {
 						return;
 					}
 
 					switch (which) {
 					case 0:
 						final Intent iCamera = new Intent("android.media.action.IMAGE_CAPTURE");
-						iCamera.putExtra(MediaStore.EXTRA_OUTPUT, f.tempUri);
+						iCamera.putExtra(MediaStore.EXTRA_OUTPUT, f.tempPhotoUri);
 						f.startActivityForResult(iCamera, REQUEST_CODE_CAMERA);
 						break;
 					case 1:
 						final Intent iGallery = new Intent(Intent.ACTION_PICK);
 						iGallery.setType("image/*");
-						iGallery.putExtra(MediaStore.EXTRA_OUTPUT, f.tempUri);
-						Utils.getCropImageIntent(iGallery, f.tempUri);
+						iGallery.putExtra(MediaStore.EXTRA_OUTPUT, f.tempPhotoUri);
+						Utils.getCropImageIntent(iGallery, f.tempPhotoUri);
 						f.startActivityForResult(iGallery, REQUEST_CODE_GALLERY);
 						break;
 					}

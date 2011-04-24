@@ -37,19 +37,33 @@ public class ArtDetail extends FragmentActivity {
 
 	private void setupUi() {
 		setupMiniGallery();
-
+		setupMiniMap();
 	}
 
+
 	private void setupMiniGallery() {
-		MiniGalleryFragment f = new MiniGalleryFragment();
 		Bundle args = new Bundle();
 		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTOS, art.photoIds);
 		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
 		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, true);
+
+		MiniGalleryFragment f = new MiniGalleryFragment();
 		f.setArguments(args);
+
 		FragmentManager fm = getSupportFragmentManager();
 		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f).commit();
-		Utils.d(TAG, "setupMiniGallery(): args=" + args);
 	}
+
+	private void setupMiniMap() {
+		Bundle args = new Bundle();
+		args.putBoolean(MiniMapFragment.ARG_EDIT_MODE, true);
+
+		MiniMapFragment f = new MiniMapFragment();
+		f.setArguments(args);
+
+		FragmentManager fm = getSupportFragmentManager();
+		fm.beginTransaction().replace(R.id.mini_map_placeholder, f).commit();
+	}
+
 
 }

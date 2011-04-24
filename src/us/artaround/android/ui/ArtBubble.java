@@ -16,6 +16,7 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,6 +30,8 @@ import android.widget.TextView;
 
 public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener {
 	private final static String TAG = "ArtAround.ArtBubble";
+
+	private final static int TIMEOUT = 30000;
 
 	private final LinearLayout layout;
 	private final TextView title;
@@ -65,7 +68,6 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		params.gravity = Gravity.NO_GRAVITY;
 
 		addView(layout, params);
-
 	}
 
 	@Override
@@ -106,6 +108,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		if (art.photoIds != null && art.photoIds.size() > 0) {
 			String id = art.photoIds.get(0);
 			Resources res = ctx.getResources();
+
 			Bundle args = new Bundle();
 			args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
 			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
@@ -115,6 +118,15 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 
 			task = new ArtAroundAsyncTask(new LoadFlickrPhotoThumbCommand(0, id, args), this);
 			task.execute();
+			new CountDownTimer(TIMEOUT, 1) {
+				@Override
+				public void onTick(long millisUntilFinished) {}
+
+				@Override
+				public void onFinish() {
+					progress.setVisibility(View.GONE);
+				}
+			}.start();
 			Utils.d(TAG, "setData(): start task " + task.getCommandId());
 		}
 	}

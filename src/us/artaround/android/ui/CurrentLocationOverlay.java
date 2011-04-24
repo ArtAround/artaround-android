@@ -30,13 +30,14 @@ public class CurrentLocationOverlay extends ItemizedOverlay<OverlayItem> {
 	private int xDragTouchOffset = 0;
 	private int yDragTouchOffset = 0;
 
-	private final Activity context;
+	private final CurrentOverlayDragCallback callback;
 
-	public CurrentLocationOverlay(Activity context, int defaultMarker, GeoPoint geo, Integer dragId) {
+	public CurrentLocationOverlay(Activity context, CurrentOverlayDragCallback callback, int defaultMarker,
+			GeoPoint geo, Integer dragId) {
 		super(boundCenterBottom(context.getResources().getDrawable(defaultMarker)));
 		this.marker = context.getResources().getDrawable(defaultMarker);
 		this.draggable = (dragId != null);
-		this.context = context;
+		this.callback = callback;
 
 		items.add(new OverlayItem(geo, context.getString(R.string.current_location), ""));
 		populate(); //do populate after constructor so it doen't crash when empty
@@ -133,9 +134,8 @@ public class CurrentLocationOverlay extends ItemizedOverlay<OverlayItem> {
 	private void updateCoordinatesView() {
 		GeoPoint point = items.get(0).getPoint();
 
-		if (context instanceof CurrentOverlayDragListener) {
-			((CurrentOverlayDragListener) context).onDragOverlay(point.getLatitudeE6() / 1E6,
-					point.getLongitudeE6() / 1E6);
+		if (callback != null) {
+			callback.onDragOverlay(point.getLatitudeE6() / 1E6, point.getLongitudeE6() / 1E6);
 		}
 	}
 
@@ -147,7 +147,7 @@ public class CurrentLocationOverlay extends ItemizedOverlay<OverlayItem> {
 		return items.get(0).getPoint().getLongitudeE6() / 1E6;
 	}
 
-	public static interface CurrentOverlayDragListener {
+	public static interface CurrentOverlayDragCallback {
 		void onDragOverlay(double latitude, double longitude);
 	}
 }

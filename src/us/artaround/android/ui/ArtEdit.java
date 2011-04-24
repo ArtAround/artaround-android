@@ -2,8 +2,6 @@ package us.artaround.android.ui;
 
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
-import us.artaround.android.common.LocationUpdater;
-import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -14,7 +12,6 @@ import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import android.content.Intent;
 import android.database.Cursor;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -33,12 +30,8 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.CursorToStringConverter;
-import android.widget.TextView;
 
-import com.google.android.maps.GeoPoint;
-import com.google.android.maps.MapController;
-
-public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback {
+public class ArtEdit extends FragmentActivity {
 	private static final String TAG = "ArtAround.ArtEdit";
 
 	public static final String EXTRA_ART = "art";
@@ -47,38 +40,23 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 	private static final int LOAD_NEIGHBORHOODS = 1;
 	private static final int LOAD_ARTISTS = 2;
 
-	public static final String SAVE_LOCATION = "location";
 	public static final String SAVE_SCROLL_Y = "scroll_y";
 
-	private static final int DIALOG_LOCATION_SETTINGS = 0;
-
 	private Art art;
-	private Location location;
 
-	private LocationUpdater locationUpdater;
-
-	private TextView tvLabelMinimap;
 	private EditText tvName;
 	private AutoCompleteTextView tvArtist;
 	private AutoCompleteTextView tvCategory;
 	private AutoCompleteTextView tvNeighborhood;
-
 	private ImageView imgLoader;
 	private Animation rotateAnim;
-
 	private Button btnSubmit;
-
 	private ScrollView scrollView;
-	private ArtMapView minimap;
-	private CurrentLocationOverlay currentOverlay;
-
 	private int scrollY;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.art_edit);
-
 		Utils.setTheme(this);
 		Utils.enableDump(this);
 
@@ -90,26 +68,15 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 	}
 
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		if (location == null) {
-			startLocationUpdate();
-		}
-	}
-
 	private void restoreState(Bundle savedInstanceState) {
 		if (savedInstanceState != null) {
 			scrollY = savedInstanceState.getInt(SAVE_SCROLL_Y, 0);
-			location = savedInstanceState.getParcelable(SAVE_LOCATION);
 		}
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
-		outState.putParcelable(SAVE_LOCATION, location);
 		super.onSaveInstanceState(outState);
 	}
 
@@ -121,8 +88,6 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 		else {
 			art = new Art(); // will be used as a "holder" for user input
 		}
-
-		locationUpdater = new LocationUpdater(this);
 		restoreState(savedInstanceState);
 	}
 
@@ -183,7 +148,6 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 		setupMiniMap();
 		setupMiniGallery();
 	}
-
 
 	private boolean validateTexts() {
 		boolean ok = true;
@@ -252,25 +216,31 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 		if (!TextUtils.isEmpty(art.locationDesc)) {
 			tvLocDesc.setText(Html.fromHtml(art.locationDesc));
 		}
-
-		tvLabelMinimap = (TextView) findViewById(R.id.art_edit_label_minimap);
-	}
-
-	private void setupMiniMap() {
-		minimap = (ArtMapView) findViewById(R.id.minimap);
-		minimap.setBuiltInZoomControls(false);
 	}
 
 	private void setupMiniGallery() {
-		MiniGalleryFragment f = new MiniGalleryFragment();
 		Bundle args = new Bundle();
 		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTOS, art.photoIds);
 		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
 		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, true);
+
+		MiniGalleryFragment f = new MiniGalleryFragment();
 		f.setArguments(args);
+
 		FragmentManager fm = getSupportFragmentManager();
 		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f).commit();
 		Utils.d(TAG, "setupMiniGallery(): args=" + args);
+	}
+
+	private void setupMiniMap() {
+		Bundle args = new Bundle();
+		args.putBoolean(MiniMapFragment.ARG_EDIT_MODE, true);
+
+		MiniMapFragment f = new MiniMapFragment();
+		f.setArguments(args);
+
+		FragmentManager fm = getSupportFragmentManager();
+		fm.beginTransaction().replace(R.id.mini_map_placeholder, f).commit();
 	}
 
 	private void toggleLoading(boolean show) {
@@ -287,40 +257,6 @@ public class ArtEdit extends FragmentActivity implements LocationUpdaterCallback
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
-	}
-
-	private void startLocationUpdate() {
-		tvLabelMinimap.setText(R.string.art_edit_label_minimap_loading);
-		locationUpdater.updateLocation();
-	}
-
-	@Override
-	public void onSuggestLocationSettings() {
-		showDialog(DIALOG_LOCATION_SETTINGS);
-	}
-
-	@Override
-	public void onLocationUpdate(Location location) {
-		this.location = location;
-
-		// position the minimap on the user
-		MapController ctrl = minimap.getController();
-		GeoPoint geo = Utils.geo(location);
-		ctrl.animateTo(geo);
-		ctrl.setZoom(Utils.MINIMAP_ZOOM);
-
-		currentOverlay = new CurrentLocationOverlay(this, R.drawable.ic_pin, geo, R.id.minimap_drag);
-		minimap.getOverlays().add(currentOverlay);
-		minimap.invalidate();
-
-		tvLabelMinimap.setText(R.string.art_edit_label_minimap);
-		TextView tvCoords = (TextView) findViewById(R.id.minimap_coords);
-		tvCoords.setText(Utils.formatCoords(location));
-	}
-
-	@Override
-	public void onLocationUpdateError() {
-		tvLabelMinimap.setText(R.string.location_update_failure);
 	}
 
 	private final LoaderCallbacks<Cursor> cursorLoaderCallback = new LoaderCallbacks<Cursor>() {
