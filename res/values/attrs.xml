@@ -5,21 +5,4 @@
 	<!-- Theme Attributes -->
 	<!-- =============================================================== -->
 
-	<attr
-		name="Actionbar"
-		format="reference" />
-	<attr
-		name="ActionbarTitle"
-		format="reference" />
-	<attr
-		name="ActionbarLoader"
-		format="reference" />
-
-	<attr
-		name="Activity"
-		format="reference" />
-
-	<attr
-		name="ArtEditHintInputEmpty"
-		format="reference" />
 </resources>

@@ -89,7 +89,7 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 		final String stacktrace = wr.toString();
 		err.close();
 
-		final String timestamp = Utils.titleDateFormatter.format(new Date());
+		final String timestamp = Utils.utilDateFormatter.format(new Date());
 
 		if (cardDump && filePath != null) {
 			dumpOnCard(timestamp, stacktrace);

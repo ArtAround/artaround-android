@@ -45,6 +45,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.google.android.maps.GeoPoint;
@@ -101,9 +102,9 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private ArtBubblesOverlay artsOverlay;
 	private HashMap<Art, ArtOverlayItem> items;
 
-	private ImageView btnLocation;
-	private ImageView btnFavorite;
-	private ImageView btnSearch;
+	private ImageButton btnLocation;
+	private ImageButton btnFavorite;
+	private ImageButton btnSearch;
 	private ImageView imgRefresh;
 	private Button btnAddArt;
 
@@ -148,7 +149,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (currentLocation == null) {
+		if (currentLocation == null && !getIntent().hasExtra(SAVE_MAP_LATITUDE)) {
 			startLocationUpdate();
 		}
 	}
@@ -161,7 +162,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		imgRefresh = (ImageView) actionbar.findViewById(R.id.img_loading);
 		rotateAnim = Utils.getRoateAnim(this);
 
-		btnLocation = (ImageView) actionbar.findViewById(R.id.btn_locate);
+		btnLocation = (ImageButton) actionbar.findViewById(R.id.btn_locate);
 		btnLocation.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -169,7 +170,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			}
 		});
 
-		btnSearch = (ImageView) actionbar.findViewById(R.id.btn_search);
+		btnSearch = (ImageButton) actionbar.findViewById(R.id.btn_search);
 		btnSearch.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -177,7 +178,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			}
 		});
 
-		btnFavorite = (ImageView) actionbar.findViewById(R.id.btn_favorite);
+		btnFavorite = (ImageButton) actionbar.findViewById(R.id.btn_favorite);
 		btnFavorite.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -210,7 +211,9 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 		checkWifiStatus();
 		changeCity();
-		startLocationUpdate();
+		if (currentLocation == null && !getIntent().hasExtra(SAVE_MAP_LATITUDE)) {
+			startLocationUpdate();
+		}
 
 		if (hasRunningTasks(LOAD_ARTS)) {
 			showLoading(true);
@@ -280,37 +283,50 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	@SuppressWarnings("unchecked")
 	private void restoreState(Bundle savedInstanceState) {
-		if (savedInstanceState == null) return;
+		Intent intent = getIntent();
+		if (intent.hasExtra(SAVE_ZOOM)) {
+			newZoom = intent.getIntExtra(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
 
-		crtPage.set(savedInstanceState.getInt(SAVE_CRT_PAGE, 1));
-		totalCount.set(savedInstanceState.getInt(SAVE_TOTAL_COUNT, 0));
+			if (intent.hasExtra(SAVE_MAP_LATITUDE) && intent.hasExtra(SAVE_MAP_LONGITUDE)) {
+				int lati = intent.getIntExtra(SAVE_MAP_LATITUDE, 0);
+				int longi = intent.getIntExtra(SAVE_MAP_LONGITUDE, 0);
 
-		int lati = savedInstanceState.getInt(SAVE_MAP_LATITUDE, 0);
-		int longi = savedInstanceState.getInt(SAVE_MAP_LONGITUDE, 0);
-
-		if (lati == 0 || longi == 0) {
-			if (currentCity != null) {
-				lati = currentCity.center.getLatitudeE6();
-				longi = currentCity.center.getLongitudeE6();
+				if (lati != 0 && longi != 0) {
+					currentMapCenter = new GeoPoint(lati, longi);
+				}
 			}
 		}
+		else if (savedInstanceState != null) {
+			crtPage.set(savedInstanceState.getInt(SAVE_CRT_PAGE, 1));
+			totalCount.set(savedInstanceState.getInt(SAVE_TOTAL_COUNT, 0));
 
-		if (lati != 0 && longi != 0) {
-			currentMapCenter = new GeoPoint(lati, longi);
-		}
+			int lati = savedInstanceState.getInt(SAVE_MAP_LATITUDE, 0);
+			int longi = savedInstanceState.getInt(SAVE_MAP_LONGITUDE, 0);
 
-		currentLocation = savedInstanceState.getParcelable(SAVE_LOCATION);
-		newZoom = savedInstanceState.getInt(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
+			if (lati == 0 || longi == 0) {
+				if (currentCity != null) {
+					lati = currentCity.center.getLatitudeE6();
+					longi = currentCity.center.getLongitudeE6();
+				}
+			}
 
-		allArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_ARTS);
-		filteredArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_FILTERED_ARTS);
-		if (filteredArt == null) {
-			filteredArt = new ArrayList<Art>();
-		}
+			if (lati != 0 && longi != 0) {
+				currentMapCenter = new GeoPoint(lati, longi);
+			}
 
-		filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
-		if (filters == null) {
-			filters = new HashMap<Integer, HashSet<String>>();
+			currentLocation = savedInstanceState.getParcelable(SAVE_LOCATION);
+			newZoom = savedInstanceState.getInt(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
+
+			allArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_ARTS);
+			filteredArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_FILTERED_ARTS);
+			if (filteredArt == null) {
+				filteredArt = new ArrayList<Art>();
+			}
+
+			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
+			if (filters == null) {
+				filters = new HashMap<Integer, HashSet<String>>();
+			}
 		}
 	}
 
@@ -621,8 +637,11 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	private void gotoArtDetail(Art art) {
 		// save the current state of the map
-		//Intent iArtPage = new Intent(this, ArtEdit.class).putExtra("art", art);
 		Intent iArtDetail = new Intent(this, ArtDetail.class).putExtra(ArtDetail.EXTRA_ART, art);
+		iArtDetail.putExtra(SAVE_ZOOM, newZoom);
+		GeoPoint center = mapView.getMapCenter();
+		iArtDetail.putExtra(SAVE_MAP_LATITUDE, center.getLatitudeE6());
+		iArtDetail.putExtra(SAVE_MAP_LONGITUDE, center.getLongitudeE6());
 		startActivity(iArtDetail);
 		finish(); // call finish to save memory because of the 2 map views
 	}
@@ -630,6 +649,10 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private void gotoNewArtPage() {
 		// save the current state of the map
 		Intent iArtEdit = new Intent(this, ArtEdit.class);
+		iArtEdit.putExtra(SAVE_ZOOM, newZoom);
+		GeoPoint center = mapView.getMapCenter();
+		iArtEdit.putExtra(SAVE_MAP_LATITUDE, center.getLatitudeE6());
+		iArtEdit.putExtra(SAVE_MAP_LONGITUDE, center.getLongitudeE6());
 		startActivity(iArtEdit);
 		finish(); // call finish to save memory because of the 2 map views
 	}

@@ -15,7 +15,7 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:background">@drawable/actionbar_background</item>
+			name="android:background">@drawable/art_map_actionbar_background</item>
 		<item
 			name="android:gravity">center_vertical</item>
 		<item
@@ -56,7 +56,7 @@
 	</style>
 
 	<style
-		name="ActionbarLoaderDark">
+		name="ActionbarLoadingDark">
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
@@ -70,6 +70,22 @@
 		<item
 			name="android:visibility">gone</item>
 	</style>
+	
+	<style
+		name="ActionbarLoadingWhite">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:layout_marginRight">9dp</item>
+		<item
+			name="android:layout_gravity">center</item>
+		<item
+			name="android:src">@drawable/ic_loading_white</item>
+		<item
+			name="android:visibility">gone</item>
+	</style>
 
 	<style
 		name="ActionbarButton">
@@ -78,9 +94,11 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:padding">6dp</item>
+			name="android:padding">4dp</item>
 		<item
 			name="android:scaleType">center</item>
+		<item
+			name="android:background">@null</item>
 	</style>
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -95,11 +113,9 @@
 		<item
 			name="android:background">@drawable/bottombar_background</item>
 		<item
-			name="android:gravity">center</item>
+			name="android:gravity">center_vertical</item>
 		<item
-			name="android:paddingTop">10dp</item>
-		<item
-			name="android:paddingBottom">10dp</item>
+			name="android:padding">10dp</item>
 	</style>
 	
 	<style
@@ -121,7 +137,7 @@
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:background">@drawable/add_art_background</item>
+			name="android:background">@drawable/add_art_button_background</item>
 		<item
 			name="android:gravity">center</item>
 		<item
@@ -153,20 +169,24 @@
 			name="android:layout_height">fill_parent</item>
 		<item
 			name="android:fillViewport">true</item>
+		<item
+			name="android:cacheColorHint">#FF000000</item>
 	</style>
 
 	<style
-		name="Button">
+		name="ArtDetailButton">
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:background">@drawable/button_background</item>
+			name="android:background">@drawable/art_detail_button_background</item>
 		<item
 			name="android:textColor">#FFFFFF</item>
 		<item
 			name="android:minWidth">100dp</item>
+		<item
+			name="android:gravity">center</item>
 	</style>
 
 	<style
@@ -184,9 +204,17 @@
 	<style
 		name="MinimapContainer" parent="GalleryContainer">
 		<item
-			name="android:background">@drawable/mini_gallery_background</item>
+			name="android:layout_width">fill_parent</item>
 		<item
-			name="android:padding">6dp</item>
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:background">@drawable/mini_map_background</item>
+		<item
+			name="android:paddingLeft">9dp</item>
+		<item
+			name="android:paddingRight">9dp</item>
+		<item
+			name="android:layout_marginTop">12dp</item>
 	</style>
 	
 	<style
@@ -210,11 +238,13 @@
 		<item
 			name="android:gravity">center</item>
 		<item
-			name="android:background">@drawable/minimap_background</item>
+			name="android:background">@drawable/mini_gallery_background</item>
 		<item
 			name="android:paddingTop">16dp</item>
 		<item
 			name="android:paddingBottom">16dp</item>
+		<item
+			name="android:layout_marginTop">12dp</item>
 	</style>
 
 	<style
@@ -301,26 +331,25 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<!-- Art Edit -->
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-	<style
-		name="ArtEditTable">
+	
+	<style 
+		name="ArtEditTableRow">
 		<item
 			name="android:layout_width">fill_parent</item>
 		<item
 			name="android:layout_height">wrap_content</item>
 		<item
-			name="android:stretchColumns">1</item>
+			name="android:paddingLeft">6dp</item>
 		<item
-			name="android:shrinkColumns">0</item>
+			name="android:paddingRight">6dp</item>
+		<item
+			name="android:paddingTop">12dp</item>
 	</style>
-
-	<style
-		name="ArtEditTable.Row"></style>
 
 	<style
 		name="ArtEditLabel">
 		<item
-			name="android:layout_width">wrap_content</item>
+			name="android:layout_width">55dp</item>
 		<item
 			name="android:layout_height">fill_parent</item>
 		<item
@@ -336,25 +365,16 @@
 		<item
 			name="android:singleLine">true</item>
 		<item
-			name="android:layout_marginLeft">6dp</item>
-		<item
-			name="android:layout_marginRight">6dp</item>
+			name="android:paddingRight">6dp</item>
 	</style>
 
-	<style
-		name="ArtEditInput.HintEmpty">
-		<item
-			name="android:textColorHint">@color/ArtEditHintInputEmpty</item>
-	</style>
 
 	<style
 		name="ArtEditInput">
 		<item
-			name="android:layout_width">wrap_content</item>
+			name="android:layout_width">fill_parent</item>
 		<item
 			name="android:layout_height">wrap_content</item>
-		<item
-			name="android:minHeight">30dp</item>
 		<item
 			name="android:textSize">@dimen/ArtEditInput</item>
 		<item
@@ -366,41 +386,166 @@
 		<item
 			name="android:cursorVisible">true</item>
 		<item
-			name="android:layout_margin">6dp</item>
-		<item
-			name="android:background">@drawable/edit_text</item>
-		<item
 			name="android:paddingLeft">6dp</item>
 		<item
-			name="android:drawablePadding">6dp</item>
+			name="android:background">@drawable/textfield_background</item>
 	</style>
-
+	
 	<style
 		name="ArtEditInput.Textarea">
 		<item
 			name="android:singleLine">false</item>
 		<item
-			name="android:lines">4</item>
+			name="android:minLines">4</item>
 		<item
 			name="android:gravity">left|top</item>
 	</style>
-
+	
 	<style
-		name="ArtEditInput.Autocomplete">
+		name="ArtEditInput.Dropdown">
 		<item
-			name="android:drawableRight">@drawable/ic_arrow_dropdown</item>
-	</style>
-
-	<style
-		name="ArtEditInput.Autocomplete.HintEmpty">
-	</style>
-
-	<style
-		name="ArtEditHintInputEmpty">
+			name="android:completionThreshold">1</item>
 		<item
-			name="android:color">@color/ArtEditHintInputEmpty</item>
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_weight">1</item>
+		<item
+			name="android:layout_height">fill_parent</item>
+	</style>
+	
+	<style
+		name="AutocompleteDropdown">
+		<item
+			name="android:layout_width">wrap_content</item>
+		<item
+			name="android:layout_height">fill_parent</item>
+		<item
+			name="android:src">@drawable/arrow_dropdown_background</item>
+		<item
+			name="android:background">@null</item>
 	</style>
 
 
-
+	<!-- Art Detail -->
+	<style
+		name="ArtDetailTitle">
+		<item
+			name="android:layout_marginLeft">9dp</item>
+		<item
+			name="android:layout_marginRight">9dp</item>
+		<item
+			name="android:textColor">@color/ArtDetailTitle</item>
+		<item
+			name="android:textStyle">bold</item>
+		<item
+			name="android:textSize">18dp</item>
+		<item
+			name="android:singleLine">false</item>
+		<item
+			name="android:maxLines">2</item>
+		<item
+			name="android:ellipsize">end</item>
+		<item
+			name="android:typeface">serif</item>
+	</style>
+	
+	<style
+		name="ArtDetailText">
+		<item
+			name="android:textColor">@color/ArtDetailText</item>
+		<item
+			name="android:textSize">14dp</item>
+	</style>
+	
+	<style
+		name="ArtDetailText.Bold">
+		<item
+			name="android:textStyle">bold</item>
+	</style>
+	
+	<style
+		name="ArtDetailHeading">
+		<item
+			name="android:textColor">@color/ArtDetailHeading</item>
+		<item
+			name="android:textSize">16dp</item>
+		<item
+			name="android:layout_marginTop">10dp</item>
+		<item
+			name="android:layout_marginBottom">10dp</item>
+		<item
+			name="android:layout_marginLeft">9dp</item>
+		<item
+			name="android:layout_marginRight">9dp</item>
+	</style>
+	
+	<style
+		name="ArtDetailHeading.Light">
+		<item
+			name="android:textColor">@color/ArtDetailHeadingLight</item>
+		<item
+			name="android:layout_margin">0dp</item>
+	</style>
+	
+	<style
+		name="ArtDetailText.Link">
+		<item
+			name="android:textStyle">bold|italic</item>
+	</style>
+	
+	<style
+		name="ArtDetailFormLabel">
+		<item
+			name="android:textColor">#FFFFFF</item>
+		<item
+			name="android:textSize">14dp</item>
+		<item
+			name="android:textStyle">bold|italic</item>
+		<item
+			name="android:layout_width">50dp</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:layout_marginRight">6dp</item>
+	</style>
+	
+	<style
+		name="ArtDetailInput">
+		<item
+			name="android:layout_width">fill_parent</item>
+		<item
+			name="android:layout_height">wrap_content</item>
+		<item
+			name="android:textSize">@dimen/ArtEditInput</item>
+		<item
+			name="android:textColor">@color/ArtDetailInput</item>
+		<item
+			name="android:ellipsize">end</item>
+		<item
+			name="android:singleLine">true</item>
+		<item
+			name="android:cursorVisible">true</item>
+		<item
+			name="android:paddingLeft">6dp</item>
+		<item
+			name="android:background">@drawable/textfield_comment_background</item>
+	</style>
+	
+	<style
+		name="ArtDetailInput.Textarea">
+		<item
+			name="android:singleLine">false</item>
+		<item
+			name="android:minLines">4</item>
+		<item
+			name="android:gravity">left|top</item>
+	</style>
+	
+	<style
+		name="ArtDetailTableRow">
+		<item
+			name="android:layout_marginBottom">10dp</item>
+		<item
+			name="android:gravity">center_vertical</item>
+	</style>
 </resources>

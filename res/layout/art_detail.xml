@@ -1,18 +1,322 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent"
-  android:orientation="vertical">
-  
-  <FrameLayout
-  	android:id="@+id/mini_gallery_placeholder"
-  	android:layout_width="fill_parent"
-  	android:layout_height="wrap_content" />
-  	
-  <FrameLayout
-  	android:id="@+id/mini_map_placeholder"
-  	android:layout_width="fill_parent"
-  	android:layout_height="wrap_content" />
-  
-</LinearLayout>
+<us.artaround.android.ui.ArtScrollView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:background="@color/Activity"
+	android:id="@+id/scroll_view"
+	style="@style/Scrollable">
+
+	<LinearLayout
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:orientation="vertical">
+
+		<!-- Art Detail -->
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:background="@drawable/art_detail_background"
+			android:orientation="vertical">
+
+			<!-- Actionbar -->
+			<LinearLayout
+				android:id="@+id/actionbar"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal"
+				android:gravity="center_vertical">
+
+				<TextView
+					style="@style/ArtDetailTitle"
+					android:id="@+id/art_detail_title"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_weight="1" />
+
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:gravity="right|center">
+
+					<ImageView
+						style="@style/ActionbarLoadingWhite"
+						android:id="@+id/img_loading" />
+
+					<include
+						layout="@layout/actionbar_divider_white" />
+
+					<ImageButton
+						style="@style/ActionbarButton"
+						android:id="@+id/btn_favorite"
+						android:src="@drawable/ic_add_favorite_background" />
+
+					<include
+						layout="@layout/actionbar_divider_white" />
+
+					<ImageButton
+						style="@style/ActionbarButton"
+						android:id="@+id/btn_home"
+						android:src="@drawable/ic_home_background" />
+				</LinearLayout>
+			</LinearLayout>
+
+			<!-- Artist, Year -->
+			<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="10dp"
+				android:layout_marginLeft="9dp"
+				android:layout_marginRight="9dp">
+				<TextView
+					style="@style/ArtDetailText"
+					android:id="@+id/art_detail_artist"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content" />
+
+				<TextView
+					style="@style/ArtDetailText.Bold"
+					android:id="@+id/art_detail_year"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content" />
+			</LinearLayout>
+
+			<!-- Category, Description -->
+			<TextView
+				style="@style/ArtDetailText.Bold"
+				android:id="@+id/art_detail_category"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="9dp"
+				android:layout_marginRight="9dp"
+				android:layout_marginBottom="10dp" />
+
+			<TextView
+				style="@style/ArtDetailText"
+				android:id="@+id/art_detail_description"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="9dp"
+				android:layout_marginRight="9dp" />
+		</LinearLayout>
+
+		<!-- Mini Gallery -->
+		<FrameLayout
+			android:id="@+id/mini_gallery_placeholder"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" />
+
+		<!-- Location -->
+		<TextView
+			style="@style/ArtDetailHeading"
+			android:id="@+id/art_detail_location_heading"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/art_detail_location" />
+
+		<!-- Area, Ward -->
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="9dp"
+			android:layout_marginRight="9dp"
+			android:layout_marginBottom="10dp">
+
+			<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:gravity="left|center">
+
+				<TextView
+					style="@style/ArtDetailText.Bold"
+					android:layout_width="50dp"
+					android:layout_height="wrap_content"
+					android:id="@+id/art_detail_area_label"
+					android:text="@string/art_detail_area_label" />
+
+				<TextView
+					style="@style/ArtDetailText"
+					android:id="@+id/art_detail_area"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="9dp"
+					android:layout_marginRight="9dp" />
+			</LinearLayout>
+
+			<LinearLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:gravity="left|center">
+
+				<TextView
+					style="@style/ArtDetailText.Bold"
+					android:layout_width="50dp"
+					android:layout_height="wrap_content"
+					android:id="@+id/art_detail_ward_label"
+					android:text="@string/art_detail_ward_label" />
+
+				<TextView
+					style="@style/ArtDetailText"
+					android:id="@+id/art_detail_ward"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content" />
+			</LinearLayout>
+		</LinearLayout>
+
+		<TextView
+			style="@style/ArtDetailText"
+			android:id="@+id/art_detail_location"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="9dp"
+			android:layout_marginRight="9dp"
+			android:layout_marginBottom="10dp"
+			android:singleLine="false" />
+
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:background="@drawable/mini_gallery_background"
+			android:paddingTop="16dp"
+			android:paddingBottom="16dp"
+			android:paddingLeft="9dp"
+			android:paddingRight="9dp"
+			android:gravity="center">
+			<FrameLayout
+				android:id="@+id/mini_map_placeholder"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content" />
+		</LinearLayout>
+
+		<TextView
+			style="@style/ArtDetailHeading"
+			android:id="@+id/art_detail_comments_heading"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/art_detail_comments" />
+
+		<LinearLayout
+			android:id="@+id/art_detail_comments"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="10dp"
+			android:layout_marginLeft="9dp"
+			android:layout_marginRight="9dp"
+			android:orientation="vertical">
+		</LinearLayout>
+
+		<TextView
+			style="@style/ArtDetailText.Link"
+			android:id="@+id/art_detail_view_all"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="10dp"
+			android:layout_marginLeft="9dp"
+			android:layout_marginRight="9dp"
+			android:text="@string/art_detail_view_all_comments"
+			android:gravity="right"
+			android:visibility="gone" />
+
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:background="@drawable/mini_map_background"
+			android:paddingTop="16dp"
+			android:paddingBottom="16dp"
+			android:paddingLeft="9dp"
+			android:paddingRight="9dp"
+			android:gravity="center"
+			android:orientation="vertical">
+
+			<TextView
+				style="@style/ArtDetailHeading.Light"
+				android:id="@+id/art_detail_leave_comment_heading"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/art_detail_leave_comment" />
+
+			<TableLayout
+				android:id="@+id/comment_form"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="10dp"
+				android:shrinkColumns="0"
+				android:stretchColumns="1">
+
+				<TableRow
+					style="@style/ArtDetailTableRow">
+					<TextView
+						style="@style/ArtDetailFormLabel"
+						android:text="@string/art_detail_label_name" />
+					<EditText
+						style="@style/ArtDetailInput"
+						android:id="@+id/art_detail_input_name" />
+				</TableRow>
+
+				<TableRow
+					style="@style/ArtDetailTableRow">
+					<TextView
+						style="@style/ArtDetailFormLabel"
+						android:text="@string/art_detail_label_email" />
+					<EditText
+						style="@style/ArtDetailInput"
+						android:id="@+id/art_detail_input_email" />
+				</TableRow>
+
+				<TableRow
+					style="@style/ArtDetailTableRow">
+					<TextView
+						style="@style/ArtDetailFormLabel"
+						android:text="@string/art_detail_label_url" />
+					<EditText
+						style="@style/ArtDetailInput"
+						android:id="@+id/art_detail_input_url" />
+				</TableRow>
+
+				<TableRow
+					style="@style/ArtDetailTableRow">
+
+<!-- 					<RelativeLayout -->
+<!-- 						android:layout_width="fill_parent" -->
+<!-- 						android:layout_height="wrap_content" -->
+<!-- 						android:layout_span="2"> -->
+
+						<EditText
+							style="@style/ArtDetailInput.Textarea"
+							android:id="@+id/art_detail_input_message"
+							android:hint="@string/art_detail_input_hint"
+							android:layout_span="2" />
+
+<!-- 						<Button -->
+<!-- 							style="@style/ArtDetailButton" -->
+<!-- 							android:text="@string/comment" -->
+<!-- 							android:layout_alignParentRight="true" -->
+<!-- 							android:layout_alignBottom="@+id/art_detail_input_message" /> -->
+<!-- 					</RelativeLayout> -->
+
+				</TableRow>
+
+			</TableLayout>
+
+		</LinearLayout>
+
+		<RelativeLayout
+			style="@style/Bottombar">
+			<Button
+				style="@style/ArtDetailButton"
+				android:text="@string/edit"
+				android:layout_alignParentLeft="true"/>
+				
+			<Button
+				style="@style/ArtDetailButton"
+				android:text="@string/add_new_art"
+				android:layout_centerHorizontal="true"/>
+				
+			<Button
+				style="@style/ArtDetailButton"
+				android:text="@string/submit"
+				android:layout_alignParentRight="true"/>		
+		</RelativeLayout>
+
+	</LinearLayout>
+
+</us.artaround.android.ui.ArtScrollView>

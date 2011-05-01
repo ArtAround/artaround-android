@@ -10,12 +10,5 @@
 	</style>
 	<style
 		name="ArtAround.Default">
-		<item
-			name="Actionbar">@style/Actionbar</item>
-		<item
-			name="ActionbarTitle">@style/ActionbarTitle</item>
-			
-		<item
-			name="ArtEditHintInputEmpty">@style/ArtEditHintInputEmpty</item>
 	</style>
 </resources>

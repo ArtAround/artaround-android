@@ -4,25 +4,26 @@
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
 	android:orientation="vertical"
-	android:padding="6dp">
+	android:gravity="center">
 
 	<TextView
 		style="@style/ArtEditLabel"
 		android:id="@+id/mini_map_label"
-		android:text="@string/art_edit_label_minimap"
+		android:layout_width="fill_parent"
+		android:text="@string/art_edit_label_minimap"		
 		android:visibility="gone" />
 
 	<TextView
 		style="@style/ArtEditLabel"
 		android:id="@+id/mini_map_coords"
-		android:text="coords"
+		android:layout_width="fill_parent"
+		android:layout_marginBottom="5dp"
 		android:visibility="gone" />
 
 	<RelativeLayout
 		style="@style/MinimapBorder"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="5dp">
+		android:layout_height="wrap_content">
 
 		<us.artaround.android.ui.ArtMapView
 			style="@style/Minimap"

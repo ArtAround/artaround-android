@@ -11,13 +11,17 @@
 	<string
 		name="loading">Loading...</string>
 	<string
-		name="empty">No items.</string>
+		name="empty">No items</string>
 	<string
 		name="by">By</string>
 	<string
 		name="all">All</string>
 	<string
 		name="submit">Submit</string>
+	<string
+		name="comment">Comment</string>
+	<string
+		name="edit">Edit</string>
 	<string
 		name="submit_successful">The art has been submitted.\n Please refresh in a while to
 		retrieve it from server.</string>
@@ -78,48 +82,6 @@
 	<string
 		name="update_cache_progress">Updating cached data...</string>
 
-	<!-- Art Map -->
-	<string
-		name="art_directions">Art Routes</string>
-	<string
-		name="art_favorites">Favorites</string>
-	<string
-		name="art_nearby">Art Nearby</string>
-	<string
-		name="art_filters">Art Filters</string>
-
-	<!-- Art Info -->
-	<string
-		name="art_add_new">Add New Art</string>
-	<string
-		name="art_minimap">Detailed Map</string>
-	<string
-		name="art_comments">Comments</string>
-	<string
-		name="art_gallery">Gallery</string>
-	<string
-		name="reposition_pin">Drag the pin to your location</string>
-
-	<string
-		name="share">Share</string>
-	<string
-		name="share_art_title">Share art via:</string>
-	<string
-		name="share_art_header">Help us find more info about this urban art!</string>
-
-	<string
-		name="add_favorite">Add Favorite</string>
-	<string
-		name="remove_favorite">Remove Favorite</string>
-	<string
-		name="added_favorite">%s is now favorite.</string>
-	<string
-		name="removed_favorite">%s is no longer favorite.</string>
-	<string
-		name="add_photo">Add Photo</string>
-
-	<string
-		name="write_comment_hint">Write a Comment</string>
 
 	<!-- =============================================================== -->
 	<!-- Theme Strings -->
@@ -147,7 +109,7 @@
 	<string
 		name="art_edit_actionbar_title">Edit Art Details</string>
 	<string
-		name="art_edit_label_name">Name*</string>
+		name="art_edit_label_name">Name</string>
 	<string
 		name="art_edit_label_artist">Artist</string>
 	<string
@@ -157,7 +119,7 @@
 	<string
 		name="art_edit_label_ward">Ward</string>
 	<string
-		name="art_edit_label_neighborhood">Area*</string>
+		name="art_edit_label_area">Area*</string>
 	<string
 		name="art_edit_label_minimap">Drag the pin to your location: </string>
 	<string
@@ -167,7 +129,9 @@
 	<string
 		name="art_edit_hint_location_description">Enter a description of the location...</string>
 	<string
-		name="art_edit_hint_input_empty">Cannot be empty</string>
+		name="art_edit_hint_input_empty_title">Required Fields</string>
+	<string
+		name="art_edit_hint_input_empty_msg">Please fill in all the fields marked with (*) before submitting.</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
 	<string
@@ -180,5 +144,31 @@
 		name="art_edit_media_source">Add New Photo</string>
 	<string
 		name="art_edit_remove_photo">Remove Photo</string>
+		
+	<!-- Art Detail -->
+	<string 
+		name="art_detail_location">Location</string>
+	<string
+		name="art_detail_comments">Comments</string>
+	<string
+		name="art_detail_area_label">Area:</string>
+	<string
+		name="art_detail_ward_label">Ward:</string>
+	<string
+		name="art_detail_view_all_comments">View All Comments...</string>
+	<string
+		name="art_detail_leave_comment">Leave a Comment</string>
+	<string
+		name="art_detail_label_name">Name</string>
+	<string
+		name="art_detail_label_email">Email</string>
+	<string
+		name="art_detail_label_url">URL</string>
+	<string
+		name="art_detail_input_hint">Leave a comment about this piece of art.</string>
+	<string
+		name="art_added_favorite">This art has been added to favorites.</string>
+	<string
+		name="art_removed_favorite">This art has been removed from favorites.</string>
 
 </resources>

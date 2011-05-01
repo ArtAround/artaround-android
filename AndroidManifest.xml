@@ -35,14 +35,7 @@
 
 		<activity
 			android:name=".android.ui.ArtFilters"
-			android:theme="@android:style/Theme.Dialog"
-			android:label="@string/art_filters" />
-
-		<activity
-			android:name=".android.ui.ArtNearby" />
-
-		<activity
-			android:name=".android.ui.ArtFavs" />
+			android:theme="@android:style/Theme.Dialog" />
 
 		<activity
 			android:name=".android.ui.Preferences" />

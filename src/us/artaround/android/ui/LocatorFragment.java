@@ -1,4 +1,4 @@
-package us.artaround.android.common;
+package us.artaround.android.ui;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import us.artaround.android.common.AsyncLoader;
+import us.artaround.android.common.Utils;
 import android.app.Activity;
 import android.content.Context;
 import android.location.Address;
@@ -39,8 +41,10 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 
 	private Map<String, CountDownTimer> timers;
 	private LocationManager locationManager;
-	private final LocatorCallback callback;
+	private LocatorCallback callback;
 	private boolean addressUpdate;
+
+	public LocatorFragment() {}
 
 	public LocatorFragment(LocatorCallback callback) {
 		this.callback = callback;
@@ -49,7 +53,6 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		setRetainInstance(true);
 
 		timers = Collections.synchronizedMap(new HashMap<String, CountDownTimer>());
 		locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
@@ -59,6 +62,7 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 	@Override
 	public void onDetach() {
 		super.onDetach();
+		locationManager.removeUpdates(listener);
 	}
 
 	@Override
@@ -71,7 +75,9 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 		String coarseProvider = locationManager.getBestProvider(coarseCriteria, true);
 		if (onUpdateFromProvider(coarseProvider)) return;
 
-		callback.onLocationUpdateError(ERROR_NO_PROVIDER);
+		if (callback != null) {
+			callback.onLocationUpdateError(ERROR_NO_PROVIDER);
+		}
 	}
 
 	private boolean onUpdateFromProvider(final String provider) {
@@ -106,7 +112,9 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 			}
 		}
 		if (!success) {
-			callback.onLocationUpdateError(ERROR_TIMEOUT);
+			if (callback != null) {
+				callback.onLocationUpdateError(ERROR_TIMEOUT);
+			}
 		}
 	}
 
@@ -153,11 +161,13 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 
 		@Override
 		public void onLocationChanged(Location location) {
-			callback.onLocationUpdate(location);
-			onTimeoutProvider(location.getProvider(), true);
+			if (callback != null) {
+				callback.onLocationUpdate(location);
+				onTimeoutProvider(location.getProvider(), true);
 
-			if (addressUpdate) {
-				onStartAddressUpdate(location);
+				if (addressUpdate) {
+					onStartAddressUpdate(location);
+				}
 			}
 		}
 	};

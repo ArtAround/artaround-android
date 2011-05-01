@@ -430,12 +430,14 @@ public class BaseParser {
 										comment.username = jp.getText().trim();
 									}
 									else if (TEXT_KEY.equalsIgnoreCase(commKey)) {
-										comment.text = jp.getText().trim();
+										comment.message = jp.getText().trim();
 									}
 									else if (CREATED_AT_KEY.equalsIgnoreCase(commKey)) {
 										String date = jp.getText().trim();
 										try {
-											comment.createdAt = Utils.parseDate(date);
+											if (date != null) {
+												comment.date = Utils.sqlDateFormatter.parse(date);
+											}
 										}
 										catch (ParseException e) {
 											Utils.w(TAG, "Date not parsed correctly: " + date);

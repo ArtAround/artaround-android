@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -31,12 +30,14 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.text.TextUtils;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -63,9 +64,9 @@ public class Utils {
 	public static final String KEY_CLEARED_CACHE = "cleared_cache";
 	public static final String KEY_SEND_CRASH_ONLINE = "send_crash_online";
 
-	public static final String DATE_FORMAT = "yy-MM-dd'T'HH:mm:ss'Z'";
-	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(Utils.DATE_FORMAT);
-	public static final SimpleDateFormat titleDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
+	public static final SimpleDateFormat sqlDateFormatter = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss'Z'");
+	public static final SimpleDateFormat utilDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
+	public static final SimpleDateFormat textDateFormatter = new SimpleDateFormat("MM.dd.yy");
 
 	public static final DecimalFormat coordinateFormatter = new DecimalFormat();
 	static {
@@ -103,20 +104,6 @@ public class Utils {
 
 	public static GeoPoint geo(double latitude, double longitude) {
 		return geo((float) latitude, (float) longitude);
-	}
-
-	public static String formatDate(Date date) {
-		if (date == null) {
-			return null;
-		}
-		return dateFormatter.format(date);
-	}
-
-	public static Date parseDate(String date) throws ParseException {
-		if (TextUtils.isEmpty(date)) {
-			return new Date();
-		}
-		return dateFormatter.parse(date);
 	}
 
 	public static Animation getRoateAnim(Context context) {
@@ -277,7 +264,7 @@ public class Utils {
 	}
 
 	public static Uri getNewPhotoUri() {
-		String photoName = Utils.APP_NAME + "_" + Utils.titleDateFormatter.format(new Date()) + ".jpg";
+		String photoName = Utils.APP_NAME + "_" + Utils.utilDateFormatter.format(new Date()) + ".jpg";
 		File cacheFolder = Utils.getCacheFolder();
 		if (cacheFolder != null) {
 			return Uri.fromFile(new File(cacheFolder, photoName));
@@ -361,5 +348,12 @@ public class Utils {
 
 	public static int dip(Context context, int dim) {
 		return (int) (context.getResources().getDisplayMetrics().density * dim + 0.5f);
+	}
+
+	public static void setHintSpan(TextView textView, CharSequence hint) {
+		SpannableString hintSpan = new SpannableString(textView.getHint());
+		hintSpan.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC), 0, hintSpan.length(), 0);
+		textView.setHint(hintSpan);
+		textView.setHintTextColor(textView.getContext().getResources().getColor(R.color.HintColor));
 	}
 }

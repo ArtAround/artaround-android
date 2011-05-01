@@ -10,6 +10,9 @@ import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -21,11 +24,13 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.text.Html;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
@@ -40,6 +45,8 @@ public class ArtEdit extends FragmentActivity {
 	private static final int LOAD_NEIGHBORHOODS = 1;
 	private static final int LOAD_ARTISTS = 2;
 
+	private static final int DIALOG_EMPTY_INPUT = 0;
+
 	public static final String SAVE_SCROLL_Y = "scroll_y";
 
 	private Art art;
@@ -47,7 +54,10 @@ public class ArtEdit extends FragmentActivity {
 	private EditText tvName;
 	private AutoCompleteTextView tvArtist;
 	private AutoCompleteTextView tvCategory;
-	private AutoCompleteTextView tvNeighborhood;
+	private AutoCompleteTextView tvArea;
+	private ImageButton dropdownArtist;
+	private ImageButton dropdownCategory;
+	private ImageButton dropdownArea;
 	private ImageView imgLoader;
 	private Animation rotateAnim;
 	private Button btnSubmit;
@@ -66,7 +76,6 @@ public class ArtEdit extends FragmentActivity {
 		setupUi();
 		setupState();
 	}
-
 
 	private void restoreState(Bundle savedInstanceState) {
 		if (savedInstanceState != null) {
@@ -151,29 +160,14 @@ public class ArtEdit extends FragmentActivity {
 
 	private boolean validateTexts() {
 		boolean ok = true;
-		if (TextUtils.isEmpty(tvName.getText())) {
-			tvName.setHint(getString(R.string.art_edit_hint_input_empty));
+		if (TextUtils.isEmpty(tvCategory.getText()) || TextUtils.isEmpty(tvArea.getText())) {
 			ok = false;
-		}
-		if (TextUtils.isEmpty(tvCategory.getText())) {
-			tvCategory.setHint(getString(R.string.art_edit_hint_input_empty));
-			ok = false;
-		}
-		if (TextUtils.isEmpty(tvNeighborhood.getText())) {
-			tvNeighborhood.setHint(getString(R.string.art_edit_hint_input_empty));
-			ok = false;
+			showDialog(DIALOG_EMPTY_INPUT);
 		}
 		return ok;
 	}
 
 	private void setupArtFields() {
-		View.OnClickListener listener = new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				((AutoCompleteTextView) v).showDropDown();
-			}
-		};
-
 		tvName = (EditText) findViewById(R.id.art_edit_input_name);
 		if (!TextUtils.isEmpty(art.title)) {
 			tvName.setText(art.title);
@@ -183,7 +177,14 @@ public class ArtEdit extends FragmentActivity {
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
 			tvArtist.setText(art.artist.name);
 		}
-		tvArtist.setOnClickListener(listener);
+		dropdownArtist = (ImageButton) findViewById(R.id.dropdown_artist);
+		dropdownArtist.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				tvArtist.showDropDown();
+			}
+		});
 
 		EditText tvYear = (EditText) findViewById(R.id.art_edit_input_year);
 		if (art.year > 0) {
@@ -194,28 +195,42 @@ public class ArtEdit extends FragmentActivity {
 		if (!TextUtils.isEmpty(art.category)) {
 			tvCategory.setText(art.category);
 		}
-		tvCategory.setOnClickListener(listener);
+		dropdownCategory = (ImageButton) findViewById(R.id.dropdown_category);
+		dropdownCategory.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				tvCategory.showDropDown();
+			}
+		});
 
 		EditText tvDesc = (EditText) findViewById(R.id.art_edit_input_description);
 		if (!TextUtils.isEmpty(art.description)) {
 			tvDesc.setText(Html.fromHtml(art.description)); // for special UTF-8 characters
 		}
+		Utils.setHintSpan(tvDesc, tvDesc.getHint());
 
 		EditText tvWard = (EditText) findViewById(R.id.art_edit_input_ward);
 		if (art.ward > 0) {
 			tvWard.setText(String.valueOf(art.ward));
 		}
 
-		tvNeighborhood = (AutoCompleteTextView) findViewById(R.id.art_edit_input_neighborhood);
+		tvArea = (AutoCompleteTextView) findViewById(R.id.art_edit_input_area);
 		if (!TextUtils.isEmpty(art.neighborhood)) {
-			tvNeighborhood.setText(art.neighborhood);
+			tvArea.setText(art.neighborhood);
 		}
-		tvNeighborhood.setOnClickListener(listener);
+		dropdownArea = (ImageButton) findViewById(R.id.dropdown_area);
+		dropdownArea.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				tvArea.showDropDown();
+			}
+		});
 
 		EditText tvLocDesc = (EditText) findViewById(R.id.art_edit_input_location_description);
 		if (!TextUtils.isEmpty(art.locationDesc)) {
 			tvLocDesc.setText(Html.fromHtml(art.locationDesc));
 		}
+		Utils.setHintSpan(tvLocDesc, tvLocDesc.getHint());
 	}
 
 	private void setupMiniGallery() {
@@ -346,7 +361,7 @@ public class ArtEdit extends FragmentActivity {
 					return str;
 				}
 			});
-			tvNeighborhood.setAdapter(adapter);
+			tvArea.setAdapter(adapter);
 			break;
 		}
 	}
@@ -435,5 +450,47 @@ public class ArtEdit extends FragmentActivity {
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case DIALOG_EMPTY_INPUT:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.art_edit_hint_input_empty_title);
+			builder.setMessage(R.string.art_edit_hint_input_empty_msg);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.setCancelable(true);
+			return builder.create();
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+			onFinish();
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	public void onBackPressed() {
+		onFinish();
+		return;
+	}
+
+	private void onFinish() {
+		Intent iHome = Utils.getHomeIntent(this);
+		iHome.putExtras(getIntent()); // saved things from ArtMap
+		startActivity(iHome);
+		finish();
 	}
 }

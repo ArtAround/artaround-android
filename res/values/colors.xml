@@ -16,7 +16,7 @@
 		name="ActionbarTitle">#FFFFFF</color>
 
 	<color
-		name="Activity"> #C0B9B7</color>
+		name="Activity">#C0B9B7</color>
 		
 	<!-- Gallery, Minimap -->
 	<color
@@ -28,7 +28,7 @@
 	<color
 		name="ItemBackground">#C1B9B7</color>
 	<color
-		name="ContainerBackground">#706667</color>
+		name="ContainerBackground">#6F6567</color>
 	<color
 		name="ContainerBorder">#52494A</color>
 	<color
@@ -38,11 +38,25 @@
 	<color
 		name="ArtBubbleText">#332F2E</color>
 		
+	<color
+		name="HintColor">#6E6566</color>
+		
 	<!-- Art Edit -->
 	<color
 		name="ArtEditLabel">#FFFFFF</color>
 	<color
-		name="ArtEditInput">#312d2d</color>
+		name="ArtEditInput">#312D2D</color>
+		
 	<color
-		name="ArtEditHintInputEmpty">#FF0000</color>
+		name="ArtDetailTitle">#373332</color>
+	<color
+		name="ArtDetailText">#332F2E</color>
+	<color
+		name="ArtDetailHeading">#524A4B</color>
+	<color
+		name="ArtDetailHeadingLight">#C0BBB7</color>
+	<color
+		name="ArtDetailInput">#312D2D</color>
+		
+	
 </resources>

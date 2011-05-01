@@ -7,19 +7,21 @@
 		style="@style/Scrollable"
 		android:id="@+id/scroll_view">
 
-		<TableLayout
-			style="@style/ArtEditTable">
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:orientation="vertical">
 
 			<!-- ============================================= -->
 			<!-- Name -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 				<TextView
 					style="@style/ArtEditLabel"
 					android:text="@string/art_edit_label_name" />
 
 				<EditText
-					style="@style/ArtEditInput.HintEmpty"
+					style="@style/ArtEditInput"
 					android:id="@+id/art_edit_input_name" />
 			</TableRow>
 			<!-- ============================================= -->
@@ -27,21 +29,31 @@
 			<!-- ============================================= -->
 			<!-- Artist -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 				<TextView
 					style="@style/ArtEditLabel"
 					android:text="@string/art_edit_label_artist" />
 
-				<AutoCompleteTextView
-					style="@style/ArtEditInput.Autocomplete"
-					android:id="@+id/art_edit_input_artist" />
+				<LinearLayout
+					android:layout_width="fill_parent"
+					android:layout_height="fill_parent">
+
+					<AutoCompleteTextView
+						style="@style/ArtEditInput.Dropdown"
+						android:id="@+id/art_edit_input_artist" />
+
+					<ImageButton
+						style="@style/AutocompleteDropdown"
+						android:id="@+id/dropdown_artist" />
+				</LinearLayout>
+
 			</TableRow>
 			<!-- ============================================= -->
 
 			<!-- ============================================= -->
 			<!-- Year, Category -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 
 				<TextView
 					style="@style/ArtEditLabel"
@@ -52,19 +64,27 @@
 						style="@style/ArtEditInput"
 						android:id="@+id/art_edit_input_year"
 						android:layout_width="wrap_content"
-						android:minWidth="70dp"
+						android:minWidth="50dp"
 						android:inputType="number" />
 
 					<TextView
 						style="@style/ArtEditLabel"
 						android:text="@string/art_edit_label_category"
-						android:layout_width="wrap_content" />
+						android:layout_width="wrap_content"
+						android:paddingLeft="6dp" />
 
-					<AutoCompleteTextView
-						style="@style/ArtEditInput.Autocomplete.HintEmpty"
-						android:id="@+id/art_edit_input_category"
-						android:layout_width="0dp"
-						android:layout_weight="1" />
+					<LinearLayout
+						android:layout_width="fill_parent"
+						android:layout_height="fill_parent">
+
+						<AutoCompleteTextView
+							style="@style/ArtEditInput.Dropdown"
+							android:id="@+id/art_edit_input_category" />
+
+						<ImageButton
+							style="@style/AutocompleteDropdown"
+							android:id="@+id/dropdown_category" />
+					</LinearLayout>
 				</LinearLayout>
 			</TableRow>
 			<!-- ============================================= -->
@@ -72,7 +92,7 @@
 			<!-- ============================================= -->
 			<!-- Description -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 				<EditText
 					style="@style/ArtEditInput.Textarea"
 					android:id="@+id/art_edit_input_description"
@@ -84,8 +104,9 @@
 			<!-- ============================================= -->
 			<!-- Gallery -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
-
+				style="@style/ArtEditTableRow"
+				android:paddingLeft="0dp"
+				android:paddingRight="0dp">
 				<FrameLayout
 					android:id="@+id/mini_gallery_placeholder"
 					android:layout_width="fill_parent"
@@ -95,9 +116,9 @@
 			<!-- ============================================= -->
 
 			<!-- ============================================= -->
-			<!-- Ward, Neighborhood -->
+			<!-- Ward, area -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 
 				<TextView
 					style="@style/ArtEditLabel"
@@ -113,14 +134,23 @@
 
 					<TextView
 						style="@style/ArtEditLabel"
-						android:text="@string/art_edit_label_neighborhood"
-						android:layout_width="wrap_content" />
+						android:text="@string/art_edit_label_area"
+						android:layout_width="wrap_content"
+						android:paddingLeft="6dp" />
+						
+					<LinearLayout
+						android:layout_width="fill_parent"
+						android:layout_height="fill_parent">
 
-					<AutoCompleteTextView
-						style="@style/ArtEditInput.Autocomplete.HintEmpty"
-						android:id="@+id/art_edit_input_neighborhood"
-						android:layout_width="0dp"
-						android:layout_weight="1" />
+						<AutoCompleteTextView
+							style="@style/ArtEditInput.Dropdown"
+							android:id="@+id/art_edit_input_area" />
+
+						<ImageButton
+							style="@style/AutocompleteDropdown"
+							android:id="@+id/dropdown_area" />
+					</LinearLayout>
+
 				</LinearLayout>
 			</TableRow>
 			<!-- ============================================= -->
@@ -128,7 +158,7 @@
 			<!-- ============================================= -->
 			<!-- Location Description -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
+				style="@style/ArtEditTableRow">
 
 				<EditText
 					style="@style/ArtEditInput.Textarea"
@@ -142,21 +172,18 @@
 			<!-- Minimap -->
 			<TableRow
 				style="@style/MinimapContainer">
-
 				<FrameLayout
 					android:id="@+id/mini_map_placeholder"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content"
-					android:padding="6dp"
 					android:layout_span="2" />
-
 			</TableRow>
 
 			<!-- ============================================= -->
 			<!-- Bottombar -->
 			<TableRow
-				style="@style/ArtEditTable.Row">
-
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
 				<RelativeLayout
 					style="@style/Bottombar"
 					android:layout_span="2">
@@ -168,7 +195,7 @@
 						android:layout_marginLeft="12dp" />
 
 					<Button
-						style="@style/Button"
+						style="@style/ArtDetailButton"
 						android:id="@+id/btn_submit"
 						android:text="@string/submit"
 						android:layout_alignParentRight="true"
@@ -176,7 +203,6 @@
 				</RelativeLayout>
 			</TableRow>
 			<!-- ============================================= -->
-
-		</TableLayout>
+		</LinearLayout>
 	</us.artaround.android.ui.ArtScrollView>
 </LinearLayout>

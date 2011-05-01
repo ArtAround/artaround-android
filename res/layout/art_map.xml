@@ -19,29 +19,29 @@
 			android:gravity="right|center">
 
 			<ImageView
-				style="@style/ActionbarLoaderDark"
+				style="@style/ActionbarLoadingDark"
 				android:id="@+id/img_loading" />
 
 			<include
-				layout="@layout/actionbar_divider" />
+				layout="@layout/actionbar_divider_dark" />
 
-			<ImageView
+			<ImageButton
 				style="@style/ActionbarButton"
 				android:id="@+id/btn_locate"
 				android:src="@drawable/ic_locate_background" />
 
 			<include
-				layout="@layout/actionbar_divider" />
+				layout="@layout/actionbar_divider_dark" />
 
-			<ImageView
+			<ImageButton
 				style="@style/ActionbarButton"
 				android:id="@+id/btn_search"
 				android:src="@drawable/ic_search_background" />
 
 			<include
-				layout="@layout/actionbar_divider" />
+				layout="@layout/actionbar_divider_dark" />
 
-			<ImageView
+			<ImageButton
 				style="@style/ActionbarButton"
 				android:id="@+id/btn_favorite"
 				android:src="@drawable/ic_favorites_background" />
@@ -68,6 +68,7 @@
 		style="@style/Bottombar"
 		android:id="@+id/bottombar"
 		android:layout_alignParentBottom="true"
+		android:gravity="center"
 		android:padding="6dp">
 
 		<Button
