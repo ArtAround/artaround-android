@@ -13,6 +13,8 @@
 	<string
 		name="empty">No items</string>
 	<string
+		name="unknown">Unknown</string>
+	<string
 		name="by">By</string>
 	<string
 		name="all">All</string>
@@ -25,17 +27,17 @@
 	<string
 		name="submit_successful">The art has been submitted.\n Please refresh in a while to
 		retrieve it from server.</string>
-	<string
-		name="streetview">Street View</string>
 
-	<!-- Location  -->
+	<!-- Location -->
 	<string
 		name="current_location">Current location: </string>
 	<string
 		name="location_suggest_settings_title">Improve my location</string>
 	<string
 		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest	and most accurate location detection please turn on	GPS and wireless network.</string>
+		the fastest
+		and most accurate location detection please turn on GPS and wireless
+		network.</string>
 	<string
 		name="location_update_failure">Your current location is temporary unavailable.</string>
 	<string
@@ -51,15 +53,10 @@
 		name="connection_failure_ok">WiFi Options</string>
 	<string
 		name="load_data_failure">Could not retrieve data from server.</string>
-		
-	
 
 	<!-- Search -->
 	<string
 		name="search_hint">Enter search here...</string>
-
-	<string
-		name="value_unset">Not Set</string>
 
 	<!-- Preferences -->
 	<string
@@ -78,7 +75,7 @@
 		name="clear_cache_failure">Clearing the cache failed.</string>
 	<string
 		name="choose_city">Choose city</string>
-		
+
 	<string
 		name="update_cache_progress">Updating cached data...</string>
 
@@ -93,7 +90,8 @@
 		later.</string>
 	<string
 		name="load_neighborhoods_error">Could not load the area list from server. Please try
-		again later.</string>
+		again later.
+	</string>
 	<string
 		name="load_photos_error">Could not load the photos from Flickr. Please try again later.
 	</string>
@@ -104,6 +102,10 @@
 	<!-- Art Map -->
 	<string
 		name="add_new_art">Add New Art</string>
+	<string
+		name="favorites">Favorites</string>
+	<string
+		name="filtered">Filtered</string>
 
 	<!-- Art Edit -->
 	<string
@@ -131,7 +133,8 @@
 	<string
 		name="art_edit_hint_input_empty_title">Required Fields</string>
 	<string
-		name="art_edit_hint_input_empty_msg">Please fill in all the fields marked with (*) before submitting.</string>
+		name="art_edit_hint_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
+	</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
 	<string
@@ -144,9 +147,9 @@
 		name="art_edit_media_source">Add New Photo</string>
 	<string
 		name="art_edit_remove_photo">Remove Photo</string>
-		
+
 	<!-- Art Detail -->
-	<string 
+	<string
 		name="art_detail_location">Location</string>
 	<string
 		name="art_detail_comments">Comments</string>
@@ -171,4 +174,46 @@
 	<string
 		name="art_removed_favorite">This art has been removed from favorites.</string>
 
+	<!-- Art Detail Options Menu -->
+	<string
+		name="share">Share</string>
+	<string
+		name="add_favorite">Add Favorite</string>
+	<string
+		name="remove_favorite">Remove Favorite</string>
+	<string
+		name="added_favorite">%s is now favorite.</string>
+	<string
+		name="removed_favorite">%s is no longer favorite.</string>
+	<string
+		name="street_view">Street View</string>
+
+	<!-- Share Art -->
+	<string
+		name="share_art_title">Share art via:</string>
+	<string
+		name="share_art_header">Find more info about this piece of art!</string>
+	<string
+		name="share_artist">Artist:</string>
+	<string
+		name="share_category">Category:</string>
+	<string
+		name="share_neighborhood">Neighborhood:</string>
+
+
+	<!-- Art Filters -->
+	<string
+		name="art_filter_title">Filter</string>
+	<string
+		name="art_filter_by_category">By Category</string>
+	<string
+		name="art_filter_by_area">By Neighborhood</string>
+	<string
+		name="art_filter_by_artist">By Artist</string>
+	<string
+		name="art_filter_by_title">By Title</string>
+	<string
+		name="art_filter_group_venues">All Venues</string>
+	<string
+		name="art_filter_group_public">All Public Art</string>
 </resources>

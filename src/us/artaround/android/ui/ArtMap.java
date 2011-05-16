@@ -3,7 +3,6 @@ package us.artaround.android.ui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,6 +16,7 @@ import us.artaround.android.common.task.ArtAroundAsyncCommand;
 import us.artaround.android.common.task.ClearCacheCommand;
 import us.artaround.android.common.task.LoadArtCommand;
 import us.artaround.android.database.ArtAroundDatabase;
+import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.parsers.ParseResult;
@@ -36,7 +36,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,6 +46,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 
@@ -66,6 +66,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	//--- activity requests ids ---
 	public static final int REQUEST_FILTER = 0;
+	public static final String EXTRA_FILTERS = "filters";
 
 	//--- dialog ids ---
 	private static final int DIALOG_LOCATION_SETTINGS = 1;
@@ -77,6 +78,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	//--- queries ids ---
 	private static final int QUERY_ARTS = 0;
+	private static final int QUERY_FAVORITES = 1;
 
 	//--- handler msgs ---
 	private static final int MSG_LOAD_ARTS_FINISHED = 0;
@@ -108,10 +110,14 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private ImageView imgRefresh;
 	private Button btnAddArt;
 
+	private View filtersHeading;
+	private TextView filtersTitle;
+	private ImageButton btnFiltersExit;
+
 	private ArrayList<Art> allArt;
 	private ArrayList<Art> filteredArt;
 	private int nrPinsForZoomLevel;
-	private HashMap<Integer, HashSet<String>> filters;
+	private HashMap<Integer, ArrayList<String>> filters;
 
 	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
@@ -182,7 +188,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		btnFavorite.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				gotoFavoritesPage();
+				loadFavorites();
 			}
 		});
 	}
@@ -202,7 +208,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			filteredArt = new ArrayList<Art>();
 		}
 		if (filters == null) {
-			filters = new HashMap<Integer, HashSet<String>>();
+			filters = new HashMap<Integer, ArrayList<String>>();
 		}
 	}
 
@@ -216,10 +222,10 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		}
 
 		if (hasRunningTasks(LOAD_ARTS)) {
-			showLoading(true);
+			toggleLoading(true);
 		}
 		else {
-			showLoading(false);
+			toggleLoading(false);
 
 			if (Utils.isCacheOutdated(this)) {
 				Utils.d(TAG, "setupState(): cache outdated!");
@@ -242,13 +248,32 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	}
 
 	private void clearCache() {
-		showLoading(true);
+		toggleLoading(true);
 		startTask(new ClearCacheCommand(CLEAR_CACHE, String.valueOf(CLEAR_CACHE)));
 	}
 
 	private void setupUi() {
+		setupFilterBarUi();
 		setupFooterBarUi();
 		setupMapUi();
+	}
+
+	private void setupFilterBarUi() {
+		filtersHeading = findViewById(R.id.filters);
+		filtersTitle = (TextView) findViewById(R.id.filters_title);
+		btnFiltersExit = (ImageButton) findViewById(R.id.filters_exit);
+		btnFiltersExit.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				filtersTitle.setText("");
+				filtersHeading.setVisibility(View.GONE);
+
+				// clear all filters
+				filters.clear();
+				filterArt(allArt);
+				displayArt(filteredArt);
+			}
+		});
 	}
 
 	private void setupFooterBarUi() {
@@ -323,9 +348,9 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 				filteredArt = new ArrayList<Art>();
 			}
 
-			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
+			filters = (HashMap<Integer, ArrayList<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
 			if (filters == null) {
-				filters = new HashMap<Integer, HashSet<String>>();
+				filters = new HashMap<Integer, ArrayList<String>>();
 			}
 		}
 	}
@@ -345,7 +370,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		super.onSaveInstanceState(outState);
 	}
 
-	private void showLoading(boolean loading) {
+	private void toggleLoading(boolean loading) {
 		if (loading) {
 			imgRefresh.setVisibility(View.VISIBLE);
 			imgRefresh.startAnimation(rotateAnim);
@@ -364,7 +389,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private void loadArt() {
 		Utils.d(TAG, "loadArtFromDb(): start query");
 
-		showLoading(true);
+		toggleLoading(true);
 		queryHandler.startQuery(QUERY_ARTS, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, ARTS_SELECTION,
 				new String[] { currentCity.name }, null);
 	}
@@ -384,10 +409,23 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 				loadArtFromServer();
 			}
 			else {
-				showLoading(false);
+				toggleLoading(false);
 				processArts();
 			}
 			break;
+		case QUERY_FAVORITES:
+			toggleLoading(false);
+
+			if (cursor != null && cursor.moveToFirst()) {
+				Utils.d(Utils.TAG, "There are " + cursor.getCount() + " favorites");
+
+				ArrayList<Art> favs = ArtAroundDatabase.artsFromCursor(cursor);
+
+				filtersHeading.setVisibility(View.VISIBLE);
+				filtersTitle.setText(R.string.favorites);
+				filterArt(favs);
+				displayArt(filteredArt);
+			}
 		}
 	}
 
@@ -409,14 +447,14 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		case LOAD_ARTS:
 
 			if (exception != null) {
-				showLoading(false);
+				toggleLoading(false);
 				Utils.showToast(this, R.string.load_arts_error);
 				return;
 			}
 
 			ParseResult pr = (ParseResult) result;
 			if (pr == null) {
-				showLoading(false);
+				toggleLoading(false);
 				showDialog(DIALOG_WIFI_FAIL);
 				return;
 			}
@@ -436,7 +474,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			break;
 
 		case CLEAR_CACHE:
-			showLoading(true);
+			toggleLoading(true);
 			loadArt();
 			break;
 		}
@@ -499,42 +537,48 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	}
 
 	private boolean matchesFilter(List<String> byType, String prop) {
-		if ((TextUtils.isEmpty(prop) && byType.contains(getString(R.string.value_unset)))) return true;
 		return byType.contains(prop);
 	}
 
 	private boolean matchesAllFilters(HashMap<Integer, List<String>> onFilters, Art a, boolean matchAll) {
 		int match = 0;
-		int length = ArtFilters.FILTER_NAMES.length;
+		int length = ArtFilter.FILTER_TYPE_NAMES.length;
 
 		for (int i = 0; i < length; i++) {
 			List<String> byType = onFilters.get(i);
 
-			if (byType.isEmpty() || (i == ArtFilters.FILTER_CATEGORY && matchesFilter(byType, a.category))) {
+			if (byType.isEmpty()) {
+				++match;
+				continue;
+			}
+
+			if (i == ArtFilter.TYPE_CATEGORY && matchesFilter(byType, a.category)) {
 				++match;
 			}
-			else if (byType.isEmpty() || (i == ArtFilters.FILTER_NEIGHBORHOOD && matchesFilter(byType, a.neighborhood))) {
+			else if (i == ArtFilter.TYPE_NEIGHBORHOOD && matchesFilter(byType, a.neighborhood)) {
 				++match;
 			}
-			else if (byType.isEmpty()
-					|| (i == ArtFilters.FILTER_ARTIST && a.artist != null && matchesFilter(byType, a.artist.name))) {
+			else if (i == ArtFilter.TYPE_ARTIST && a.artist != null && matchesFilter(byType, a.artist.name)) {
+				++match;
+			}
+			else if (i == ArtFilter.TYPE_TITLE && matchesFilter(byType, a.title)) {
 				++match;
 			}
 		}
 
-		return matchAll ? match == ArtFilters.FILTER_NAMES.length : match > 0;
+		return matchAll ? match == ArtFilter.FILTER_TYPE_NAMES.length : match > 0;
 	}
 
 	private HashMap<Integer, List<String>> updateFilters() {
 		HashMap<Integer, List<String>> onFilters = new HashMap<Integer, List<String>>();
-		int length = ArtFilters.FILTER_NAMES.length;
+		int length = ArtFilter.FILTER_TYPE_NAMES.length;
 
 		for (int i = 0; i < length; i++) {
 			onFilters.put(i, new ArrayList<String>());
 		}
 
 		for (int i = 0; i < length; i++) {
-			HashSet<String> f = filters.get(i);
+			ArrayList<String> f = filters.get(i);
 			if (f == null || f.isEmpty()) {
 				continue;
 			}
@@ -603,9 +647,12 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		case REQUEST_FILTER:
-			filters = (HashMap<Integer, HashSet<String>>) data.getSerializableExtra("filters");
+			filters = (HashMap<Integer, ArrayList<String>>) data.getSerializableExtra(EXTRA_FILTERS);
 			filterArt(allArt);
 			displayArt(filteredArt);
+
+			filtersTitle.setText(R.string.filtered);
+			filtersHeading.setVisibility(View.VISIBLE);
 			break;
 		}
 	}
@@ -657,12 +704,19 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		finish(); // call finish to save memory because of the 2 map views
 	}
 
-	private void gotoFavoritesPage() {
-		startActivity(new Intent(ArtMap.this, ArtFavs.class));
+	private void loadFavorites() {
+		toggleLoading(true);
+		queryHandler.startQuery(QUERY_FAVORITES, null, ArtFavorites.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
+				null, null, null);
 	}
 
 	private void gotoFiltersPage() {
-		startActivityForResult(new Intent(ArtMap.this, ArtFilters.class).putExtra("filters", filters), REQUEST_FILTER);
+		Intent iArtFilter = new Intent(this, ArtFilter.class);
+		iArtFilter.putExtra(SAVE_ZOOM, newZoom);
+		GeoPoint center = mapView.getMapCenter();
+		iArtFilter.putExtra(SAVE_MAP_LATITUDE, center.getLatitudeE6());
+		iArtFilter.putExtra(SAVE_MAP_LONGITUDE, center.getLongitudeE6());
+		startActivityForResult(iArtFilter.putExtra(EXTRA_FILTERS, filters), REQUEST_FILTER);
 	}
 
 	@Override
@@ -747,7 +801,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_LOAD_ARTS_FINISHED:
-				showLoading(false);
+				toggleLoading(false);
 				Utils.setLastCacheUpdate(ArtMap.this);
 				break;
 

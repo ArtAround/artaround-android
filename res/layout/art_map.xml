@@ -48,6 +48,7 @@
 		</LinearLayout>
 
 	</LinearLayout>
+	
 
 	<us.artaround.android.ui.ArtMapView
 		android:id="@+id/map_view"
@@ -56,6 +57,32 @@
 		android:layout_below="@+id/actionbar"
 		android:clickable="true"
 		android:apiKey="@string/maps_api" />
+		
+	<RelativeLayout
+		android:id="@+id/filters"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/actionbar"
+		style="@style/ArtFiltersHeadingBackground"
+		android:visibility="gone">
+				
+		<TextView
+			android:id="@+id/filters_title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_centerInParent="true"
+			style="@style/ArtFilterTitle" />
+		
+		<ImageButton
+			android:id="@+id/filters_exit"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_alignParentRight="true"
+			android:layout_marginRight="10dp"
+			android:src="@drawable/ic_filter_exit_background"
+			android:background="@null" />	
+	</RelativeLayout>
 
 	<FrameLayout
 		android:id="@+id/layout_zoom"

@@ -7,14 +7,14 @@
 	android:gravity="center">
 
 	<TextView
-		style="@style/ArtEditLabel"
+		style="@style/ArtEditLabel.White"
 		android:id="@+id/mini_map_label"
 		android:layout_width="fill_parent"
 		android:text="@string/art_edit_label_minimap"		
 		android:visibility="gone" />
 
 	<TextView
-		style="@style/ArtEditLabel"
+		style="@style/ArtEditLabel.White"
 		android:id="@+id/mini_map_coords"
 		android:layout_width="fill_parent"
 		android:layout_marginBottom="5dp"

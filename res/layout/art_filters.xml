@@ -4,22 +4,35 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:orientation="vertical"
-	android:padding="6dp">
+	android:padding="10dp">
 
-	<Spinner
-		android:id="@+id/spinner"
+	<LinearLayout
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="5dp" />
+		android:layout_marginBottom="10dp">
+
+		<AutoCompleteTextView
+			style="@style/ArtEditInput.Dropdown"
+			android:id="@+id/filter_type"
+			android:cursorVisible="false"
+			android:text="@string/art_filter_by_category" />
+
+		<ImageButton			
+			style="@style/AutocompleteDropdown"
+			android:id="@+id/dropdown_filter_type" />
+	</LinearLayout>
 
 	<EditText
-		android:id="@+id/autocomplete"
+		style="@style/ArtEditInput"
+		android:id="@+id/art_filter_search"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:drawableLeft="@drawable/ic_search"
+		android:drawableLeft="@drawable/ic_search_small"
 		android:drawablePadding="6dp"
+		android:gravity="left|center"
 		android:imeOptions="actionSearch"
-		android:hint="@string/search_hint" />
+		android:hint="@string/search_hint"
+		android:visibility="gone" />
 
 	<include
 		android:id="@+id/loading"
@@ -29,30 +42,30 @@
 		android:visibility="gone" />
 
 	<LinearLayout
-		android:id="@+id/content"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
+		android:layout_height="fill_parent"
+		android:layout_marginTop="10dp">
 
 		<TextView
-			android:id="@android:id/android:empty"
+			android:id="@+id/art_filters_empty"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
 			android:layout_gravity="center"
 			android:gravity="center"
 			android:textStyle="bold"
+			android:textColor="#FFFFFF"
+			android:textSize="16sp"
 			android:text="@string/empty" />
 
-		<ListView
-			android:id="@android:id/android:list"
+		<ExpandableListView
+			android:id="@+id/art_filters_list"
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
-
 			android:scrollbarStyle="outsideOverlay"
 			android:scrollingCache="false"
-			android:cacheColorHint="@color/dialog_bg"
-			android:dividerHeight="1px"
-			android:descendantFocusability="blocksDescendants" />
-			
+			android:cacheColorHint="@color/ArtFiltersBackground"
+			android:dividerHeight="1px" />
+
 	</LinearLayout>
 
 </LinearLayout>

@@ -18,7 +18,9 @@
 		android:layout_height="wrap_content"
 		android:layout_marginTop="10dp"
 		android:text="@string/art_edit_add_photo"
-		android:textColor="#000000"
+		android:textColor="@color/ArtEditLabel"
+		android:textStyle="bold|italic"
+		android:textSize="@dimen/ArtEditLabel"
 		android:visibility="gone" />
 	<ProgressBar
 		style="@android:style/Widget.ProgressBar.Large.Inverse"

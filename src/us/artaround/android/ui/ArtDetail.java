@@ -28,7 +28,11 @@ import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.UnderlineSpan;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -124,8 +128,24 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	private void setupBottombar() {
-		// TODO Auto-generated method stub
+		Button btnEdit = (Button) findViewById(R.id.art_detail_edit);
+		btnEdit.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
+				iEdit.putExtra(ArtEdit.EXTRA_ART, art);
+				startActivity(iEdit);
+			}
+		});
 
+		Button btnAdd = (Button) findViewById(R.id.art_detail_add);
+		btnAdd.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
+				startActivity(iEdit);
+			}
+		});
 	}
 
 	private void setupActionbar() {
@@ -463,5 +483,55 @@ public class ArtDetail extends FragmentActivity {
 		iHome.putExtras(getIntent()); // saved things from ArtMap
 		startActivity(iHome);
 		finish();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.art_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		menu.findItem(R.id.favorite_art).setTitle(isFavorite() ? R.string.remove_favorite : R.string.add_favorite);
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.share_art:
+			onShareArt();
+			return true;
+		case R.id.favorite_art:
+			onFavoriteArt();
+			return true;
+		case R.id.street_view:
+			startActivity(Utils.getStreetViewIntent(art.latitude, art.longitude));
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private String getShareText() {
+		StringBuilder b = new StringBuilder(getString(R.string.share_art_header));
+		b.append(Utils.NL).append(getString(R.string.share_artist));
+		if (art.artist != null) {
+			b.append(" ").append(art.artist.name);
+		}
+		else {
+			b.append(getString(R.string.unknown));
+		}
+		b.append(Utils.NL).append(art.locationDesc);
+		b.append(Utils.NL).append(getString(R.string.share_category)).append(" ").append(art.category);
+		b.append(Utils.NL).append(getString(R.string.share_neighborhood)).append(" ").append(art.neighborhood);
+		return b.toString();
+	}
+
+	private void onShareArt() {
+		Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain")
+				.putExtra(Intent.EXTRA_TEXT, getShareText());
+		startActivity(Intent.createChooser(intent, getString(R.string.share_art_title)));
 	}
 }

@@ -70,7 +70,7 @@
 		<item
 			name="android:visibility">gone</item>
 	</style>
-	
+
 	<style
 		name="ActionbarLoadingWhite">
 		<item
@@ -117,7 +117,7 @@
 		<item
 			name="android:padding">10dp</item>
 	</style>
-	
+
 	<style
 		name="BottombarLoaderDark">
 		<item
@@ -149,6 +149,7 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<!-- General -->
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
 	<style
 		name="Activity">
 		<item
@@ -190,6 +191,14 @@
 	</style>
 
 	<style
+		name="Checkbox">
+		<item
+			name="android:background">@drawable/btn_check_background</item>
+		<item
+			name="android:button">@drawable/btn_check</item>
+	</style>
+
+	<style
 		name="Minimap">
 		<item
 			name="android:layout_width">fill_parent</item>
@@ -200,9 +209,10 @@
 		<item
 			name="android:apiKey">@string/maps_api</item>
 	</style>
-	
+
 	<style
-		name="MinimapContainer" parent="GalleryContainer">
+		name="MinimapContainer"
+		parent="GalleryContainer">
 		<item
 			name="android:layout_width">fill_parent</item>
 		<item
@@ -216,7 +226,7 @@
 		<item
 			name="android:layout_marginTop">12dp</item>
 	</style>
-	
+
 	<style
 		name="MinimapBorder">
 		<item
@@ -258,8 +268,9 @@
 		<item
 			name="android:gravity">center</item>
 	</style>
-	
-	<style name="ArtGalleryActionbarTitle">
+
+	<style
+		name="ArtGalleryActionbarTitle">
 		<item
 			name="android:layout_width">wrap_content</item>
 		<item
@@ -328,11 +339,12 @@
 			name="android:typeface">serif</item>
 	</style>
 
+
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<!-- Art Edit -->
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	
-	<style 
+
+	<style
 		name="ArtEditTableRow">
 		<item
 			name="android:layout_width">fill_parent</item>
@@ -361,11 +373,19 @@
 		<item
 			name="android:textColor">@color/ArtEditLabel</item>
 		<item
+			name="android:textStyle">bold|italic</item>
+		<item
 			name="android:ellipsize">end</item>
 		<item
 			name="android:singleLine">true</item>
 		<item
 			name="android:paddingRight">6dp</item>
+	</style>
+
+	<style
+		name="ArtEditLabel.White">
+		<item
+			name="android:textColor">#FFFFFF</item>
 	</style>
 
 
@@ -390,7 +410,7 @@
 		<item
 			name="android:background">@drawable/textfield_background</item>
 	</style>
-	
+
 	<style
 		name="ArtEditInput.Textarea">
 		<item
@@ -400,7 +420,7 @@
 		<item
 			name="android:gravity">left|top</item>
 	</style>
-	
+
 	<style
 		name="ArtEditInput.Dropdown">
 		<item
@@ -412,7 +432,7 @@
 		<item
 			name="android:layout_height">fill_parent</item>
 	</style>
-	
+
 	<style
 		name="AutocompleteDropdown">
 		<item
@@ -425,6 +445,11 @@
 			name="android:background">@null</item>
 	</style>
 
+	<style
+		name="AutocompleteDropdown.Filter">
+		<item
+			name="android:src">@drawable/arrow_dropdown_filter_background</item>
+	</style>
 
 	<!-- Art Detail -->
 	<style
@@ -448,7 +473,7 @@
 		<item
 			name="android:typeface">serif</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailText">
 		<item
@@ -456,13 +481,13 @@
 		<item
 			name="android:textSize">14dp</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailText.Bold">
 		<item
 			name="android:textStyle">bold</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailHeading">
 		<item
@@ -478,7 +503,7 @@
 		<item
 			name="android:layout_marginRight">9dp</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailHeading.Light">
 		<item
@@ -486,13 +511,13 @@
 		<item
 			name="android:layout_margin">0dp</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailText.Link">
 		<item
 			name="android:textStyle">bold|italic</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailFormLabel">
 		<item
@@ -508,7 +533,7 @@
 		<item
 			name="android:layout_marginRight">6dp</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailInput">
 		<item
@@ -530,7 +555,7 @@
 		<item
 			name="android:background">@drawable/textfield_comment_background</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailInput.Textarea">
 		<item
@@ -540,12 +565,78 @@
 		<item
 			name="android:gravity">left|top</item>
 	</style>
-	
+
 	<style
 		name="ArtDetailTableRow">
 		<item
 			name="android:layout_marginBottom">10dp</item>
 		<item
 			name="android:gravity">center_vertical</item>
+	</style>
+
+	<!-- Art Filter Background -->
+	<style
+		name="ArtFilterTitleBackground">
+		<item
+			name="android:background">@drawable/art_filter_title_background</item>
+		<item
+			name="android:padding">8dp</item>
+		<item
+			name="android:gravity">center</item>
+	</style>
+	
+	<style
+		name="ArtFiltersHeadingBackground">
+		<item
+			name="android:background">@drawable/art_filter_heading_background</item>
+		<item
+			name="android:padding">8dp</item>
+	</style>
+
+	<style
+		name="ArtFilterTitle">
+		<item
+			name="android:textSize">17sp</item>
+		<item
+			name="android:textColor">#FFFFFF</item>
+		<item
+			name="android:textStyle">bold</item>
+	</style>
+
+	<style
+		name="ArtFilterInputSearch"
+		parent="ArtDetailInput">
+		<item
+			name="android:drawableLeft">@drawable/ic_filter_search</item>
+		<item
+			name="android:drawablePadding">3dp</item>
+		<item
+			name="android:imeOptions">actionSearch</item>
+		<item
+			name="android:hint">@string/search_hint</item>
+	</style>
+
+	<style
+		name="ArtFilterInputDropdown"
+		parent="ArtEditInput.Dropdown">
+		<item
+			name="android:cursorVisible">false</item>
+		<item
+			name="android:focusable">false</item>
+		<item
+			name="android:paddingLeft">6dp</item>
+		<item
+			name="android:background">@drawable/textfield_comment_background</item>
+	</style>
+
+	<style
+		name="ArtFilterDialog"
+		parent="@android:style/Theme.Dialog">
+		<item
+			name="android:windowBackground">@drawable/art_filter_dialog_background</item>
+		<item
+			name="android:windowNoTitle">true</item>
+		<!-- <item -->
+		<!-- name="android:windowIsFloating">true</item> -->
 	</style>
 </resources>

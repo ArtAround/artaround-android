@@ -302,16 +302,19 @@
 		<RelativeLayout
 			style="@style/Bottombar">
 			<Button
+				android:id="@+id/art_detail_edit"
 				style="@style/ArtDetailButton"
 				android:text="@string/edit"
 				android:layout_alignParentLeft="true"/>
 				
 			<Button
+				android:id="@+id/art_detail_add"
 				style="@style/ArtDetailButton"
 				android:text="@string/add_new_art"
 				android:layout_centerHorizontal="true"/>
 				
 			<Button
+				android:id="@+id/art_detail_submit"
 				style="@style/ArtDetailButton"
 				android:text="@string/submit"
 				android:layout_alignParentRight="true"/>		

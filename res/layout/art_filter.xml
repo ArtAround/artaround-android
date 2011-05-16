@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_gravity="center"
+	android:gravity="center"
+	android:orientation="vertical">
+
+	<include
+		layout="@layout/art_filter_title" />
+
+	<LinearLayout
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:orientation="vertical"
+		android:padding="15dp">
+
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="10dp">
+
+			<us.artaround.android.ui.InstantAutoComplete
+				style="@style/ArtFilterInputDropdown"
+				android:id="@+id/filter_type"
+				android:hint="@string/art_filter_by_category" />
+
+			<ImageButton
+				style="@style/AutocompleteDropdown.Filter"
+				android:id="@+id/dropdown_filter_type" />
+		</LinearLayout>
+
+		<EditText
+			style="@style/ArtFilterInputSearch"
+			android:id="@+id/filter_search"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="10dp"
+			android:gravity="left|center"
+			android:visibility="gone" />
+
+		<fragment
+			class="us.artaround.android.ui.ArtFilterListFragment"
+			android:id="@+id/filters"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent" />
+	</LinearLayout>
+
+</LinearLayout>
+

@@ -182,7 +182,10 @@ public class ArtEdit extends FragmentActivity {
 
 			@Override
 			public void onClick(View v) {
-				tvArtist.showDropDown();
+				if (tvArtist.isPopupShowing())
+					tvArtist.dismissDropDown();
+				else
+					tvArtist.showDropDown();
 			}
 		});
 
@@ -199,7 +202,10 @@ public class ArtEdit extends FragmentActivity {
 		dropdownCategory.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				tvCategory.showDropDown();
+				if (tvCategory.isPopupShowing())
+					tvCategory.dismissDropDown();
+				else
+					tvCategory.showDropDown();
 			}
 		});
 
@@ -222,7 +228,10 @@ public class ArtEdit extends FragmentActivity {
 		dropdownArea.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				tvArea.showDropDown();
+				if (tvArea.isPopupShowing())
+					tvArea.dismissDropDown();
+				else
+					tvArea.showDropDown();
 			}
 		});
 

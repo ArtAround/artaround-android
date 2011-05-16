@@ -15,6 +15,7 @@ import android.view.View;
 
 import com.google.android.maps.MapActivity;
 
+//FIXME remove this and use loaders
 public abstract class ArtAroundMapActivity extends MapActivity implements ArtAroundAsyncTaskListener {
 	protected static final String TAG = "ArtAround.MapActivity";
 

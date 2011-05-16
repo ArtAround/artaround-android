@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	
-
-	<color
-		name="dialog_bg">#DD494949</color>
-	<color
-		name="dialog_text">#FFFFFF</color>
-
 	<!-- =============================================================== -->
 	<!-- Theme Colors -->
 	<!-- =============================================================== -->
@@ -43,7 +36,7 @@
 		
 	<!-- Art Edit -->
 	<color
-		name="ArtEditLabel">#FFFFFF</color>
+		name="ArtEditLabel">#3F3F3F</color>
 	<color
 		name="ArtEditInput">#312D2D</color>
 		
@@ -56,7 +49,10 @@
 	<color
 		name="ArtDetailHeadingLight">#C0BBB7</color>
 	<color
-		name="ArtDetailInput">#312D2D</color>
+		name="ArtDetailInput">#312D2D</color>	
 		
+	<!-- Art Filters -->
+	<color
+		name="ArtFiltersBackground">#706567</color>	
 	
 </resources>
