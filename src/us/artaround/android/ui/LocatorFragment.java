@@ -37,7 +37,7 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 	public static final int ERROR_TIMEOUT = 1;
 	public static final int ERROR_REVERSE_GEOCODING = 2;
 
-	private static final int TIMEOUT = 20000; // 20 seconds
+	private static final int TIMEOUT = 30000; // 30 seconds
 
 	private Map<String, CountDownTimer> timers;
 	private LocationManager locationManager;

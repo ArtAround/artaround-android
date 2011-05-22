@@ -6,12 +6,12 @@
 	android:orientation="vertical"
 	android:gravity="center">
 
-	<TextView
-		style="@style/ArtEditLabel.White"
-		android:id="@+id/mini_map_label"
-		android:layout_width="fill_parent"
-		android:text="@string/art_edit_label_minimap"		
-		android:visibility="gone" />
+<!-- 	<TextView -->
+<!-- 		style="@style/ArtEditLabel.White" -->
+<!-- 		android:id="@+id/mini_map_label" -->
+<!-- 		android:layout_width="fill_parent" -->
+<!-- 		android:text="@string/art_edit_label_minimap"		 -->
+<!-- 		android:visibility="gone" /> -->
 
 	<TextView
 		style="@style/ArtEditLabel.White"
@@ -29,7 +29,8 @@
 			style="@style/Minimap"
 			android:id="@+id/mini_map"
 			android:layout_below="@+id/mini_map_coords"
-			android:clickable="true" />
+			android:clickable="false"
+			android:focusable="false" />
 
 		<ImageView
 			android:id="@+id/mini_map_drag"

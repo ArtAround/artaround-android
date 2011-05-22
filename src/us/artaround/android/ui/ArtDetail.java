@@ -13,7 +13,10 @@ import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import us.artaround.models.Comment;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
@@ -33,9 +36,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
@@ -58,6 +63,8 @@ public class ArtDetail extends FragmentActivity {
 
 	private static final String PAGE_BASE_URL = "http://theartaround.us/arts/";
 
+	private static final int DIALOG_EMPTY_INPUT = 0;
+
 	private Art art;
 	private final ArrayList<Comment> comments = new ArrayList<Comment>();
 	private int commentsCount = -1;
@@ -69,6 +76,10 @@ public class ArtDetail extends FragmentActivity {
 	private EditText edCommentName;
 	private EditText edCommentUrl;
 	private EditText edCommentText;
+	private EditText edCommentEmail;
+
+	private ImageView imgLoader;
+	private Animation rotateAnim;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +146,9 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	private void setupBottombar() {
+		imgLoader = (ImageView) findViewById(R.id.bottombar_loader);
+		rotateAnim = Utils.getRoateAnim(this);
+
 		Button btnEdit = (Button) findViewById(R.id.art_detail_edit);
 		btnEdit.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -149,9 +163,21 @@ public class ArtDetail extends FragmentActivity {
 		btnSubmit.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				onSubmitComment();
+				if (validateTexts()) {
+					onSubmitComment();
+				}
 			}
 		});
+	}
+
+	private boolean validateTexts() {
+		boolean ok = true;
+		if (TextUtils.isEmpty(edCommentName.getText()) && TextUtils.isEmpty(edCommentUrl.getText())
+				&& TextUtils.isEmpty(edCommentText.getText())) {
+			ok = false;
+			showDialog(DIALOG_EMPTY_INPUT);
+		}
+		return ok;
 	}
 
 	protected void onSubmitComment() {
@@ -159,19 +185,30 @@ public class ArtDetail extends FragmentActivity {
 		comment.name = edCommentName.getText().toString();
 		comment.url = edCommentUrl.getText().toString();
 		comment.text = edCommentText.getText().toString();
-
-		if (TextUtils.isEmpty(comment.name) && TextUtils.isEmpty(comment.url) && TextUtils.isEmpty(comment.text))
-			return;
+		comment.email = edCommentEmail.getText().toString();
 
 		LoaderManager lm = getSupportLoaderManager();
 		Bundle args = new Bundle();
 		args.putSerializable(ARG_NEW_COMMENT, comment);
+
+		toggleLoading(true);
 
 		if (lm.getLoader(SUBMIT_COMMENT) == null) {
 			lm.initLoader(SUBMIT_COMMENT, args, asyncCallback);
 		}
 		else {
 			lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
+		}
+	}
+
+	private void toggleLoading(boolean show) {
+		if (show) {
+			imgLoader.setVisibility(View.VISIBLE);
+			imgLoader.startAnimation(rotateAnim);
+		}
+		else {
+			imgLoader.clearAnimation();
+			imgLoader.setVisibility(View.INVISIBLE);
 		}
 	}
 
@@ -322,11 +359,17 @@ public class ArtDetail extends FragmentActivity {
 		tvLeaveComment.setTypeface(tf);
 
 		edCommentName = (EditText) findViewById(R.id.art_detail_input_name);
-
 		edCommentUrl = (EditText) findViewById(R.id.art_detail_input_url);
-
+		edCommentEmail = (EditText) findViewById(R.id.art_detail_input_email);
 		edCommentText = (EditText) findViewById(R.id.art_detail_input_message);
 		Utils.setHintSpan(edCommentText, edCommentText.getHint());
+	}
+
+	private void clearCommentFields() {
+		edCommentName.setText("");
+		edCommentUrl.setText("");
+		edCommentEmail.setText("");
+		edCommentText.setText("");
 	}
 
 	private void setupMiniGallery() {
@@ -367,9 +410,10 @@ public class ArtDetail extends FragmentActivity {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
+			Utils.d(TAG, "onLoadFinished(): payload=" + payload);
+
 			switch (loader.getId()) {
 			case LOAD_COMMENTS:
-				Utils.d(TAG, "onLoadFinished(): result=" + payload);
 
 				if (payload.getStatus() == LoaderPayload.RESULT_OK) {
 					List<Comment> result = (List<Comment>) payload.getResult();
@@ -398,8 +442,26 @@ public class ArtDetail extends FragmentActivity {
 						populateComment(parent, i, c);
 					}
 				}
+				else {
+					Utils.showToast(ArtDetail.this, R.string.load_data_failure);
+				}
 				break;
 			case SUBMIT_COMMENT:
+				toggleLoading(false);
+
+				if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+					Boolean result = (Boolean) payload.getResult();
+					if (result != null && result) {
+						Utils.showToast(ArtDetail.this, R.string.submit_comment_success);
+						clearCommentFields();
+					}
+					else {
+						Utils.showToast(ArtDetail.this, R.string.submit_comment_failure);
+					}
+				}
+				else {
+					Utils.showToast(ArtDetail.this, R.string.load_data_failure);
+				}
 				break;
 			}
 		}
@@ -546,20 +608,12 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		menu.findItem(R.id.favorite_art).setTitle(isFavorite() ? R.string.remove_favorite : R.string.add_favorite);
-		return super.onPrepareOptionsMenu(menu);
-	}
-
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.share_art:
 			onShareArt();
 			return true;
-		case R.id.favorite_art:
-			onFavoriteArt();
-			return true;
+
 		case R.id.street_view:
 			startActivity(Utils.getStreetViewIntent(art.latitude, art.longitude));
 		default:
@@ -586,5 +640,25 @@ public class ArtDetail extends FragmentActivity {
 		Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain")
 				.putExtra(Intent.EXTRA_TEXT, getShareText());
 		startActivity(Intent.createChooser(intent, getString(R.string.share_art_title)));
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case DIALOG_EMPTY_INPUT:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.art_detail_hint_input_empty_title);
+			builder.setMessage(R.string.art_detail_hint_input_empty_msg);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.setCancelable(true);
+			return builder.create();
+		default:
+			return super.onCreateDialog(id);
+		}
 	}
 }

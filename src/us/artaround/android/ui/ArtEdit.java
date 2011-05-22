@@ -2,6 +2,7 @@ package us.artaround.android.ui;
 
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
+import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -10,11 +11,13 @@ import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
+import us.artaround.models.Artist;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -38,12 +41,18 @@ import android.widget.SimpleCursorAdapter.CursorToStringConverter;
 
 public class ArtEdit extends FragmentActivity {
 	private static final String TAG = "ArtAround.ArtEdit";
+	private static final String TAG_MINIMAP = "minimap";
+	private static final String TAG_MINI_GALLERY = "mini_gallery";
 
 	public static final String EXTRA_ART = "art";
+
+	private static final String ARG_NEW_ART = "new_art";
 
 	private static final int LOAD_CATEGORIES = 0;
 	private static final int LOAD_NEIGHBORHOODS = 1;
 	private static final int LOAD_ARTISTS = 2;
+	private static final int SUBMIT_ART = 3;
+	private static final int SUBMIT_PHOTO = 4;
 
 	private static final int DIALOG_EMPTY_INPUT = 0;
 
@@ -55,6 +64,11 @@ public class ArtEdit extends FragmentActivity {
 	private AutoCompleteTextView tvArtist;
 	private AutoCompleteTextView tvCategory;
 	private AutoCompleteTextView tvArea;
+	private EditText tvYear;
+	private EditText tvWard;
+	private EditText tvDescription;
+	private EditText tvLocationDescription;
+
 	private ImageButton dropdownArtist;
 	private ImageButton dropdownCategory;
 	private ImageButton dropdownArea;
@@ -136,7 +150,7 @@ public class ArtEdit extends FragmentActivity {
 			@Override
 			public void onClick(View v) {
 				if (validateTexts()) {
-					//TODO submit to server
+					onSubmitArt();
 				}
 			}
 		});
@@ -156,6 +170,35 @@ public class ArtEdit extends FragmentActivity {
 		setupArtFields();
 		setupMiniMap();
 		setupMiniGallery();
+	}
+
+	protected void onSubmitArt() {
+		if (art == null) {
+			art = new Art();
+		}
+
+		art.title = tvName.getText().toString();
+		art.artist = new Artist(tvArtist.getText().toString());
+
+		Location location = ((MiniMapFragment) getSupportFragmentManager().findFragmentByTag(TAG_MINIMAP))
+				.getLocation();
+		if (location != null) {
+			art.latitude = location.getLatitude();
+			art.longitude = location.getLongitude();
+		}
+		art.category = tvCategory.getText().toString();
+		art.neighborhood = tvArea.getText().toString();
+		art.description = tvDescription.getText().toString();
+		art.locationDesc = tvDescription.getText().toString();
+		String ward = tvWard.getText().toString();
+		if (!TextUtils.isEmpty(ward)) {
+			art.ward = Integer.parseInt(ward);
+		}
+		String year = tvYear.getText().toString();
+		if (!TextUtils.isEmpty(year)) {
+			art.year = Integer.parseInt(year);
+		}
+		Utils.d(TAG, "Sumbitting new art art " + art);
 	}
 
 	private boolean validateTexts() {
@@ -189,7 +232,7 @@ public class ArtEdit extends FragmentActivity {
 			}
 		});
 
-		EditText tvYear = (EditText) findViewById(R.id.art_edit_input_year);
+		tvYear = (EditText) findViewById(R.id.art_edit_input_year);
 		if (art.year > 0) {
 			tvYear.setText(String.valueOf(art.year));
 		}
@@ -209,13 +252,13 @@ public class ArtEdit extends FragmentActivity {
 			}
 		});
 
-		EditText tvDesc = (EditText) findViewById(R.id.art_edit_input_description);
+		tvDescription = (EditText) findViewById(R.id.art_edit_input_description);
 		if (!TextUtils.isEmpty(art.description)) {
-			tvDesc.setText(Html.fromHtml(art.description)); // for special UTF-8 characters
+			tvDescription.setText(Html.fromHtml(art.description)); // for special UTF-8 characters
 		}
-		Utils.setHintSpan(tvDesc, tvDesc.getHint());
+		Utils.setHintSpan(tvDescription, tvDescription.getHint());
 
-		EditText tvWard = (EditText) findViewById(R.id.art_edit_input_ward);
+		tvWard = (EditText) findViewById(R.id.art_edit_input_ward);
 		if (art.ward > 0) {
 			tvWard.setText(String.valueOf(art.ward));
 		}
@@ -235,11 +278,11 @@ public class ArtEdit extends FragmentActivity {
 			}
 		});
 
-		EditText tvLocDesc = (EditText) findViewById(R.id.art_edit_input_location_description);
+		tvLocationDescription = (EditText) findViewById(R.id.art_edit_input_location_description);
 		if (!TextUtils.isEmpty(art.locationDesc)) {
-			tvLocDesc.setText(Html.fromHtml(art.locationDesc));
+			tvLocationDescription.setText(Html.fromHtml(art.locationDesc));
 		}
-		Utils.setHintSpan(tvLocDesc, tvLocDesc.getHint());
+		Utils.setHintSpan(tvLocationDescription, tvLocationDescription.getHint());
 	}
 
 	private void setupMiniGallery() {
@@ -252,7 +295,7 @@ public class ArtEdit extends FragmentActivity {
 		f.setArguments(args);
 
 		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f).commit();
+		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f, TAG_MINI_GALLERY).commit();
 		Utils.d(TAG, "setupMiniGallery(): args=" + args);
 	}
 
@@ -264,7 +307,7 @@ public class ArtEdit extends FragmentActivity {
 		f.setArguments(args);
 
 		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_map_placeholder, f).commit();
+		fm.beginTransaction().replace(R.id.mini_map_placeholder, f, TAG_MINIMAP).commit();
 	}
 
 	private void toggleLoading(boolean show) {
@@ -301,20 +344,20 @@ public class ArtEdit extends FragmentActivity {
 		}
 	};
 
-	private final LoaderCallbacks<Object> asyncLoader = new LoaderCallbacks<Object>() {
+	private final LoaderCallbacks<LoaderPayload> asyncLoader = new LoaderCallbacks<LoaderPayload>() {
 
 		@Override
-		public void onLoaderReset(Loader<Object> loader) {
+		public void onLoaderReset(Loader<LoaderPayload> loader) {
 			onAsyncLoaderReset(loader);
 		}
 
 		@Override
-		public void onLoadFinished(Loader<Object> loader, Object result) {
-			onAsyncLoadFinished(loader, result);
+		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
+			onAsyncLoadFinished(loader, payload);
 		}
 
 		@Override
-		public Loader<Object> onCreateLoader(int id, Bundle args) {
+		public Loader<LoaderPayload> onCreateLoader(int id, Bundle args) {
 			return onCreateAsyncLoader(id, args);
 		}
 	};
@@ -408,51 +451,78 @@ public class ArtEdit extends FragmentActivity {
 		}
 	}
 
-	private void onAsyncLoaderReset(Loader<Object> loader) {
+	private void onAsyncLoaderReset(Loader<LoaderPayload> loader) {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void onAsyncLoadFinished(Loader<Object> loader, Object result) {
+	private void onAsyncLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
 		switch (loader.getId()) {
 		case LOAD_CATEGORIES:
-			if (result != null) {
+			if (payload.getStatus() == LoaderPayload.RESULT_ERROR) {
 				Utils.showToast(this, R.string.load_categories_error);
 			}
 			break;
 		case LOAD_NEIGHBORHOODS:
-			if (result != null) {
+			if (payload.getStatus() == LoaderPayload.RESULT_ERROR) {
 				Utils.showToast(this, R.string.load_neighborhoods_error);
 			}
 			break;
+		case SUBMIT_ART:
+			if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+				String newSlug = (String) payload.getResult();
+				art.slug = newSlug;
+
+				if (!TextUtils.isEmpty(newSlug)) {
+					// upload pictures
+				}
+			}
+			else {
+				Utils.showToast(this, R.string.submit_art_failure);
+			}
 		}
 	}
 
-	private Loader<Object> onCreateAsyncLoader(int id, Bundle args) {
+	private Loader<LoaderPayload> onCreateAsyncLoader(int id, final Bundle args) {
 		switch (id) {
 		case LOAD_CATEGORIES:
-			return new AsyncLoader<Object>(this) {
+			return new AsyncLoader<LoaderPayload>(this) {
 				@Override
-				public Object loadInBackground() {
+				public LoaderPayload loadInBackground() {
+
 					try {
 						ServiceFactory.getArtService().getCategories();
-						return null;
+						return new LoaderPayload(LoaderPayload.RESULT_OK);
 					}
 					catch (ArtAroundException e) {
-						return e;
+						return new LoaderPayload(e);
 					}
 				}
 			};
 		case LOAD_NEIGHBORHOODS:
-			return new AsyncLoader<Object>(this) {
+			return new AsyncLoader<LoaderPayload>(this) {
 				@Override
-				public Object loadInBackground() {
+				public LoaderPayload loadInBackground() {
 					try {
 						ServiceFactory.getArtService().getNeighborhoods();
-						return null;
+						return new LoaderPayload(LoaderPayload.RESULT_OK);
 					}
 					catch (ArtAroundException e) {
-						return e;
+						return new LoaderPayload(e);
+					}
+				}
+			};
+		case SUBMIT_ART:
+			return new AsyncLoader<LoaderPayload>(this) {
+
+				@Override
+				public LoaderPayload loadInBackground() {
+					try {
+						return new LoaderPayload(ServiceFactory.getArtService().submitArt(
+								(Art) args.getSerializable(ARG_NEW_ART)));
+					}
+					catch (ArtAroundException e) {
+						return new LoaderPayload(e);
 					}
 				}
 			};

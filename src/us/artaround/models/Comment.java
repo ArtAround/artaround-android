@@ -10,11 +10,15 @@ public class Comment implements Serializable {
 	public String name;
 	public String text;
 	public String url;
+	public String email;
 	public Date createdAt;
 
 	@Override
 	public String toString() {
-		return "Comment [artSlug=" + artSlug + ", name=" + name + ", text=" + text + ", url=" + url
-				+ ", createdAt=" + createdAt + "]";
+		StringBuilder builder = new StringBuilder();
+		builder.append("Comment [artSlug=").append(artSlug).append(", name=").append(name).append(", text=")
+				.append(text).append(", url=").append(url).append(", email=").append(email).append(", createdAt=")
+				.append(createdAt).append("]");
+		return builder.toString();
 	}
 }

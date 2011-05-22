@@ -13,7 +13,11 @@ public class Artist implements Serializable {
 		this.name = name;
 	}
 
- 	@Override
+	public Artist(String name) {
+		this.name = name;
+	}
+
+	@Override
 	public String toString() {
 		return "Artist [name=" + name + "]";
 	}

@@ -25,8 +25,18 @@
 	<string
 		name="edit">Edit</string>
 	<string
-		name="submit_successful">The art has been submitted.\n Please refresh in a while to
-		retrieve it from server.</string>
+		name="sending">Sending...</string>
+	<string
+		name="submit_art_success">The art has been submitted and is awaiting moderation.</string>
+	<string
+		name="submit_art_failure">Due to an error, the art was not submitted.\n Please try again later.</string>
+	<string
+		name="submit_comment_success">Your comment has been submitted and is awaiting moderation.
+	</string>
+	<string
+		name="submit_comment_failure">Due to an error, your comment was not submitted.\n Please try
+		again later.</string>
+
 
 	<!-- Location -->
 	<string
@@ -52,7 +62,11 @@
 	<string
 		name="connection_failure_ok">WiFi Options</string>
 	<string
-		name="load_data_failure">Could not retrieve data from server.</string>
+		name="load_data_failure">Could not retrieve data from server.\n Please check your
+		connectivity.</string>
+	<string
+		name="upload_data_failure">Could not send data to server.\n Please check your connectivity.
+	</string>
 
 	<!-- Search -->
 	<string
@@ -127,6 +141,8 @@
 	<string
 		name="art_edit_label_minimap_loading">Updating your current location...</string>
 	<string
+		name="art_edit_label_minimap_coords">Your coordinates: </string>
+	<string
 		name="art_edit_hint_description">Enter a description of the piece of art...</string>
 	<string
 		name="art_edit_hint_location_description">Enter a description of the location...</string>
@@ -173,6 +189,10 @@
 		name="art_added_favorite">This art has been added to favorites.</string>
 	<string
 		name="art_removed_favorite">This art has been removed from favorites.</string>
+	<string
+		name="art_detail_hint_input_empty_title">Required Fields</string>
+	<string
+		name="art_detail_hint_input_empty_msg">Please fill in the fields before submitting.</string>
 
 	<!-- Art Detail Options Menu -->
 	<string
@@ -226,5 +246,5 @@
 		name="category_museum">Museum</string>
 	<string
 		name="category_market">Market</string>
-	
+
 </resources>

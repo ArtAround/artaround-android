@@ -542,9 +542,6 @@ public class BaseParser {
 			g.writeNumber(art.longitude);
 			g.writeEndArray();
 
-			g.writeStringField(CREATED_AT_KEY, art.createdAt);
-			g.writeStringField(UPDATED_AT_KEY, art.updatedAt);
-
 			g.writeEndObject();
 			g.flush();
 			g.close();

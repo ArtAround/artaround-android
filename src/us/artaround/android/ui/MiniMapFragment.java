@@ -20,6 +20,7 @@ import com.google.android.maps.GeoPoint;
 
 public class MiniMapFragment extends Fragment implements LocatorCallback, CurrentOverlayDragCallback {
 	private static final String TAG = "ArtAround.MiniMapFragment";
+	private static final String TAG_LOCATOR = "locator";
 
 	private static final int ZOOM_DEFAULT_LEVEL = 15;
 
@@ -68,7 +69,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		if (isEditMode) {
 			tvCoords = (TextView) view.findViewById(R.id.mini_map_coords);
 			tvCoords.setVisibility(View.VISIBLE);
-			view.findViewById(R.id.mini_map_label).setVisibility(View.VISIBLE);
+			//view.findViewById(R.id.mini_map_label).setVisibility(View.VISIBLE);
 		}
 		return view;
 	}
@@ -107,7 +108,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 			miniMap.invalidate();
 
 			if (tvCoords != null) {
-				tvCoords.setText(Utils.formatCoords(location));
+				tvCoords.setText(getString(R.string.art_edit_label_minimap_coords) + " " + Utils.formatCoords(location));
 			}
 		}
 	}
@@ -129,12 +130,12 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		args.putBoolean(LocatorFragment.ARG_ADDRESS_UPDATE, false);
 
 		FragmentManager fm = getFragmentManager();
-		LocatorFragment f = (LocatorFragment) fm.findFragmentByTag("locator");
+		LocatorFragment f = (LocatorFragment) fm.findFragmentByTag(TAG_LOCATOR);
 		if (f == null) {
 			f = new LocatorFragment(this);
 			f.setArguments(args);
 			//f.setTargetFragment(this, 0);
-			fm.beginTransaction().add(f, "locator").commit();
+			fm.beginTransaction().add(f, TAG_LOCATOR).commit();
 		}
 	}
 
@@ -163,7 +164,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		if (errorCode == LocatorFragment.ERROR_NO_PROVIDER) {
 			FragmentManager fm = getFragmentManager();
 
-			if (fm == null) return; //FIXME wtf?! fm is null?!
+			if (fm == null) return; //FIXME wtf?! why is it null?!
 
 			Fragment f = fm.findFragmentByTag("dlgLocation");
 			if (f != null) {
@@ -176,6 +177,10 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
 		}
+	}
+
+	public Location getLocation() {
+		return location;
 	}
 
 	public static class LocationSettingsDialog extends DialogFragment {
