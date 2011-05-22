@@ -648,11 +648,23 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		switch (requestCode) {
 		case REQUEST_FILTER:
 			filters = (HashMap<Integer, ArrayList<String>>) data.getSerializableExtra(EXTRA_FILTERS);
-			filterArt(allArt);
-			displayArt(filteredArt);
 
-			filtersTitle.setText(R.string.filtered);
-			filtersHeading.setVisibility(View.VISIBLE);
+			boolean isEmpty = true;
+			for (int type : filters.keySet()) {
+				if (!filters.get(type).isEmpty()) {
+					isEmpty = false;
+					break;
+				}
+			}
+
+			if (!isEmpty) {
+				filterArt(allArt);
+				displayArt(filteredArt);
+
+				filtersTitle.setText(R.string.filtered);
+				filtersHeading.setVisibility(View.VISIBLE);
+			}
+
 			break;
 		}
 	}

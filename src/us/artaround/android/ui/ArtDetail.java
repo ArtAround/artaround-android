@@ -5,6 +5,7 @@ import java.util.List;
 
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
+import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundProvider;
@@ -48,10 +49,12 @@ public class ArtDetail extends FragmentActivity {
 	private static final String SAVE_COMMENTS_COUNT = "comments_count";
 
 	private static final String ARG_ART_SLUG = "art_slug";
+	private static final String ARG_NEW_COMMENT = "new_comment";
 
 	private static final int LOAD_FAVORITE = 0;
 	private static final int LOAD_COMMENTS = 1;
 	private static final int MAX_COMMENTS = 3;
+	private static final int SUBMIT_COMMENT = 4;
 
 	private static final String PAGE_BASE_URL = "http://theartaround.us/arts/";
 
@@ -62,6 +65,10 @@ public class ArtDetail extends FragmentActivity {
 	private TextView tvComments;
 	private TextView tvViewAll;
 	private ImageButton btnFavorite;
+
+	private EditText edCommentName;
+	private EditText edCommentUrl;
+	private EditText edCommentText;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -138,14 +145,34 @@ public class ArtDetail extends FragmentActivity {
 			}
 		});
 
-		Button btnAdd = (Button) findViewById(R.id.art_detail_add);
-		btnAdd.setOnClickListener(new View.OnClickListener() {
+		Button btnSubmit = (Button) findViewById(R.id.art_detail_comment);
+		btnSubmit.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
-				startActivity(iEdit);
+				onSubmitComment();
 			}
 		});
+	}
+
+	protected void onSubmitComment() {
+		Comment comment = new Comment();
+		comment.name = edCommentName.getText().toString();
+		comment.url = edCommentUrl.getText().toString();
+		comment.text = edCommentText.getText().toString();
+
+		if (TextUtils.isEmpty(comment.name) && TextUtils.isEmpty(comment.url) && TextUtils.isEmpty(comment.text))
+			return;
+
+		LoaderManager lm = getSupportLoaderManager();
+		Bundle args = new Bundle();
+		args.putSerializable(ARG_NEW_COMMENT, comment);
+
+		if (lm.getLoader(SUBMIT_COMMENT) == null) {
+			lm.initLoader(SUBMIT_COMMENT, args, asyncCallback);
+		}
+		else {
+			lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
+		}
 	}
 
 	private void setupActionbar() {
@@ -294,8 +321,12 @@ public class ArtDetail extends FragmentActivity {
 		TextView tvLeaveComment = (TextView) findViewById(R.id.art_detail_leave_comment_heading);
 		tvLeaveComment.setTypeface(tf);
 
-		EditText editMessage = (EditText) findViewById(R.id.art_detail_input_message);
-		Utils.setHintSpan(editMessage, editMessage.getHint());
+		edCommentName = (EditText) findViewById(R.id.art_detail_input_name);
+
+		edCommentUrl = (EditText) findViewById(R.id.art_detail_input_url);
+
+		edCommentText = (EditText) findViewById(R.id.art_detail_input_message);
+		Utils.setHintSpan(edCommentText, edCommentText.getHint());
 	}
 
 	private void setupMiniGallery() {
@@ -328,58 +359,80 @@ public class ArtDetail extends FragmentActivity {
 		}
 	}
 
-	private final LoaderCallbacks<List<Comment>> asyncCallback = new LoaderCallbacks<List<Comment>>() {
+	private final LoaderCallbacks<LoaderPayload> asyncCallback = new LoaderCallbacks<LoaderPayload>() {
 
 		@Override
-		public void onLoaderReset(Loader<List<Comment>> loader) {}
+		public void onLoaderReset(Loader<LoaderPayload> loader) {}
 
+		@SuppressWarnings("unchecked")
 		@Override
-		public void onLoadFinished(Loader<List<Comment>> loader, List<Comment> result) {
+		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
 			switch (loader.getId()) {
 			case LOAD_COMMENTS:
-				Utils.d(TAG, "onLoadFinished(): result=" + result);
+				Utils.d(TAG, "onLoadFinished(): result=" + payload);
 
-				if (result == null || result.isEmpty()) {
-					findViewById(R.id.art_detail_comments).setVisibility(View.GONE);
+				if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+					List<Comment> result = (List<Comment>) payload.getResult();
 
-					commentsCount = 0;
+					if (result == null || result.isEmpty()) {
+						findViewById(R.id.art_detail_comments).setVisibility(View.GONE);
+
+						commentsCount = 0;
+						tvComments.setText(tvComments.getText() + " (" + commentsCount + ")");
+						return;
+					}
+
+					commentsCount = result.size();
 					tvComments.setText(tvComments.getText() + " (" + commentsCount + ")");
-					return;
-				}
 
-				commentsCount = result.size();
-				tvComments.setText(tvComments.getText() + " (" + commentsCount + ")");
+					int displayCount = result.size() < MAX_COMMENTS ? result.size() : MAX_COMMENTS;
+					if (displayCount < commentsCount) {
+						tvViewAll.setVisibility(View.VISIBLE);
+					}
 
-				int displayCount = result.size() < MAX_COMMENTS ? result.size() : MAX_COMMENTS;
-				if (displayCount < commentsCount) {
-					tvViewAll.setVisibility(View.VISIBLE);
+					LinearLayout parent = (LinearLayout) findViewById(R.id.art_detail_comments);
+					for (int i = 0; i < displayCount; i++) {
+						Comment c = result.get(i);
+						c.artSlug = art.slug;
+						comments.add(c);
+						populateComment(parent, i, c);
+					}
 				}
-
-				LinearLayout parent = (LinearLayout) findViewById(R.id.art_detail_comments);
-				for (int i = 0; i < displayCount; i++) {
-					Comment c = result.get(i);
-					c.artSlug = art.slug;
-					comments.add(c);
-					populateComment(parent, i, c);
-				}
+				break;
+			case SUBMIT_COMMENT:
 				break;
 			}
 		}
 
 		@Override
-		public Loader<List<Comment>> onCreateLoader(int id, final Bundle args) {
+		public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
 			switch (id) {
 			case LOAD_COMMENTS:
-				return new AsyncLoader<List<Comment>>(ArtDetail.this) {
+				return new AsyncLoader<LoaderPayload>(ArtDetail.this) {
 					@Override
-					public List<Comment> loadInBackground() {
+					public LoaderPayload loadInBackground() {
 						try {
-							return ServiceFactory.getArtService().getComments(args.getString(ARG_ART_SLUG));
+							return new LoaderPayload(ServiceFactory.getArtService().getComments(
+									args.getString(ARG_ART_SLUG)));
 						}
 						catch (ArtAroundException e) {
-							return null;
+							return new LoaderPayload(e);
 						}
 					}
+				};
+			case SUBMIT_COMMENT:
+				return new AsyncLoader<LoaderPayload>(ArtDetail.this) {
+					@Override
+					public LoaderPayload loadInBackground() {
+						Comment comment = (Comment) args.getSerializable(ARG_NEW_COMMENT);
+						try {
+							return new LoaderPayload(ServiceFactory.getArtService().submitComment(art.slug, comment));
+						}
+						catch (ArtAroundException e) {
+							return new LoaderPayload(e);
+						}
+					}
+
 				};
 			default:
 				return null;
@@ -441,7 +494,7 @@ public class ArtDetail extends FragmentActivity {
 		params.topMargin = 10;
 		view.setLayoutParams(params);
 
-		String username = c.username;
+		String username = c.name;
 		if (!TextUtils.isEmpty(c.url)) {
 			((TextView) view.findViewById(R.id.comment_url)).setText(c.url);
 			if (username != null) username += " | ";
@@ -451,12 +504,12 @@ public class ArtDetail extends FragmentActivity {
 			((TextView) view.findViewById(R.id.comment_username)).setText(username);
 		}
 
-		if (c.date != null) {
-			((TextView) view.findViewById(R.id.comment_date)).setText(Utils.textDateFormatter.format(c.date));
+		if (c.createdAt != null) {
+			((TextView) view.findViewById(R.id.comment_date)).setText(Utils.textDateFormatter.format(c.createdAt));
 		}
 
-		if (!TextUtils.isEmpty(c.message)) {
-			((TextView) view.findViewById(R.id.comment_message)).setText(c.message);
+		if (!TextUtils.isEmpty(c.text)) {
+			((TextView) view.findViewById(R.id.comment_message)).setText(c.text);
 		}
 
 		parent.addView(view);

@@ -7,14 +7,14 @@ public class Comment implements Serializable {
 	private static final long serialVersionUID = 7985114174101659683L;
 
 	public String artSlug;
-	public String username;
-	public String message;
+	public String name;
+	public String text;
 	public String url;
-	public Date date;
+	public Date createdAt;
 
 	@Override
 	public String toString() {
-		return "Comment [artSlug=" + artSlug + ", username=" + username + ", text=" + message + ", url=" + url
-				+ ", createdAt=" + date + "]";
+		return "Comment [artSlug=" + artSlug + ", name=" + name + ", text=" + text + ", url=" + url
+				+ ", createdAt=" + createdAt + "]";
 	}
 }

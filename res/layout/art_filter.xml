@@ -1,52 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:layout_gravity="center"
-	android:gravity="center"
-	android:orientation="vertical">
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content">
 
-	<include
-		layout="@layout/art_filter_title" />
+	<TextView
+		android:id="@+id/window_title"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentTop="true"
+		style="@style/ArtFilterTitle" />
 
 	<LinearLayout
+		android:id="@+id/dropdown"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:orientation="vertical"
-		android:padding="15dp">
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/window_title"
+		android:layout_margin="10dp">
 
-		<LinearLayout
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="10dp">
+		<us.artaround.android.ui.InstantAutoComplete
+			android:id="@+id/filter_type"
+			android:hint="@string/art_filter_by_category"
+			style="@style/ArtFilterInputDropdown"/>
 
-			<us.artaround.android.ui.InstantAutoComplete
-				style="@style/ArtFilterInputDropdown"
-				android:id="@+id/filter_type"
-				android:hint="@string/art_filter_by_category" />
-
-			<ImageButton
-				style="@style/AutocompleteDropdown.Filter"
-				android:id="@+id/dropdown_filter_type" />
-		</LinearLayout>
-
-		<EditText
-			style="@style/ArtFilterInputSearch"
-			android:id="@+id/filter_search"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="10dp"
-			android:gravity="left|center"
-			android:visibility="gone" />
-
-		<fragment
-			class="us.artaround.android.ui.ArtFilterListFragment"
-			android:id="@+id/filters"
-			android:layout_width="fill_parent"
-			android:layout_height="fill_parent" />
+		<ImageButton
+			android:id="@+id/dropdown_filter_type"
+			style="@style/AutocompleteDropdown.Filter" />
 	</LinearLayout>
 
-</LinearLayout>
+	<EditText
+		android:id="@+id/filter_search"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/dropdown"
+		android:layout_alignLeft="@+id/dropdown"
+		android:layout_marginBottom="10dp"
+		android:layout_marginRight="10dp"
+		android:visibility="gone" 
+		style="@style/ArtFilterInputSearch"/>
+
+	<fragment
+		class="us.artaround.android.ui.ArtFilterListFragment"
+		android:id="@+id/filters"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/filter_search"
+		android:layout_marginLeft="10dp"
+		android:layout_marginRight="10dp" />
+
+</RelativeLayout>
 

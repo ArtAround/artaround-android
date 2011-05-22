@@ -37,8 +37,9 @@ public class BaseParser {
 	public static final int TYPE_CATEGORIES = 2;
 	public static final int TYPE_NEIGHBORHOODS = 3;
 	public static final int TYPE_COMMENTS = 4;
-	public static final int TYPE_STRING_RESPONSE = 5;
+	public static final int TYPE_COMMENT_RESPONSE = 5;
 	public static final int TYPE_NONE = 6;
+
 
 	private static final HashMap<String, Artist> temp = new HashMap<String, Artist>();
 	
@@ -63,8 +64,8 @@ public class BaseParser {
 		case TYPE_COMMENTS:
 			parseComments(data);
 			break;
-		case TYPE_STRING_RESPONSE:
-			parseStringResponse(data);
+		case TYPE_COMMENT_RESPONSE:
+			parseStringResponse(data, SUCCESS_KEY);
 			break;
 		case TYPE_NONE:
 		default:
@@ -427,16 +428,16 @@ public class BaseParser {
 									jp.nextValue();
 
 									if (NAME_KEY.equalsIgnoreCase(commKey)) {
-										comment.username = jp.getText().trim();
+										comment.name = jp.getText().trim();
 									}
 									else if (TEXT_KEY.equalsIgnoreCase(commKey)) {
-										comment.message = jp.getText().trim();
+										comment.text = jp.getText().trim();
 									}
 									else if (CREATED_AT_KEY.equalsIgnoreCase(commKey)) {
 										String date = jp.getText().trim();
 										try {
 											if (date != null) {
-												comment.date = Utils.sqlDateFormatter.parse(date);
+												comment.createdAt = Utils.sqlDateFormatter.parse(date);
 											}
 										}
 										catch (ParseException e) {
@@ -481,7 +482,7 @@ public class BaseParser {
 		}
 	}
 
-	private static void parseStringResponse(StreamData data) {
+	private static void parseStringResponse(StreamData data, String keyName) {
 		JsonFactory f = new JsonFactory();
 		JsonParser jp = null;
 
@@ -499,7 +500,7 @@ public class BaseParser {
 				String key = jp.getCurrentName();
 				jp.nextValue();
 
-				if (SLUG_KEY.equalsIgnoreCase(key)) {
+				if (keyName.equalsIgnoreCase(key)) {
 					data.setAuxData(jp.getText());
 				} else {
 					jp.skipChildren();
@@ -559,6 +560,31 @@ public class BaseParser {
 		}
 	}
 
+	public static String writeComment(Comment comment) {
+		JsonFactory f = new JsonFactory();
+		StringWriter writer = new StringWriter();
+		try {
+			JsonGenerator g = f.createJsonGenerator(writer);
+			g.writeStartObject();
+			g.writeStringField(NAME_KEY, comment.name);
+			g.writeStringField(TEXT_KEY, comment.text);
+			g.writeStringField(URL_KEY, comment.url);
+			g.writeEndObject();
+
+			g.flush();
+			g.close();
+
+			return writer.toString();
+		}
+		catch (IOException e) {
+			Log.w(TAG, "writeArt(): exception", e);
+			return null;
+		}
+		finally {
+			closeWriter(writer);
+		}
+	}
+
 	private static final void closeWriter(Writer wr) {
 		try {
 			wr.close();
@@ -592,4 +618,5 @@ public class BaseParser {
 	private static final String NAME_KEY = "name";
 	private static final String URL_KEY = "url";
 	private static final String TEXT_KEY = "text";
+	private static final String SUCCESS_KEY = "success";
 }

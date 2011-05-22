@@ -21,7 +21,8 @@ public class ArtService extends BaseService {
 
 	private static final String ENDPOINT_ARTS = "arts";
 	private static final String ENDPOINT_CATEGORIES = "categories";
-	private final String ENDPOINT_NEIGHBORHOODS = "neighborhoods";
+	private static final String ENDPOINT_NEIGHBORHOODS = "neighborhoods";
+	private static final String ENDPOINT_COMMENTS = "/comments";
 
 	private final String PARAM_PER_PAGE = "per_page=";
 	private final String PARAM_PAGE = "page=";
@@ -108,11 +109,25 @@ public class ArtService extends BaseService {
 	public String submitArt(Art art) throws ArtAroundException {
 		String json = BaseParser.writeArt(art);
 		Utils.d(Utils.TAG, "Sending new art json " + json);
-		StreamData data = new StreamData(BaseParser.TYPE_STRING_RESPONSE);
+
+		StreamData data = new StreamData(BaseParser.TYPE_COMMENT_RESPONSE);
 		postMethod(data, ENDPOINT_ARTS + FORMAT, json);
 		Object[] obj = data.getAuxData();
 		if (obj != null && obj.length > 0) {
 			return (String) obj[0];
+		}
+		return null;
+	}
+
+	public Boolean submitComment(String artSlug, Comment comment) throws ArtAroundException {
+		String json = BaseParser.writeComment(comment);
+		Utils.d(Utils.TAG, "Sending new comment json " + json);
+
+		StreamData data = new StreamData(BaseParser.TYPE_COMMENT_RESPONSE);
+		postMethod(data, ENDPOINT_ARTS + "/" + artSlug + ENDPOINT_COMMENTS + FORMAT, json);
+		Object[] obj = data.getAuxData();
+		if (obj != null && obj.length > 0) {
+			return Boolean.valueOf((String) obj[0]);
 		}
 		return null;
 	}

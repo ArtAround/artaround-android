@@ -216,4 +216,15 @@
 		name="art_filter_group_venues">All Venues</string>
 	<string
 		name="art_filter_group_public">All Public Art</string>
+	<string
+		name="all_venues">All Venues</string>
+	<string
+		name="all_public">All Public</string>
+	<string
+		name="category_gallery">Gallery</string>
+	<string
+		name="category_museum">Museum</string>
+	<string
+		name="category_market">Market</string>
+	
 </resources>

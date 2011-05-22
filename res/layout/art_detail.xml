@@ -275,10 +275,10 @@
 				<TableRow
 					style="@style/ArtDetailTableRow">
 
-<!-- 					<RelativeLayout -->
-<!-- 						android:layout_width="fill_parent" -->
-<!-- 						android:layout_height="wrap_content" -->
-<!-- 						android:layout_span="2"> -->
+					<RelativeLayout
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:layout_span="2">
 
 						<EditText
 							style="@style/ArtDetailInput.Textarea"
@@ -286,12 +286,13 @@
 							android:hint="@string/art_detail_input_hint"
 							android:layout_span="2" />
 
-<!-- 						<Button -->
-<!-- 							style="@style/ArtDetailButton" -->
-<!-- 							android:text="@string/comment" -->
-<!-- 							android:layout_alignParentRight="true" -->
-<!-- 							android:layout_alignBottom="@+id/art_detail_input_message" /> -->
-<!-- 					</RelativeLayout> -->
+						<Button
+							android:id="@+id/art_detail_comment"
+							style="@style/ArtDetailButton"
+							android:text="@string/comment"
+							android:layout_alignParentRight="true"
+							android:layout_alignBottom="@+id/art_detail_input_message" />
+					</RelativeLayout>
 
 				</TableRow>
 
@@ -305,19 +306,13 @@
 				android:id="@+id/art_detail_edit"
 				style="@style/ArtDetailButton"
 				android:text="@string/edit"
-				android:layout_alignParentLeft="true"/>
+				android:layout_alignParentRight="true"/>
 				
-			<Button
-				android:id="@+id/art_detail_add"
-				style="@style/ArtDetailButton"
-				android:text="@string/add_new_art"
-				android:layout_centerHorizontal="true"/>
-				
-			<Button
-				android:id="@+id/art_detail_submit"
-				style="@style/ArtDetailButton"
-				android:text="@string/submit"
-				android:layout_alignParentRight="true"/>		
+<!-- 			<Button -->
+<!-- 				android:id="@+id/art_detail_submit" -->
+<!-- 				style="@style/ArtDetailButton" -->
+<!-- 				android:text="@string/submit" -->
+<!-- 				android:layout_alignParentRight="true"/>		 -->
 		</RelativeLayout>
 
 	</LinearLayout>

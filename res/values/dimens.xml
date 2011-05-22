@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<dimen
-		name="ActionbarTitle">18sp</dimen>
-
-	<dimen
-		name="ArtEditLabel">17sp</dimen>
-	<dimen
-		name="ArtEditInput">17sp</dimen>
-	<dimen
 		name="MinimapHeight">200dp</dimen>
 	<dimen
 		name="GalleryItemWidth">200dp</dimen>
@@ -18,5 +11,10 @@
 		name="BubbleItemWidth">100dp</dimen>
 	<dimen
 		name="BubbleItemHeight">100dp</dimen>
+		
+	<dimen
+		name="TextSizeNormal">14dp</dimen>
+	<dimen
+		name="TextSizeTitle">18dp</dimen>
 
 </resources>
