@@ -22,13 +22,12 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 
 public class LocatorFragment extends Fragment implements LoaderCallbacks<String> {
-	private static final String TAG = "ArtAround.LocatorFragment";
+	private static final String TAG = "Location";
 
 	public static final String ARG_ADDRESS_UPDATE = "address_update";
 	private static final String ARG_LOCATION = "location";
@@ -128,13 +127,7 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 		Bundle args = new Bundle();
 		args.putParcelable(ARG_LOCATION, location);
 
-		LoaderManager lm = getLoaderManager();
-		if (lm.getLoader(0) == null) {
-			lm.initLoader(0, args, this);
-		}
-		else {
-			lm.restartLoader(0, args, this);
-		}
+		getLoaderManager().restartLoader(0, args, this);
 	}
 
 	public static interface LocatorCallback {

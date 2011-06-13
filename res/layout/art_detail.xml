@@ -60,24 +60,14 @@
 			</LinearLayout>
 
 			<!-- Artist, Year -->
-			<LinearLayout
+			<TextView
+				style="@style/ArtDetailText"
+				android:id="@+id/art_detail_artist"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
 				android:layout_marginTop="10dp"
 				android:layout_marginLeft="9dp"
-				android:layout_marginRight="9dp">
-				<TextView
-					style="@style/ArtDetailText"
-					android:id="@+id/art_detail_artist"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content" />
-
-				<TextView
-					style="@style/ArtDetailText.Bold"
-					android:id="@+id/art_detail_year"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content" />
-			</LinearLayout>
+				android:layout_marginRight="9dp" />
 
 			<!-- Category, Description -->
 			<TextView
@@ -305,13 +295,13 @@
 
 		<RelativeLayout
 			style="@style/Bottombar">
-			
+
 			<ImageView
 				style="@style/BottombarLoaderDark"
 				android:id="@+id/bottombar_loader"
 				android:layout_alignParentLeft="true"
-				android:layout_centerVertical="true"/>
-				
+				android:layout_centerVertical="true" />
+
 			<Button
 				android:id="@+id/art_detail_edit"
 				style="@style/ArtDetailButton"

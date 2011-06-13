@@ -15,7 +15,6 @@ import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -24,12 +23,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.Gallery;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean> {
-	private static final String TAG = "ArtAround.GalleryFragment";
+	//private static final String TAG = "GalleryFragment";
 
 	public static final String ARG_PHOTOS = "photos";
 	public static final String ARG_PHOTO = "photo";
@@ -40,8 +38,8 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	private Animation rotateAnim;
 	private ImageView imgLoader;
-	private ImageButton btnComment;
-	private ImageButton btnAddImg;
+	//private ImageButton btnComment;
+	//private ImageButton btnAddImg;
 	private TextView tvTitle;
 
 	private String title;
@@ -53,7 +51,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		Utils.d(TAG, "onAttach()");
+		Utils.d(Utils.TAG, "onAttach()");
 
 		setRetainInstance(true);
 
@@ -76,31 +74,31 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		rotateAnim = Utils.getRoateAnim(getActivity());
 		imgLoader = (ImageView) view.findViewById(R.id.img_loader);
 
-		btnComment = (ImageButton) view.findViewById(R.id.btn_comment);
-		btnComment.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-
-		btnAddImg = (ImageButton) view.findViewById(R.id.btn_add_image);
-		btnAddImg.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-
-			}
-
-		});
+		//		btnComment = (ImageButton) view.findViewById(R.id.btn_comment);
+		//		btnComment.setOnClickListener(new View.OnClickListener() {
+		//			@Override
+		//			public void onClick(View v) {
+		//				// TODO Auto-generated method stub
+		//
+		//			}
+		//		});
+		//
+		//		btnAddImg = (ImageButton) view.findViewById(R.id.btn_add_image);
+		//		btnAddImg.setOnClickListener(new View.OnClickListener() {
+		//			@Override
+		//			public void onClick(View v) {
+		//				// TODO Auto-generated method stub
+		//
+		//			}
+		//
+		//		});
 		return view;
 	}
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		Utils.d(TAG, "onActivityCreated()");
+		Utils.d(Utils.TAG, "onActivityCreated()");
 
 		setupState();
 	}
@@ -108,7 +106,6 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	private void setupState() {
 		if (photos == null || photos.isEmpty()) return;
 
-		LoaderManager lm = getLoaderManager();
 		Bundle args = new Bundle();
 
 		int size = photos.size();
@@ -119,18 +116,13 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 			toLoadCount++;
 			args.putString(ARG_PHOTO, id);
 			int hashCode = id.hashCode();
-			if (lm.getLoader(hashCode) == null) {
-				lm.initLoader(hashCode, args, this);
-			}
-			else {
-				lm.restartLoader(hashCode, args, this);
-			}
+			getLoaderManager().restartLoader(hashCode, args, this);
 		}
 	}
 
 	@Override
 	public Loader<Boolean> onCreateLoader(int id, final Bundle args) {
-		Utils.d(TAG, "onCreateLoader(): id=" + id + ", args=" + args);
+		Utils.d(Utils.TAG, "onCreateLoader(): id=" + id + ", args=" + args);
 
 		loadedCount.incrementAndGet();
 		toggleLoading(true);
@@ -154,7 +146,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 					}
 				}
 				catch (ArtAroundException e) {
-					Utils.w(TAG, "loadInBackground(): exc=" + e);
+					Utils.w(Utils.TAG, "loadInBackground(): exc=" + e);
 				}
 				return false;
 			}
@@ -163,7 +155,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	@Override
 	public void onLoadFinished(Loader<Boolean> loader, Boolean result) {
-		Utils.d(TAG, "onLoadFinished(): id=" + loader.getId());
+		Utils.d(Utils.TAG, "onLoadFinished(): id=" + loader.getId());
 		if (result == null || result == false) return;
 		adapter.notifyDataSetChanged();
 
@@ -174,7 +166,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	@Override
 	public void onLoaderReset(Loader<Boolean> loader) {
-		Utils.d(TAG, "onLoaderReset(): id=" + loader.getId());
+		Utils.d(Utils.TAG, "onLoaderReset(): id=" + loader.getId());
 	}
 
 	private void toggleLoading(boolean show) {

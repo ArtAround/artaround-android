@@ -2,11 +2,8 @@ package us.artaround.android.ui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import us.artaround.R;
-import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
@@ -14,6 +11,7 @@ import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -26,11 +24,9 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListAdapter;
@@ -42,11 +38,12 @@ public class ArtFilterListFragment extends ListFragment {
 	private static final String SAVE_FILTER_INDEX = "index";
 	private static final String QUERY = "query";
 
-	private String[] allVenues;
-
 	private HashMap<Integer, ArrayList<String>> filters;
+	private ArrayList<String> categories;
 	private int filterIndex;
 	private int currentInputLength;
+	private String allPublic;
+	private String allVenues;
 
 	//FIXME fetch data from server if it's not in the database
 
@@ -68,9 +65,6 @@ public class ArtFilterListFragment extends ListFragment {
 		super.onActivityCreated(savedInstanceState);
 		setRetainInstance(true);
 
-		allVenues = new String[] { getString(R.string.category_gallery), getString(R.string.category_museum),
-				getString(R.string.category_market) };
-
 		InstantAutoComplete tvType = null;
 
 		if (savedInstanceState != null) {
@@ -86,6 +80,9 @@ public class ArtFilterListFragment extends ListFragment {
 				filters.put(i, new ArrayList<String>());
 			}
 		}
+		categories = new ArrayList<String>();
+		allPublic = getString(R.string.all_public);
+		allVenues = getString(R.string.all_venues);
 
 		final EditText tvSearch = (EditText) getActivity().findViewById(R.id.filter_search);
 		tvSearch.addTextChangedListener(new TextWatcher() {
@@ -97,13 +94,7 @@ public class ArtFilterListFragment extends ListFragment {
 					Bundle args = new Bundle();
 					args.putString(QUERY, s.toString().toLowerCase());
 
-					LoaderManager lm = getLoaderManager();
-					if (lm.getLoader(filterIndex) == null) {
-						lm.initLoader(filterIndex, args, cursorCallbacks);
-					}
-					else {
-						lm.restartLoader(filterIndex, args, cursorCallbacks);
-					}
+					getLoaderManager().restartLoader(filterIndex, args, cursorCallbacks);
 				}
 			}
 
@@ -124,13 +115,7 @@ public class ArtFilterListFragment extends ListFragment {
 				filterIndex = position;
 
 				setListAdapter(createAdapter(position));
-				LoaderManager lm = getLoaderManager();
-				if (lm.getLoader(position) == null) {
-					lm.initLoader(position, null, cursorCallbacks);
-				}
-				else {
-					lm.restartLoader(position, null, cursorCallbacks);
-				}
+				getLoaderManager().restartLoader(position, null, cursorCallbacks);
 
 				tvSearch.setVisibility(filterIndex != ArtFilter.TYPE_CATEGORY ? View.VISIBLE : View.GONE);
 				tvSearch.getText().clear();
@@ -140,7 +125,7 @@ public class ArtFilterListFragment extends ListFragment {
 		setListAdapter(createAdapter(filterIndex));
 		getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
-		getLoaderManager().initLoader(filterIndex, null, cursorCallbacks);
+		getLoaderManager().restartLoader(filterIndex, null, cursorCallbacks);
 	}
 
 	private ListAdapter createAdapter(final int position) {
@@ -148,14 +133,7 @@ public class ArtFilterListFragment extends ListFragment {
 
 		switch (position) {
 		case ArtFilter.TYPE_CATEGORY:
-			// create our list and custom adapter  
-			MyAdapterWithHeaders adapter1 = new MyAdapterWithHeaders();
-			adapter1.addSection(getString(R.string.all_venues), new ArrayAdapter<String>(getActivity(),
-					R.layout.art_filter_item, allVenues));
-
-			adapter1.addSection(getString(R.string.all_public), new MySimpleCursorAdapter(new String[] {
-					Categories._ID, Categories.NAME }, new int[] { R.id.checkbox }));
-			return adapter1;
+			return new MyArrayAdapter(getActivity(), R.layout.art_filter_item, categories);
 
 		case ArtFilter.TYPE_NEIGHBORHOOD:
 			adapter = new MySimpleCursorAdapter(new String[] { Neighborhoods._ID, Neighborhoods.NAME },
@@ -197,15 +175,9 @@ public class ArtFilterListFragment extends ListFragment {
 					s.append(" AND ");
 				}
 				s.append(Categories.NAME).append(" NOT IN (");
-				boolean first = true;
-				for (int i = 0; i < allVenues.length; i++) {
-					if (first)
-						first = false;
-					else
-						s.append(", ");
-					s.append("'").append(allVenues[i]).append("'");
-				}
-				s.append(")");
+				s.append("'").append(getString(R.string.category_gallery)).append("', ");
+				s.append("'").append(getString(R.string.category_market)).append("', ");
+				s.append("'").append(getString(R.string.category_museum)).append("')");
 				selection = s.toString();
 
 				return new CursorLoader(getActivity(), Categories.CONTENT_URI, new String[] { Categories._ID,
@@ -236,15 +208,24 @@ public class ArtFilterListFragment extends ListFragment {
 			if (adapter instanceof MySimpleCursorAdapter) {
 				((SimpleCursorAdapter) adapter).swapCursor(cursor);
 			}
-			else if (adapter instanceof MyAdapterWithHeaders) {
-				MyAdapterWithHeaders adapter1 = (MyAdapterWithHeaders) adapter;
-				for (Object section : adapter1.sections.keySet()) {
-					Adapter a = adapter1.sections.get(section);
-					if (a instanceof MySimpleCursorAdapter) {
-						((MySimpleCursorAdapter) a).swapCursor(cursor);
-						adapter1.notifyDataSetChanged();
+			else if (adapter instanceof MyArrayAdapter) {
+
+				if (cursor != null && cursor.moveToFirst()) {
+					categories.clear();
+					categories.add(allVenues);
+					categories.add(getString(R.string.category_gallery));
+					categories.add(getString(R.string.category_market));
+					categories.add(getString(R.string.category_museum));
+					categories.add(allPublic);
+
+					int count = cursor.getCount();
+					for (int i = 0; i < count; i++) {
+						categories.add(cursor.getString(cursor.getColumnIndex(Categories.NAME)));
+						cursor.moveToNext();
 					}
 				}
+				MyArrayAdapter adapter1 = (MyArrayAdapter) adapter;
+				adapter1.notifyDataSetChanged();
 			}
 		}
 
@@ -258,8 +239,8 @@ public class ArtFilterListFragment extends ListFragment {
 	public void onListItemClick(ListView listView, View view, int position, long id) {
 		CheckBox check = (CheckBox) view;
 
-		if (listView.getAdapter() instanceof MyAdapterWithHeaders) {
-			MyAdapterWithHeaders adapter1 = (MyAdapterWithHeaders) listView.getAdapter();
+		if (listView.getAdapter() instanceof MyArrayAdapter) {
+			MyArrayAdapter adapter1 = (MyArrayAdapter) listView.getAdapter();
 			Object item = adapter1.getItem(position);
 			String text = null;
 
@@ -271,11 +252,22 @@ public class ArtFilterListFragment extends ListFragment {
 				text = (String) item;
 			}
 
-			if (check.isChecked()) {
-				filters.get(filterIndex).remove(text);
+			if (text.equals(getString(R.string.all_venues))) {
+				MyArrayAdapter adapter = (MyArrayAdapter) listView.getAdapter();
+				selectAllCategories(0, 4, check.isChecked(), listView, adapter);
+
+			}
+			else if (text.equals(allPublic)) {
+				MyArrayAdapter adapter = (MyArrayAdapter) listView.getAdapter();
+				selectAllCategories(4, adapter.getCount(), check.isChecked(), listView, adapter);
 			}
 			else {
-				filters.get(filterIndex).add(text);
+				if (check.isChecked()) {
+					filters.get(filterIndex).remove(text);
+				}
+				else {
+					filters.get(filterIndex).add(text);
+				}
 			}
 		}
 		else {
@@ -288,7 +280,21 @@ public class ArtFilterListFragment extends ListFragment {
 			}
 		}
 
-		Utils.showToast(getActivity(), filters.toString());
+		//Utils.showToast(getActivity(), filters.toString());
+	}
+
+	private void selectAllCategories(int start, int end, boolean isChecked, ListView listView, MyArrayAdapter adapter) {
+		for (int i = start; i < end; i++) {
+			listView.setItemChecked(i, isChecked);
+
+			if (isChecked) {
+				filters.get(filterIndex).remove(adapter.getItem(i));
+			}
+			else {
+				filters.get(filterIndex).add(adapter.getItem(i));
+			}
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	private class MySimpleCursorAdapter extends SimpleCursorAdapter {
@@ -310,12 +316,41 @@ public class ArtFilterListFragment extends ListFragment {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			CheckBox check = (CheckBox) convertView;
+
 			if (check == null) {
 				check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
 			}
 
 			cursor.moveToPosition(position);
 			String text = cursor.getString(cursor.getColumnIndex(colName));
+			check.setText(text);
+			check.setTag(text);
+
+			boolean checked = filters.get(filterIndex).contains(text);
+			check.setChecked(checked);
+			getListView().setItemChecked(position, checked);
+
+			return check;
+		}
+
+	}
+
+	private class MyArrayAdapter extends ArrayAdapter<String> {
+
+		public MyArrayAdapter(FragmentActivity context, int resId, ArrayList<String> items) {
+			super(context, resId, resId, items);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			String text = getItem(position);
+			CheckBox check = (CheckBox) convertView;
+			if (check == null) {
+				//				if (text.equals(allPublic) || text.equals(allVenues))
+				//					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
+				//				else
+				check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
+			}
 
 			check.setText(text);
 			check.setTag(text);
@@ -323,115 +358,9 @@ public class ArtFilterListFragment extends ListFragment {
 			boolean checked = filters.get(filterIndex).contains(text);
 			check.setChecked(checked);
 
-			if (filterIndex == 0) {
-				getListView().setItemChecked(position + allVenues.length + 2, checked); // there are 2 headers
-			}
-			else {
-				getListView().setItemChecked(position, checked);
-			}
+			getListView().setItemChecked(position, checked);
 
 			return check;
-		}
-
-	}
-
-	private class MyAdapterWithHeaders extends BaseAdapter {
-		public final Map<String, Adapter> sections = new LinkedHashMap<String, Adapter>();
-		public final ArrayAdapter<String> headers;
-		public final static int TYPE_SECTION_HEADER = 0;
-
-		public MyAdapterWithHeaders() {
-			headers = new ArrayAdapter<String>(getActivity(), R.layout.art_filter_item_header);
-		}
-
-		public void addSection(String section, Adapter adapter) {
-			this.headers.add(section);
-			this.sections.put(section, adapter);
-		}
-
-		@Override
-		public Object getItem(int position) {
-			for (Object section : this.sections.keySet()) {
-				Adapter adapter = sections.get(section);
-				int size = adapter.getCount() + 1;
-
-				// check if position inside this section  
-				if (position == 0) return section;
-				if (position < size) return adapter.getItem(position - 1);
-
-				// otherwise jump into next section  
-				position -= size;
-			}
-			return null;
-		}
-
-		@Override
-		public int getCount() {
-			// total together all sections, plus one for each section header  
-			int total = 0;
-			for (Adapter adapter : this.sections.values())
-				total += adapter.getCount() + 1;
-			return total;
-		}
-
-		@Override
-		public int getViewTypeCount() {
-			// assume that headers count as one, then total all sections  
-			int total = 1;
-			for (Adapter adapter : this.sections.values())
-				total += adapter.getViewTypeCount();
-			return total;
-		}
-
-		@Override
-		public int getItemViewType(int position) {
-			int type = 1;
-			for (Object section : this.sections.keySet()) {
-				Adapter adapter = sections.get(section);
-				int size = adapter.getCount() + 1;
-
-				// check if position inside this section  
-				if (position == 0) return TYPE_SECTION_HEADER;
-				if (position < size) return type + adapter.getItemViewType(position - 1);
-
-				// otherwise jump into next section  
-				position -= size;
-				type += adapter.getViewTypeCount();
-			}
-			return -1;
-		}
-
-		@Override
-		public boolean areAllItemsEnabled() {
-			return false;
-		}
-
-		@Override
-		public boolean isEnabled(int position) {
-			return (getItemViewType(position) != TYPE_SECTION_HEADER);
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			int sectionIndex = 0;
-			for (Object section : this.sections.keySet()) {
-				Adapter adapter = sections.get(section);
-				int size = adapter.getCount() + 1;
-
-				// check if position inside this section  
-				if (position == 0) return headers.getView(sectionIndex, convertView, parent);
-				if (position < size) return adapter.getView(position - 1, convertView, parent);
-
-				// otherwise jump into next section  
-				position -= size;
-				sectionIndex++;
-			}
-			return null;
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return position;
 		}
 	}
 

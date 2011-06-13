@@ -10,7 +10,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
 public class ArtGallery extends FragmentActivity {
-	private static final String TAG = "ArtAround.ArtGallery";
+	private static final String TAG = "ArtGallery";
 
 	public static final String EXTRA_PHOTOS = "photos";
 	public static final String EXTRA_TITLE = "title";

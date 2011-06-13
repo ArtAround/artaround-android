@@ -65,7 +65,7 @@
 		name="load_data_failure">Could not retrieve data from server.\n Please check your
 		connectivity.</string>
 	<string
-		name="upload_data_failure">Could not send data to server.\n Please check your connectivity.
+		name="upload_picture_failure">Could not send the picture to server.\n Please check your connectivity.
 	</string>
 
 	<!-- Search -->
@@ -120,6 +120,8 @@
 		name="favorites">Favorites</string>
 	<string
 		name="filtered">Filtered</string>
+	<string 
+		name="empty_favorites">You have no favorite arts yet.</string>
 
 	<!-- Art Edit -->
 	<string
@@ -147,9 +149,14 @@
 	<string
 		name="art_edit_hint_location_description">Enter a description of the location...</string>
 	<string
-		name="art_edit_hint_input_empty_title">Required Fields</string>
+		name="art_edit_input_empty_title">Required Fields</string>
 	<string
-		name="art_edit_hint_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
+		name="art_edit_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
+	</string>
+	<string
+		name="art_edit_input_empty_location_title">Unknown Location</string>
+	<string
+		name="art_edit_input_empty_location_msg">Cannot submit art because the location could not be determined.
 	</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
@@ -163,6 +170,10 @@
 		name="art_edit_media_source">Add New Photo</string>
 	<string
 		name="art_edit_remove_photo">Remove Photo</string>
+	<string
+		name="art_edit_discard_changes_title">Discard Changes</string>
+	<string
+		name="art_edit_discard_changes_msg">Pressing back without submitting will cause your changes to be lost. Are you sure to discard all changes?</string>
 
 	<!-- Art Detail -->
 	<string

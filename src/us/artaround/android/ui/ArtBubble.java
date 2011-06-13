@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.text.Html;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,13 +30,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener {
-	private final static String TAG = "ArtAround.ArtBubble";
+	//private final static String TAG = "ArtBubble";
 
 	private final static int TIMEOUT = 30000;
 
 	private final LinearLayout layout;
 	private final TextView title;
-	private final TextView year;
 	private final TextView author;
 	private final TextView category;
 	private final TextView description;
@@ -57,7 +57,6 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		View rootView = inflater.inflate(R.layout.art_bubble, layout);
 		title = (TextView) rootView.findViewById(R.id.bubble_title);
 		author = (TextView) rootView.findViewById(R.id.bubble_author);
-		year = (TextView) rootView.findViewById(R.id.bubble_year);
 		category = (TextView) rootView.findViewById(R.id.bubble_category);
 		description = (TextView) rootView.findViewById(R.id.bubble_description);
 		progress = (ProgressBar) rootView.findViewById(R.id.progress);
@@ -84,26 +83,25 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 			title.setText(art.title);
 			title.setVisibility(VISIBLE);
 		}
-
-		String str = null;
+		
+		StringBuilder str = new StringBuilder();
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			author.setText(art.artist.name);
+			 str.append(art.artist.name);
+			
+			if(art.year > 0) {
+				str.append(" - ");
+			}
+		}
+		
+		if(art.year > 0) {
+			str.append("<b>").append(art.year).append("</b>");
+		}
+		if (str.length() > 0) {
+			author.setText(Html.fromHtml(str.toString()));
 			author.setVisibility(View.VISIBLE);
-			str = " - ";
 		}
 
-		if (art.year > 0) {
-			if (str != null) {
-				str += art.year;
-			}
-			else {
-				str = "" + art.year;
-			}
-			year.setText(str);
-			year.setVisibility(View.VISIBLE);
-		}
-
-		if (!TextUtils.isEmpty(art.category)) {
+ 		if (!TextUtils.isEmpty(art.category)) {
 			category.setText(art.category.toUpperCase());
 			category.setVisibility(View.VISIBLE);
 		}
@@ -135,12 +133,12 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 					progress.setVisibility(View.GONE);
 				}
 			}.start();
-			Utils.d(TAG, "setData(): start task " + task.getCommandId());
+			Utils.d(Utils.TAG, "setData(): start task " + task.getCommandId());
 		}
 	}
 
 	public void clearData() {
-		Utils.d(TAG, "clearData()");
+		Utils.d(Utils.TAG, "clearData()");
 		progress.setVisibility(View.VISIBLE);
 		imgView.setVisibility(View.GONE);
 		imgView.setImageURI(null);

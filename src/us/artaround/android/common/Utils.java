@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import us.artaround.R;
@@ -63,6 +64,7 @@ public class Utils {
 	public static final String KEY_UPDATE_INTERVAL = "update_interval";
 	public static final String KEY_CLEARED_CACHE = "cleared_cache";
 	public static final String KEY_SEND_CRASH_ONLINE = "send_crash_online";
+	public static final String KEY_CHECK_WIFI = "check_wifi";
 
 	public static final SimpleDateFormat sqlDateFormatter = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss'Z'");
 	public static final SimpleDateFormat utilDateFormatter = new SimpleDateFormat("yyMMdd'_'HHmmss");
@@ -259,8 +261,8 @@ public class Utils {
 
 	public static Intent getStreetViewIntent(double latitude, double longitude) {
 		//FIXME find better values for the params
-		return new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("google.streetview:cbll=" + latitude + ","
-				+ longitude + "&cbp=1,99.56,,1,-5.27&mz=21"));
+		return new Intent(Intent.ACTION_VIEW, Uri.parse("google.streetview:cbll=" + latitude + "," + longitude
+				+ "&cbp=11,0,0,0,0"));
 	}
 
 	public static Uri getNewPhotoUri() {
@@ -355,5 +357,31 @@ public class Utils {
 		hintSpan.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC), 0, hintSpan.length(), 0);
 		textView.setHint(hintSpan);
 		textView.setHintTextColor(textView.getContext().getResources().getColor(R.color.HintColor));
+	}
+
+	public static void deleteCachedFiles(ArrayList<String> uris) {
+		if (uris == null || uris.isEmpty()) return;
+
+		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			//final File storage = Environment.getExternalStorageDirectory();
+			//final File dir = new File(storage.getAbsolutePath(), Utils.APP_DIR_CACHE);
+			//final String path = dir.getAbsolutePath();
+
+			int size = uris.size();
+			for (int i = 0; i < size; i++) {
+				final File currentFile = new File(uris.get(i).replace("file://", ""));
+
+				if (currentFile != null) {
+					try {
+						Utils.d(Utils.TAG, "File exists? " + currentFile.exists());
+						boolean ok = currentFile.delete();
+						Utils.d(Utils.TAG, "Deleted file " + currentFile.getName() + ", result=" + ok);
+					}
+					catch (final SecurityException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
 	}
 }

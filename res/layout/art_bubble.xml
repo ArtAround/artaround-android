@@ -22,19 +22,9 @@
 				style="@style/ArtBubbleText.Title"
 				android:id="@+id/bubble_title" />
 
-			<LinearLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content">
-
-				<TextView
-					style="@style/ArtBubbleText"
-					android:id="@+id/bubble_author" />
-
-				<TextView
-					style="@style/ArtBubbleText"
-					android:id="@+id/bubble_year"
-					android:textStyle="bold" />
-			</LinearLayout>
+			<TextView
+				style="@style/ArtBubbleText"
+				android:id="@+id/bubble_author" />
 
 			<TextView
 				style="@style/ArtBubbleText"

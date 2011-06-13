@@ -18,12 +18,12 @@
 		android:background="@drawable/gallery_actionbar_background"
 		android:gravity="center">
 
-		<ImageButton
-			android:id="@+id/btn_comment"
-			android:background="@drawable/ic_gallery_comment_background"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentLeft="true" />
+<!-- 		<ImageButton -->
+<!-- 			android:id="@+id/btn_comment" -->
+<!-- 			android:background="@drawable/ic_gallery_comment_background" -->
+<!-- 			android:layout_width="wrap_content" -->
+<!-- 			android:layout_height="wrap_content" -->
+<!-- 			android:layout_alignParentLeft="true" /> -->
 
 		<TextView
 			android:id="@+id/title"
@@ -44,12 +44,12 @@
 			android:src="@drawable/ic_gallery_loading"
 			android:visibility="gone" />
 
-		<ImageButton
-			android:id="@+id/btn_add_image"
-			android:background="@drawable/ic_gallery_add_image_background"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentRight="true" />
+<!-- 		<ImageButton -->
+<!-- 			android:id="@+id/btn_add_image" -->
+<!-- 			android:background="@drawable/ic_gallery_add_image_background" -->
+<!-- 			android:layout_width="wrap_content" -->
+<!-- 			android:layout_height="wrap_content" -->
+<!-- 			android:layout_alignParentRight="true" /> -->
 	</RelativeLayout>
 
 </RelativeLayout>

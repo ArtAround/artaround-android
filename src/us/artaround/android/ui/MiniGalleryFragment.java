@@ -27,7 +27,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -43,9 +42,9 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
 
+//FIXME why this fragment doesn't save its own state?
 public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<PhotoWrapper> {
-
-	private static final String TAG = "ArtAround.MiniGalleryFragment";
+	private static final String TAG = "MiniGallery";
 
 	public static final String ARG_EDIT_MODE = "edit_mode";
 	public static final String ARG_TITLE = "title";
@@ -70,36 +69,39 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	private String artTitle;
 	private boolean isEditMode;
 	private ArrayList<String> photoIds;
+
 	private ArrayList<PhotoWrapper> photos;
 	private ArrayList<String> newPhotoUris;
 	private Uri tempPhotoUri;
 	private AtomicInteger loadedPhotosCount;
 
+	private MiniGallerySaver gallerySaver;
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		Utils.d(TAG, "onAttach()");
-
 		setRetainInstance(true);
 
 		photoIds = getArguments().getStringArrayList(ARG_PHOTOS);
 		isEditMode = getArguments().getBoolean(ARG_EDIT_MODE);
 		artTitle = getArguments().getString(ARG_TITLE);
+
+		if (activity instanceof MiniGallerySaver) {
+			gallerySaver = (MiniGallerySaver) activity;
+		}
+
+		Utils.d(TAG, "onAttach()");
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Utils.d(TAG, "onCreateView()");
 		View view = inflater.inflate(R.layout.mini_gallery_fragment, container, false);
 
-		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
-
 		adapter = new MiniGalleryAdapter(getActivity(), isEditMode);
+		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
 		miniGallery.setAdapter(adapter);
-
 		miniGallery.setSelection(1);
 		registerForContextMenu(miniGallery);
-
 		miniGallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -117,9 +119,12 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		Utils.d(TAG, "onActivityCreated()");
 
-		setupState(savedInstanceState);
+		//Utils.d(TAG, "onActivityCreated(): savedInstanceState=" + savedInstanceState);
+		//setupState(savedInstanceState);
+		Bundle savedState = gallerySaver.restoreMiniGalleryState();
+		setupState(savedState);
+		Utils.d(TAG, "onActivityCreated(): savedState=" + savedState);
 	}
 
 	@Override
@@ -127,6 +132,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		args.putSerializable(SAVE_PHOTOS, photos);
 		args.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
 		args.putInt(SAVE_LOADED_PHOTOS_COUNT, loadedPhotosCount.get());
+
+		gallerySaver.saveMiniGalleryState(args);
 		super.onSaveInstanceState(args);
 	}
 
@@ -167,7 +174,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			}
 		}.start();
 
-		LoaderManager lm = getLoaderManager();
 		Resources res = getResources();
 
 		Bundle args = new Bundle();
@@ -183,12 +189,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			args.putString(ARG_PHOTO, id);
 
 			int hashCode = id.hashCode();
-			if (lm.getLoader(hashCode) == null) {
-				lm.initLoader(hashCode, args, this);
-			}
-			else {
-				lm.restartLoader(hashCode, args, this);
-			}
+			getLoaderManager().restartLoader(hashCode, args, this);
 		}
 	}
 
@@ -246,13 +247,13 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	@Override
 	public void onLoadFinished(Loader<PhotoWrapper> loader, PhotoWrapper wrapper) {
 		Utils.d(TAG, "onLoadFinished(): id=" + loader.getId());
+		adapter.toggleLoaders(false);
 
 		if (wrapper == null) {
 			return;
 		}
 
 		if (loadedPhotosCount.get() == photoIds.size()) {
-			adapter.toggleLoaders(false);
 			miniGallery.setClickable(true);
 		}
 		if (wrapper.uri != null) {
@@ -388,5 +389,29 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			});
 			return builder.create();
 		}
+	}
+
+	public ArrayList<String> getNewPhotoUris() {
+		return newPhotoUris;
+	}
+
+	public void setNewPhotoUris(ArrayList<String> newPhotoUris) {
+		this.newPhotoUris = newPhotoUris;
+	}
+
+	public ArrayList<PhotoWrapper> getPhotos() {
+		return photos;
+	}
+
+	public void setPhotos(ArrayList<PhotoWrapper> photos) {
+		this.photos = photos;
+	}
+
+	public AtomicInteger getLoadedPhotosCount() {
+		return loadedPhotosCount;
+	}
+
+	public void setLoadedPhotosCount(AtomicInteger loadedPhotosCount) {
+		this.loadedPhotosCount = loadedPhotosCount;
 	}
 }

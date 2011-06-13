@@ -17,7 +17,6 @@ import com.google.android.maps.MapActivity;
 
 //FIXME remove this and use loaders
 public abstract class ArtAroundMapActivity extends MapActivity implements ArtAroundAsyncTaskListener {
-	protected static final String TAG = "ArtAround.MapActivity";
 
 	protected static class SavedState {
 		List<ArtAroundAsyncTask> tasks;
@@ -56,7 +55,7 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 	protected void initActionbarUi() {
 		actionbar = findViewById(android.R.id.content).getRootView().findViewById(R.id.actionbar);
 		if (actionbar == null) {
-			Utils.d(TAG, "Could not find the actionbar view in your activity layout!");
+			Utils.d(Utils.TAG, "Could not find the actionbar view in your activity layout!");
 		}
 	}
 
@@ -85,13 +84,13 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 	@Override
 	public void onPostExecute(ArtAroundAsyncCommand command, Object result, ArtAroundException exception) {
 		if (tasks == null) {
-			Utils.d(TAG, "onPostExecute(): tasks is null.");
+			Utils.d(Utils.TAG, "onPostExecute(): tasks is null.");
 		}
 		for (ArtAroundAsyncTask task : tasks) {
 			String commandId = task.getCommandId();
 			if (command.id.equals(commandId)) {
 				tasks.remove(task);
-				Utils.d(TAG, "onPostExecute(): removed task '" + commandId + "' after completion.");
+				Utils.d(Utils.TAG, "onPostExecute(): removed task '" + commandId + "' after completion.");
 				break;
 			}
 		}
@@ -107,7 +106,7 @@ public abstract class ArtAroundMapActivity extends MapActivity implements ArtAro
 		for (ArtAroundAsyncTask task : tasks) {
 			String commandId = task.getCommandId();
 			if (command.id.equals(commandId)) {
-				Utils.d(TAG, "startTask(): task '" + commandId + "' is already running.");
+				Utils.d(Utils.TAG, "startTask(): task '" + commandId + "' is already running.");
 				break;
 			}
 		}

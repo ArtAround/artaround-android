@@ -27,6 +27,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.text.Html;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
@@ -45,13 +46,15 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
-public class ArtDetail extends FragmentActivity {
-	public static final String TAG = "ArtAround.ArtDetail";
+public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
+	//public static final String TAG = "ArtDetail";
 
 	public static final String EXTRA_ART = "art";
+	public static final String EXTRA_EDIT = "edit";
 
 	private static final String SAVE_COMMENTS = "comments";
 	private static final String SAVE_COMMENTS_COUNT = "comments_count";
+	private static final String SAVE_MINI_GALLERY = "mini_gallery";
 
 	private static final String ARG_ART_SLUG = "art_slug";
 	private static final String ARG_NEW_COMMENT = "new_comment";
@@ -66,6 +69,7 @@ public class ArtDetail extends FragmentActivity {
 	private static final int DIALOG_EMPTY_INPUT = 0;
 
 	private Art art;
+	private Bundle savedGalleryState;
 	private final ArrayList<Comment> comments = new ArrayList<Comment>();
 	private int commentsCount = -1;
 
@@ -95,7 +99,7 @@ public class ArtDetail extends FragmentActivity {
 			art = (Art) intent.getSerializableExtra(EXTRA_ART);
 		}
 		if (art == null) {
-			Utils.w(TAG, "onCreate(): art=" + art);
+			Utils.w(Utils.TAG, "onCreate(): art=" + art);
 			return;
 		}
 
@@ -107,6 +111,7 @@ public class ArtDetail extends FragmentActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putSerializable(SAVE_COMMENTS, comments);
 		outState.putInt(SAVE_COMMENTS_COUNT, commentsCount);
+		outState.putBundle(SAVE_MINI_GALLERY, savedGalleryState);
 		super.onSaveInstanceState(outState);
 	}
 
@@ -122,18 +127,13 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	private void onLoadComments() {
-		Utils.d(TAG, "onLoadComments()");
+		Utils.d(Utils.TAG, "onLoadComments()");
 
 		LoaderManager lm = getSupportLoaderManager();
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
 
-		if (lm.getLoader(LOAD_COMMENTS) == null) {
-			lm.initLoader(LOAD_COMMENTS, args, asyncCallback);
-		}
-		else {
-			lm.restartLoader(LOAD_COMMENTS, args, asyncCallback);
-		}
+		lm.restartLoader(LOAD_COMMENTS, args, asyncCallback);
 	}
 
 	private void setupUi() {
@@ -155,7 +155,8 @@ public class ArtDetail extends FragmentActivity {
 			public void onClick(View v) {
 				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
 				iEdit.putExtra(ArtEdit.EXTRA_ART, art);
-				startActivity(iEdit);
+				iEdit.putExtra(EXTRA_EDIT, true);
+				startActivityForResult(iEdit, 0);
 			}
 		});
 
@@ -193,12 +194,7 @@ public class ArtDetail extends FragmentActivity {
 
 		toggleLoading(true);
 
-		if (lm.getLoader(SUBMIT_COMMENT) == null) {
-			lm.initLoader(SUBMIT_COMMENT, args, asyncCallback);
-		}
-		else {
-			lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
-		}
+		lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
 	}
 
 	private void toggleLoading(boolean show) {
@@ -238,15 +234,10 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	protected void onFavoriteArt() {
-		LoaderManager lm = getSupportLoaderManager();
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
-		if (lm.getLoader(LOAD_FAVORITE) == null) {
-			lm.initLoader(LOAD_FAVORITE, args, cursorCallback);
-		}
-		else {
-			lm.restartLoader(LOAD_FAVORITE, args, cursorCallback);
-		}
+		getSupportLoaderManager().restartLoader(LOAD_FAVORITE, args, cursorCallback);
+
 	}
 
 	private boolean isFavorite() {
@@ -263,24 +254,24 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	private void setupFields() {
-		String str = null;
+		StringBuilder str = new StringBuilder();
 
 		TextView tvArtist = (TextView) findViewById(R.id.art_detail_artist);
 		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			tvArtist.setText(art.artist.name);
-			str = " - ";
+			str.append(art.artist.name);
+
+			if (art.year > 0) {
+				str.append(" - ");
+			}
+		}
+		if (art.year > 0) {
+			str.append("<b>").append(art.year).append("</b>");
+		}
+		if (str.length() > 0) {
+			tvArtist.setText(Html.fromHtml(str.toString()));
 		}
 		else {
 			tvArtist.setVisibility(View.GONE);
-		}
-
-		TextView tvYear = (TextView) findViewById(R.id.art_detail_year);
-		if (art.year > 0) {
-			str = (str != null) ? (str + art.year) : "" + art.year;
-			tvYear.setText(str);
-		}
-		else {
-			tvYear.setVisibility(View.GONE);
 		}
 
 		TextView tvCategory = (TextView) findViewById(R.id.art_detail_category);
@@ -410,7 +401,7 @@ public class ArtDetail extends FragmentActivity {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
-			Utils.d(TAG, "onLoadFinished(): payload=" + payload);
+			Utils.d(Utils.TAG, "onLoadFinished(): payload=" + payload);
 
 			switch (loader.getId()) {
 			case LOAD_COMMENTS:
@@ -474,8 +465,8 @@ public class ArtDetail extends FragmentActivity {
 					@Override
 					public LoaderPayload loadInBackground() {
 						try {
-							return new LoaderPayload(ServiceFactory.getArtService().getComments(
-									args.getString(ARG_ART_SLUG)));
+							return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService()
+									.getComments(args.getString(ARG_ART_SLUG)));
 						}
 						catch (ArtAroundException e) {
 							return new LoaderPayload(e);
@@ -488,7 +479,8 @@ public class ArtDetail extends FragmentActivity {
 					public LoaderPayload loadInBackground() {
 						Comment comment = (Comment) args.getSerializable(ARG_NEW_COMMENT);
 						try {
-							return new LoaderPayload(ServiceFactory.getArtService().submitComment(art.slug, comment));
+							return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService()
+									.submitComment(art.slug, comment));
 						}
 						catch (ArtAroundException e) {
 							return new LoaderPayload(e);
@@ -660,5 +652,15 @@ public class ArtDetail extends FragmentActivity {
 		default:
 			return super.onCreateDialog(id);
 		}
+	}
+
+	@Override
+	public void saveMiniGalleryState(Bundle args) {
+		savedGalleryState = args;
+	}
+
+	@Override
+	public Bundle restoreMiniGalleryState() {
+		return savedGalleryState;
 	}
 }

@@ -8,6 +8,6 @@
 	android:clickable="false"
 	android:focusable="false"
 	android:focusableInTouchMode="false"
-	android:paddingLeft="36dp"
+	android:paddingLeft="30dp"
 	android:paddingTop="5dp"
 	android:paddingBottom="5dp" />

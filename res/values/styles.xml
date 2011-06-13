@@ -638,7 +638,18 @@
 		name="ArtFiltersHeadingBackground">
 		<item
 			name="android:background">@drawable/art_filter_heading_background</item>
+<!-- 		<item -->
+<!-- 			name="android:padding">8dp</item> -->
+	</style>
+	<style
+		name="ArtFilterHeading">
 		<item
-			name="android:padding">8dp</item>
+			name="android:textSize">16sp</item>
+		<item
+			name="android:textColor">#FFFFFF</item>
+		<item
+			name="android:textStyle">bold</item>
+		<item
+			name="android:gravity">center</item>
 	</style>
 </resources>

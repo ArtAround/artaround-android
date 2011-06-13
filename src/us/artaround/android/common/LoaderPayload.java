@@ -19,8 +19,8 @@ public class LoaderPayload {
 		this.exception = exception;
 	}
 
-	public LoaderPayload(Object result) {
-		this.status = RESULT_OK;
+	public LoaderPayload(int status, Object result) {
+		this.status = status;
 		this.result = result;
 	}
 

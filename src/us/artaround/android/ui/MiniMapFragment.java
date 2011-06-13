@@ -18,8 +18,9 @@ import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 
+//FIXME why this fragment doesn't save its own state?
 public class MiniMapFragment extends Fragment implements LocatorCallback, CurrentOverlayDragCallback {
-	private static final String TAG = "ArtAround.MiniMapFragment";
+	private static final String TAG = "MiniMap";
 	private static final String TAG_LOCATOR = "locator";
 
 	private static final int ZOOM_DEFAULT_LEVEL = 15;
@@ -42,15 +43,9 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	private LocationSettingsDialog dialog;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setRetainInstance(true);
-		Utils.d(TAG, "onCreate(): savedInstanceState=" + savedInstanceState);
-	}
-
-	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
+		setRetainInstance(true);
 
 		Bundle args = getArguments();
 		isEditMode = args.getBoolean(ARG_EDIT_MODE, false);
@@ -137,6 +132,11 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 			//f.setTargetFragment(this, 0);
 			fm.beginTransaction().add(f, TAG_LOCATOR).commit();
 		}
+
+		// FIXME fix this hard-coded thing
+		if (getActivity() instanceof ArtEdit) {
+			((ArtEdit) getActivity()).toggleLoading(true);
+		}
 	}
 
 	@Override
@@ -154,6 +154,11 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		this.location = location;
 
 		centerMiniMap();
+
+		//FIXME remove this
+		if (getActivity() instanceof ArtEdit) {
+			((ArtEdit) getActivity()).toggleLoading(false);
+		}
 	}
 
 	@Override
@@ -176,6 +181,11 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
+		}
+
+		//FIXME remove this
+		if (getActivity() instanceof ArtEdit) {
+			((ArtEdit) getActivity()).toggleLoading(false);
 		}
 	}
 
