@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<string 
+		name="feedback_email"></string>
+    <string 
+    	name="feedback_subject"></string>
     <string
         name="maps_api"></string>
     <string

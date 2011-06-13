@@ -2,6 +2,8 @@
 <resources>
 	<string
 		name="app_label">ArtAround</string>
+	<string
+		name="app_version">1.0</string>
 
 	<!-- Generic -->
 	<string
@@ -29,13 +31,40 @@
 	<string
 		name="submit_art_success">The art has been submitted and is awaiting moderation.</string>
 	<string
-		name="submit_art_failure">Due to an error, the art was not submitted.\n Please try again later.</string>
+		name="submit_art_failure">Due to an error, the art was not submitted.\n Please try again
+		later.</string>
 	<string
 		name="submit_comment_success">Your comment has been submitted and is awaiting moderation.
 	</string>
 	<string
 		name="submit_comment_failure">Due to an error, your comment was not submitted.\n Please try
 		again later.</string>
+	<string
+		name="about">About</string>
+	<string
+		name="about_title">About ArtAround</string>
+	<string
+		name="about_msg">
+		<![CDATA[
+		Explore a city by its art! <br /><br /> ArtAround is an interactive,
+		inside-out museum for public art in DC that lets you find, add, and
+		comment on everything from murals, monuments, and street art to
+		galleries, museums, and festivals. <br /><br /> Share what you find and discover a
+		new way to see the space around you. <br />
+		Visit <a href="http://theartaround.us/">theartaround.us</a> for more info.
+		]]>
+	</string>
+	<string
+		name="feedback">Feedback</string>
+	<string
+		name="welcome_title">Welcome</string>
+	<string
+		name="welcome_msg">
+		<![CDATA[
+		ArtAround is an interactive, inside-out museum for public art in DC. <br /><br />
+		Get the scoop on everything from murals, monuments, and street art to galleries, museums, and festivals - and share what you know, too.
+		]]>
+	</string>
 
 
 	<!-- Location -->
@@ -65,7 +94,8 @@
 		name="load_data_failure">Could not retrieve data from server.\n Please check your
 		connectivity.</string>
 	<string
-		name="upload_picture_failure">Could not send the picture to server.\n Please check your connectivity.
+		name="upload_picture_failure">Could not send the picture to server.\n Please check your
+		connectivity.
 	</string>
 
 	<!-- Search -->
@@ -120,7 +150,7 @@
 		name="favorites">Favorites</string>
 	<string
 		name="filtered">Filtered</string>
-	<string 
+	<string
 		name="empty_favorites">You have no favorite arts yet.</string>
 
 	<!-- Art Edit -->
@@ -173,7 +203,8 @@
 	<string
 		name="art_edit_discard_changes_title">Discard Changes</string>
 	<string
-		name="art_edit_discard_changes_msg">Pressing back without submitting will cause your changes to be lost. Are you sure to discard all changes?</string>
+		name="art_edit_discard_changes_msg">Pressing back without submitting will cause your changes to be
+		lost. Are you sure to discard all changes?</string>
 
 	<!-- Art Detail -->
 	<string

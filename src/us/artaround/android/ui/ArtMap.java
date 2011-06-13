@@ -26,8 +26,10 @@ import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import us.artaround.models.ArtDispersionComparator;
 import us.artaround.models.City;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -40,7 +42,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.text.Html;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -75,6 +79,9 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	//--- dialog ids ---
 	private static final int DIALOG_LOCATION_SETTINGS = 1;
 	private static final int DIALOG_WIFI_FAIL = 2;
+	private static final int DIALOG_ABOUT = 3;
+	private static final int DIALOG_CHANGELOG = 4;
+	private static final int DIALOG_WELCOME = 5;
 
 	//--- commands ids ---
 	private static final int LOAD_ARTS = 0;
@@ -123,6 +130,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private int nrPinsForZoomLevel;
 	private HashMap<Integer, ArrayList<String>> filters;
 
+	private SharedPreferences sharedPrefs;
 	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
 	private Location currentLocation;
@@ -163,12 +171,11 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			startLocationUpdate();
 		}
 
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		// Wi-fi status has been already checked
-		if (prefs.getBoolean(Utils.KEY_CHECK_WIFI, true)) {
+		if (sharedPrefs.getBoolean(Utils.KEY_CHECK_WIFI, true)) {
 			checkWifiStatus();
 
-			Editor edit = prefs.edit();
+			Editor edit = sharedPrefs.edit();
 			edit.putBoolean(Utils.KEY_CHECK_WIFI, false);
 			SharedPreferencesCompat.apply(edit);
 		}
@@ -213,6 +220,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		ArtAroundProvider.contentResolver.registerContentObserver(Arts.CONTENT_URI, false, new ArtsContentObserver(
 				handler));
 
+		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		locationUpdater = new LocationUpdater(this);
 		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
 		items = new HashMap<Art, ArtOverlayItem>();
@@ -262,6 +270,11 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	}
 
 	private void clearCache() {
+		artsOverlay.doClear();
+		if (tasks != null && !tasks.isEmpty()) tasks.clear();
+		totalCount.set(0);
+		crtPage.set(1);
+
 		toggleLoading(true);
 		startTask(new ClearCacheCommand(CLEAR_CACHE, String.valueOf(CLEAR_CACHE)));
 	}
@@ -270,6 +283,21 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		setupFilterBarUi();
 		setupFooterBarUi();
 		setupMapUi();
+
+		if (sharedPrefs.getBoolean(Utils.KEY_SHOW_WELCOME, true)) {
+			showDialog(DIALOG_WELCOME);
+			SharedPreferencesCompat.apply(sharedPrefs.edit().putBoolean(Utils.KEY_SHOW_WELCOME, false));
+		}
+		if (isNewVersion()) {
+			showDialog(DIALOG_CHANGELOG);
+			SharedPreferencesCompat.apply(sharedPrefs.edit().putString(Utils.KEY_VERSION,
+					getString(R.string.app_version)));
+		}
+	}
+
+	private boolean isNewVersion() {
+		return !sharedPrefs.getString(Utils.KEY_VERSION, getString(R.string.app_version)).equalsIgnoreCase(
+				getString(R.string.app_version));
 	}
 
 	private void setupFilterBarUi() {
@@ -658,6 +686,32 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			return Utils.locationSettingsDialog(this).create();
 		case DIALOG_WIFI_FAIL:
 			return Utils.wifiSettingsDialog(this).create();
+		case DIALOG_ABOUT:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setIcon(R.drawable.icon);
+			builder.setTitle(R.string.about_title);
+			TextView tvAbout = (TextView) LayoutInflater.from(ArtMap.this).inflate(R.layout.about, null);
+			tvAbout.setText(Html.fromHtml(getString(R.string.about_msg)));
+			builder.setView(tvAbout);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			return builder.create();
+		case DIALOG_WELCOME:
+			builder = new AlertDialog.Builder(this);
+			builder.setIcon(R.drawable.icon);
+			builder.setTitle(R.string.welcome_title);
+			builder.setMessage(Html.fromHtml(getString(R.string.welcome_msg)));
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			return builder.create();
 		default:
 			return super.onCreateDialog(id);
 		}
@@ -702,10 +756,23 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		switch (item.getItemId()) {
 		case R.id.preferences:
 			startActivity(new Intent(this, Preferences.class));
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
+			break;
+		case R.id.about:
+			showDialog(DIALOG_ABOUT);
+			break;
+		case R.id.feedback:
+			sendFeedback();
+			break;
 		}
+		return true;
+	}
+
+	private void sendFeedback() {
+		Intent iEmail = new Intent(Intent.ACTION_SEND);
+		iEmail.setType("plain/text");
+		iEmail.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { getString(R.string.feedback_email) });
+		iEmail.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.feedback_subject));
+		startActivity(iEmail);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package us.artaround.android.ui;
 import us.artaround.R;
 import us.artaround.android.common.SharedPreferencesCompat;
 import us.artaround.android.common.Utils;
+import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
@@ -56,22 +57,44 @@ public class Preferences extends PreferenceActivity {
 		}
 	}
 
+	private final Runnable clearCacheFinish = new Runnable() {
+
+		@Override
+		public void run() {
+			dismissDialog(DIALOG_PROGRESS);
+
+			Editor edit = prefs.edit();
+			edit.putBoolean(Utils.KEY_CLEARED_CACHE, true);
+			edit.putLong(Utils.KEY_LAST_UPDATE, 0);
+			SharedPreferencesCompat.apply(edit);
+
+			Toast.makeText(Preferences.this, R.string.clear_cache_success, Toast.LENGTH_LONG).show();
+		}
+	};
 	private void clearCache() {
 		showDialog(DIALOG_PROGRESS);
 
-		ArtAroundProvider.contentResolver.delete(Arts.CONTENT_URI, null, null);
-		ArtAroundProvider.contentResolver.delete(Artists.CONTENT_URI, null, null);
-		ArtAroundProvider.contentResolver.delete(Categories.CONTENT_URI, null, null);
-		ArtAroundProvider.contentResolver.delete(Neighborhoods.CONTENT_URI, null, null);
+		new Thread() {
+			@Override
+			public void run() {
+				int count = ArtAroundProvider.contentResolver.delete(Arts.CONTENT_URI, null, null);
+				Utils.d(Utils.TAG, "-> deleted " + count + " arts");
 
-		dismissDialog(DIALOG_PROGRESS);
+				count = ArtAroundProvider.contentResolver.delete(Artists.CONTENT_URI, null, null);
+				Utils.d(Utils.TAG, "-> deleted " + count + " artists");
 
-		Editor edit = prefs.edit();
-		edit.putBoolean(Utils.KEY_CLEARED_CACHE, true);
-		edit.putLong(Utils.KEY_LAST_UPDATE, 0);
-		SharedPreferencesCompat.apply(edit);
+				count = ArtAroundProvider.contentResolver.delete(Categories.CONTENT_URI, null, null);
+				Utils.d(Utils.TAG, "-> deleted " + count + " categories");
 
-		Toast.makeText(this, R.string.clear_cache_success, Toast.LENGTH_LONG).show();
+				count = ArtAroundProvider.contentResolver.delete(Neighborhoods.CONTENT_URI, null, null);
+				Utils.d(Utils.TAG, "-> deleted " + count + " neighborhoods");
+
+				count = ArtAroundProvider.contentResolver.delete(ArtFavorites.CONTENT_URI, null, null);
+				Utils.d(Utils.TAG, "-> deleted " + count + " favorites");
+
+				runOnUiThread(clearCacheFinish);
+			}
+		}.start();
 	}
 
 }
