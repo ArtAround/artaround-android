@@ -27,7 +27,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -167,7 +166,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			}
 		}.start();
 
-		LoaderManager lm = getLoaderManager();
 		Resources res = getResources();
 
 		Bundle args = new Bundle();
@@ -183,12 +181,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			args.putString(ARG_PHOTO, id);
 
 			int hashCode = id.hashCode();
-			if (lm.getLoader(hashCode) == null) {
-				lm.initLoader(hashCode, args, this);
-			}
-			else {
-				lm.restartLoader(hashCode, args, this);
-			}
+			getLoaderManager().restartLoader(hashCode, args, this);
 		}
 	}
 
@@ -292,7 +285,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		case REQUEST_CODE_GALLERY:
 		case REQUEST_CODE_CROP_FROM_CAMERA:
 			// FIXME delete temp file after submitting
-			String uriStr = tempPhotoUri.toString();
+			String uriStr = data.getDataString(); //tempPhotoUri.toString();
 			newPhotoUris.add(uriStr);
 
 			PhotoWrapper wrapper = new PhotoWrapper(newPhotoUri(uriStr), uriStr);
@@ -388,5 +381,9 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			});
 			return builder.create();
 		}
+	}
+
+	public ArrayList<String> getNewPhotoUris() {
+		return newPhotoUris;
 	}
 }

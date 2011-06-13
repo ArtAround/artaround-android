@@ -128,12 +128,7 @@ public class ArtDetail extends FragmentActivity {
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
 
-		if (lm.getLoader(LOAD_COMMENTS) == null) {
-			lm.initLoader(LOAD_COMMENTS, args, asyncCallback);
-		}
-		else {
-			lm.restartLoader(LOAD_COMMENTS, args, asyncCallback);
-		}
+		lm.restartLoader(LOAD_COMMENTS, args, asyncCallback);
 	}
 
 	private void setupUi() {
@@ -193,12 +188,7 @@ public class ArtDetail extends FragmentActivity {
 
 		toggleLoading(true);
 
-		if (lm.getLoader(SUBMIT_COMMENT) == null) {
-			lm.initLoader(SUBMIT_COMMENT, args, asyncCallback);
-		}
-		else {
-			lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
-		}
+		lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
 	}
 
 	private void toggleLoading(boolean show) {
@@ -238,15 +228,10 @@ public class ArtDetail extends FragmentActivity {
 	}
 
 	protected void onFavoriteArt() {
-		LoaderManager lm = getSupportLoaderManager();
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
-		if (lm.getLoader(LOAD_FAVORITE) == null) {
-			lm.initLoader(LOAD_FAVORITE, args, cursorCallback);
-		}
-		else {
-			lm.restartLoader(LOAD_FAVORITE, args, cursorCallback);
-		}
+		getSupportLoaderManager().restartLoader(LOAD_FAVORITE, args, cursorCallback);
+
 	}
 
 	private boolean isFavorite() {

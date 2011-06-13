@@ -37,7 +37,7 @@ public class BaseParser {
 	public static final int TYPE_CATEGORIES = 2;
 	public static final int TYPE_NEIGHBORHOODS = 3;
 	public static final int TYPE_COMMENTS = 4;
-	public static final int TYPE_COMMENT_RESPONSE = 5;
+	public static final int TYPE_RESPONSE = 5;
 	public static final int TYPE_NONE = 6;
 
 
@@ -64,7 +64,7 @@ public class BaseParser {
 		case TYPE_COMMENTS:
 			parseComments(data);
 			break;
-		case TYPE_COMMENT_RESPONSE:
+		case TYPE_RESPONSE:
 			parseStringResponse(data, SUCCESS_KEY);
 			break;
 		case TYPE_NONE:
