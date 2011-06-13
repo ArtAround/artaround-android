@@ -97,7 +97,13 @@ public class ArtFilterListFragment extends ListFragment {
 					Bundle args = new Bundle();
 					args.putString(QUERY, s.toString().toLowerCase());
 
-					getLoaderManager().restartLoader(filterIndex, args, cursorCallbacks);
+					LoaderManager lm = getLoaderManager();
+					if (lm.getLoader(filterIndex) == null) {
+						lm.initLoader(filterIndex, args, cursorCallbacks);
+					}
+					else {
+						lm.restartLoader(filterIndex, args, cursorCallbacks);
+					}
 				}
 			}
 
@@ -118,7 +124,13 @@ public class ArtFilterListFragment extends ListFragment {
 				filterIndex = position;
 
 				setListAdapter(createAdapter(position));
-				getLoaderManager().restartLoader(position, null, cursorCallbacks);
+				LoaderManager lm = getLoaderManager();
+				if (lm.getLoader(position) == null) {
+					lm.initLoader(position, null, cursorCallbacks);
+				}
+				else {
+					lm.restartLoader(position, null, cursorCallbacks);
+				}
 
 				tvSearch.setVisibility(filterIndex != ArtFilter.TYPE_CATEGORY ? View.VISIBLE : View.GONE);
 				tvSearch.getText().clear();
@@ -128,7 +140,7 @@ public class ArtFilterListFragment extends ListFragment {
 		setListAdapter(createAdapter(filterIndex));
 		getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
-		getLoaderManager().restartLoader(filterIndex, null, cursorCallbacks);
+		getLoaderManager().initLoader(filterIndex, null, cursorCallbacks);
 	}
 
 	private ListAdapter createAdapter(final int position) {

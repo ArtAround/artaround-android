@@ -15,6 +15,7 @@ import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -107,6 +108,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	private void setupState() {
 		if (photos == null || photos.isEmpty()) return;
 
+		LoaderManager lm = getLoaderManager();
 		Bundle args = new Bundle();
 
 		int size = photos.size();
@@ -117,7 +119,12 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 			toLoadCount++;
 			args.putString(ARG_PHOTO, id);
 			int hashCode = id.hashCode();
-			getLoaderManager().restartLoader(hashCode, args, this);
+			if (lm.getLoader(hashCode) == null) {
+				lm.initLoader(hashCode, args, this);
+			}
+			else {
+				lm.restartLoader(hashCode, args, this);
+			}
 		}
 	}
 

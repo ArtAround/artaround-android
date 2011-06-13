@@ -60,12 +60,6 @@ public class ArtService extends BaseService {
 		BaseParser.parseResponse(data);
 	}
 
-	@Override
-	protected void putMethod(StreamData data, String url, String body) throws ArtAroundException {
-		super.putMethod(data, city.serverUrl + url, body);
-		BaseParser.parseResponse(data);
-	}
-
 	public ParseResult getArts(int page, int perPage) throws ArtAroundException {
 		StreamData data = new StreamData(BaseParser.TYPE_ARTS);
 		data.setAuxData(true);
@@ -116,21 +110,8 @@ public class ArtService extends BaseService {
 		String json = BaseParser.writeArt(art);
 		Utils.d(Utils.TAG, "Sending new art json " + json);
 
-		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
+		StreamData data = new StreamData(BaseParser.TYPE_COMMENT_RESPONSE);
 		postMethod(data, ENDPOINT_ARTS + FORMAT, json);
-		Object[] obj = data.getAuxData();
-		if (obj != null && obj.length > 0) {
-			return (String) obj[0];
-		}
-		return null;
-	}
-
-	public String editArt(Art art) throws ArtAroundException {
-		String json = BaseParser.writeArt(art);
-		Utils.d(Utils.TAG, "Sending new art json " + json);
-
-		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
-		putMethod(data, ENDPOINT_ARTS + "/" + art.slug + FORMAT, json);
 		Object[] obj = data.getAuxData();
 		if (obj != null && obj.length > 0) {
 			return (String) obj[0];
@@ -142,7 +123,7 @@ public class ArtService extends BaseService {
 		String json = BaseParser.writeComment(comment);
 		Utils.d(Utils.TAG, "Sending new comment json " + json);
 
-		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
+		StreamData data = new StreamData(BaseParser.TYPE_COMMENT_RESPONSE);
 		postMethod(data, ENDPOINT_ARTS + "/" + artSlug + ENDPOINT_COMMENTS + FORMAT, json);
 		Object[] obj = data.getAuxData();
 		if (obj != null && obj.length > 0) {

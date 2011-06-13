@@ -1,14 +1,18 @@
 package us.artaround.android.services;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.params.HttpProtocolParams;
@@ -75,9 +79,6 @@ public class BaseService {
 	protected void postMethod(StreamData data, String url, MultipartEntity entity) throws ArtAroundException {
 		final AndroidHttpClient client = getNewHttpClient();
 		final HttpPost postRequest = new HttpPost(url);
-
-		//postRequest.setHeader("Accept", "application/json");
-		//postRequest.setHeader("Content-Type", "image/jpeg");
 		postRequest.setEntity(entity);
 
 		try {
@@ -97,46 +98,20 @@ public class BaseService {
 		}
 	}
 
-
-	//	protected void postMethod(StreamData data, String url, List<NameValuePair> params) throws ArtAroundException {
-	//		final AndroidHttpClient client = getNewHttpClient();
-	//		final HttpPost postRequest = new HttpPost(url);
-	//		try {
-	//			postRequest.setURI(new URI(url));
-	//			postRequest.setEntity(new UrlEncodedFormEntity(params));
-	//
-	//			HttpResponse response = client.execute(postRequest);
-	//			parseHttpResponse(data, url, response);
-	//		}
-	//		catch (IOException e) {
-	//			throw new ArtAroundException(e);
-	//		}
-	//		catch (URISyntaxException e) {
-	//			throw new ArtAroundException(e);
-	//		}
-	//		finally {
-	//			if (postRequest != null) {
-	//				postRequest.abort();
-	//			}
-	//			if (client != null) {
-	//				client.close();
-	//			}
-	//		}
-	//	}
-
-	protected void postMethod(StreamData data, String url, String body) throws ArtAroundException {
+	protected void postMethod(StreamData data, String url, List<NameValuePair> params) throws ArtAroundException {
 		final AndroidHttpClient client = getNewHttpClient();
 		final HttpPost postRequest = new HttpPost(url);
 		try {
-			HttpEntity entity = new StringEntity(body);
-			postRequest.setEntity(entity);
-			postRequest.setHeader("Accept", "application/json");
-			postRequest.setHeader("Content-Type", "application/json");
+			postRequest.setURI(new URI(url));
+			postRequest.setEntity(new UrlEncodedFormEntity(params));
 
 			HttpResponse response = client.execute(postRequest);
 			parseHttpResponse(data, url, response);
 		}
 		catch (IOException e) {
+			throw new ArtAroundException(e);
+		}
+		catch (URISyntaxException e) {
 			throw new ArtAroundException(e);
 		}
 		finally {
@@ -148,26 +123,23 @@ public class BaseService {
 			}
 		}
 	}
-
-	protected void putMethod(StreamData data, String url, String body) throws ArtAroundException {
+	
+	protected void postMethod(StreamData data, String url, String body) throws ArtAroundException {
 		final AndroidHttpClient client = getNewHttpClient();
-		final HttpPut putRequest = new HttpPut(url);
-
+		final HttpPost postRequest = new HttpPost(url);
 		try {
 			HttpEntity entity = new StringEntity(body);
-			putRequest.setEntity(entity);
-			putRequest.setHeader("Accept", "application/json");
-			putRequest.setHeader("Content-Type", "application/json");
+			postRequest.setEntity(entity);
 
-			HttpResponse response = client.execute(putRequest);
+			HttpResponse response = client.execute(postRequest);
 			parseHttpResponse(data, url, response);
 		}
 		catch (IOException e) {
 			throw new ArtAroundException(e);
 		}
 		finally {
-			if (putRequest != null) {
-				putRequest.abort();
+			if (postRequest != null) {
+				postRequest.abort();
 			}
 			if (client != null) {
 				client.close();
@@ -202,5 +174,4 @@ public class BaseService {
 			throw new ArtAroundException(e);
 		}
 	}
-
 }

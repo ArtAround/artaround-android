@@ -147,14 +147,9 @@
 	<string
 		name="art_edit_hint_location_description">Enter a description of the location...</string>
 	<string
-		name="art_edit_input_empty_title">Required Fields</string>
+		name="art_edit_hint_input_empty_title">Required Fields</string>
 	<string
-		name="art_edit_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
-	</string>
-	<string
-		name="art_edit_input_empty_location_title">Unknown Location</string>
-	<string
-		name="art_edit_input_empty_location_msg">Cannot submit art because the location could not be determined.
+		name="art_edit_hint_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
 	</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
