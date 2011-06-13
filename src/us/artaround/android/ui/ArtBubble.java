@@ -82,6 +82,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		if (art.title != null) {
 			title.setText(art.title);
 			title.setVisibility(VISIBLE);
+
 		}
 		
 		StringBuilder str = new StringBuilder();
