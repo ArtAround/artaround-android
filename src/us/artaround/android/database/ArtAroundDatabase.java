@@ -20,7 +20,7 @@ public class ArtAroundDatabase {
 
 	public static final String[] CATEGORIES_PROJECTION = { Categories._ID, Categories.NAME };
 	public static final String[] NEIGHBORHOODS_PROJECTION = { Neighborhoods._ID, Neighborhoods.NAME };
-	public static final String[] ARTISTS_PROJECTION = { Artists._ID, Artists.UUID, Artists.NAME };
+	public static final String[] ARTISTS_PROJECTION = { Artists._ID, Artists.SLUG, Artists.NAME };
 
 	// We don't need to instantiate this class.
 	private ArtAroundDatabase() {}
@@ -31,7 +31,7 @@ public class ArtAroundDatabase {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
 
-		public static final String SLUG = "slug";
+		public static final String SLUG = "art_slug";
 		public static final String TITLE = "title";
 		public static final String CATEGORY = "category";
 		public static final String NEIGHBORHOOD = "neighborhood";
@@ -57,7 +57,7 @@ public class ArtAroundDatabase {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
 
-		public static final String SLUG = "slug";
+		public static final String SLUG = "art_slug";
 	}
 
 	public static final class Artists implements BaseColumns {
@@ -66,7 +66,7 @@ public class ArtAroundDatabase {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
 
-		public static final String UUID = "uuid";
+		public static final String SLUG = "artist_slug";
 		public static final String NAME = "name";
 
 		public static final String DEFAULT_SORT_ORDER = NAME + " ASC";
@@ -136,13 +136,13 @@ public class ArtAroundDatabase {
 		StringBuilder b = new StringBuilder();
 		b.append("CREATE TABLE ").append(Artists.TABLE_NAME).append(" (");
 		b.append(Artists._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(Artists.UUID).append(" TEXT,");
+		b.append(Artists.SLUG).append(" TEXT,");
 		b.append(Artists.NAME).append(" TEXT, ");
 
 		b.append("UNIQUE (").append(Artists.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append("(").append(Artists.UUID)
+		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append("(").append(Artists.SLUG)
 				.append(");");
 		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Artists.TABLE_NAME).append("(").append(Artists.NAME)
 				.append(");");

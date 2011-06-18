@@ -346,10 +346,12 @@ public class ArtFilterListFragment extends ListFragment {
 			String text = getItem(position);
 			CheckBox check = (CheckBox) convertView;
 			if (check == null) {
-				//				if (text.equals(allPublic) || text.equals(allVenues))
-				//					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
+				//				if (text.equals(allVenues) || text.equals(getString(R.string.category_gallery))
+				//						|| text.equals(getString(R.string.category_market))
+				//						|| text.equals(getString(R.string.category_museum)))
+				//					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item2, null);
 				//				else
-				check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
+					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
 			}
 
 			check.setText(text);

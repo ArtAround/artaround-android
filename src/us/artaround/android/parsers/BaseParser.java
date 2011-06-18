@@ -231,7 +231,7 @@ public class BaseParser {
 									temp.put(name, newArtist);
 
 									ContentValues artist = new ContentValues();
-									artist.put(Artists.UUID, artistUUID);
+									artist.put(Artists.SLUG, artistUUID);
 									artist.put(Artists.NAME, name);
 									artists.add(artist);
 

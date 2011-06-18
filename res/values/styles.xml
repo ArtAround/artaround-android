@@ -201,6 +201,12 @@
 		<item
 			name="android:textColor">#FFFFFF</item>
 	</style>
+	
+	<style
+		name="Checkbox2" parent="Checkbox">
+		<item
+			name="android:button">@drawable/btn_check2</item>
+	</style>
 
 	<style
 		name="Minimap">

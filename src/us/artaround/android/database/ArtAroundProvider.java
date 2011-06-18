@@ -39,6 +39,7 @@ public class ArtAroundProvider extends ContentProvider {
 	private static HashMap<String, String> artistsMap;
 	private static HashMap<String, String> categoriesMap;
 	private static HashMap<String, String> neighborhoodsMap;
+	private static HashMap<String, String> artFavoritesMap;
 
 	private static final int ARTS = 0;
 	private static final int ARTISTS = 2;
@@ -149,7 +150,7 @@ public class ArtAroundProvider extends ContentProvider {
 			break;
 		case ART_FAVORITES:
 			qb.setTables(ART_FAVORITES_TABLES);
-			qb.setProjectionMap(artsMap);
+			qb.setProjectionMap(artFavoritesMap);
 			break;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
@@ -406,13 +407,13 @@ public class ArtAroundProvider extends ContentProvider {
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, ArtFavorites.TABLE_NAME, ART_FAVORITES);
 
 		artistsMap = new HashMap<String, String>();
-		artistsMap.put(Artists._ID, Artists._ID);
-		artistsMap.put(Artists.UUID, Artists.UUID);
+		artistsMap.put(Artists._ID, Artists.TABLE_NAME + "." + Artists._ID);
+		artistsMap.put(Artists.SLUG, Artists.SLUG);
 		artistsMap.put(Artists.NAME, Artists.NAME);
 
 		artsMap = new HashMap<String, String>();
 		artsMap.put(Arts._ID, Arts.TABLE_NAME + "." + Arts._ID);
-		artsMap.put(Arts.SLUG, Arts.TABLE_NAME + "." + Arts.SLUG);
+		artsMap.put(Arts.SLUG, Arts.SLUG);
 		artsMap.put(Arts.TITLE, Arts.TITLE);
 		artsMap.put(Arts.CATEGORY, Arts.CATEGORY);
 		artsMap.put(Arts.NEIGHBORHOOD, Arts.NEIGHBORHOOD);
@@ -428,21 +429,26 @@ public class ArtAroundProvider extends ContentProvider {
 		artsMap.put(Arts.MEDIUM_DISTANCE, Arts.MEDIUM_DISTANCE);
 		artsMap.put(Arts.CITY, Arts.CITY);
 		artsMap.put(Arts.ARTIST, Arts.ARTIST);
-		artsMap.put(Artists.NAME, Artists.TABLE_NAME + "." + Artists.NAME);
+		artsMap.put(Artists.NAME, Artists.NAME);
+
+		artFavoritesMap = new HashMap<String, String>();
+		artFavoritesMap.put(ArtFavorites._ID, ArtFavorites.TABLE_NAME + "." + ArtFavorites._ID);
+		artFavoritesMap.putAll(artsMap);
+		artFavoritesMap.put(Arts.SLUG, Arts.TABLE_NAME + "." + Arts.SLUG);
 
 		categoriesMap = new HashMap<String, String>();
-		categoriesMap.put(Categories._ID, Categories._ID);
+		categoriesMap.put(Categories._ID, Categories.TABLE_NAME + "." + Categories._ID);
 		categoriesMap.put(Categories.NAME, Categories.NAME);
 
 		neighborhoodsMap = new HashMap<String, String>();
-		neighborhoodsMap.put(Neighborhoods._ID, Neighborhoods._ID);
+		neighborhoodsMap.put(Neighborhoods._ID, Neighborhoods.TABLE_NAME + "." + Neighborhoods._ID);
 		neighborhoodsMap.put(Neighborhoods.NAME, Neighborhoods.NAME);
 
 		// matches all the arts, even when art.artist is null
 		StringBuilder b = new StringBuilder();
 		b.append(Arts.TABLE_NAME).append(" LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
 		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
-		b.append(Artists.TABLE_NAME).append(".").append(Artists.UUID).append(")");
+		b.append(Artists.TABLE_NAME).append(".").append(Artists.SLUG).append(")");
 
 		ARTS_TABLES = b.toString();
 
@@ -452,7 +458,7 @@ public class ArtAroundProvider extends ContentProvider {
 		b.append(" ON (").append(ArtFavorites.TABLE_NAME).append(".").append(ArtFavorites.SLUG).append("=");
 		b.append(Arts.TABLE_NAME).append(".").append(Arts.SLUG).append(") LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
 		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
-		b.append(Artists.TABLE_NAME).append(".").append(Artists.UUID).append(")");
+		b.append(Artists.TABLE_NAME).append(".").append(Artists.SLUG).append(")");
 
 		ART_FAVORITES_TABLES = b.toString();
 	}
