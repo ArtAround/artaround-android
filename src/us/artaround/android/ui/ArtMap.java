@@ -151,7 +151,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 				handler));
 
 		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		locationUpdater = new LocationUpdater(this);
+		locationUpdater = new LocationUpdater(this, this);
 		items = new HashMap<Art, ArtOverlayItem>();
 
 		restoreState(savedInstanceState);

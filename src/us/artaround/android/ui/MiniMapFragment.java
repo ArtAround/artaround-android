@@ -1,9 +1,10 @@
 package us.artaround.android.ui;
 
 import us.artaround.R;
+import us.artaround.android.common.LocationUpdater;
+import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
 import us.artaround.android.common.Utils;
 import us.artaround.android.ui.CurrentLocationOverlay.CurrentOverlayDragCallback;
-import us.artaround.android.ui.LocatorFragment.LocatorCallback;
 import android.app.Activity;
 import android.app.Dialog;
 import android.location.Location;
@@ -19,9 +20,8 @@ import android.widget.TextView;
 import com.google.android.maps.GeoPoint;
 
 //FIXME why this fragment doesn't save its own state?
-public class MiniMapFragment extends Fragment implements LocatorCallback, CurrentOverlayDragCallback {
+public class MiniMapFragment extends Fragment implements LocationUpdaterCallback, CurrentOverlayDragCallback {
 	private static final String TAG = "MiniMap";
-	private static final String TAG_LOCATOR = "locator";
 
 	private static final int ZOOM_DEFAULT_LEVEL = 15;
 
@@ -39,6 +39,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	private TextView tvCoords;
 	private Location location;
 	private CurrentLocationOverlay currentOverlay;
+	private LocationUpdater locationUpdater;
 
 	private LocationSettingsDialog dialog;
 
@@ -73,6 +74,8 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		Utils.d(TAG, "onActivityCreated(): savedInstanceState=", savedInstanceState);
+
+		locationUpdater = new LocationUpdater(getActivity(), this);
 
 		if (savedInstanceState != null) {
 			location = savedInstanceState.getParcelable(SAVE_LOCATION);
@@ -121,16 +124,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.art_edit_label_minimap_loading);
 		}
-		Bundle args = new Bundle();
-		args.putBoolean(LocatorFragment.ARG_ADDRESS_UPDATE, false);
-
-		FragmentManager fm = getFragmentManager();
-		LocatorFragment f = (LocatorFragment) fm.findFragmentByTag(TAG_LOCATOR);
-		if (f == null) {
-			f = new LocatorFragment(this);
-			f.setArguments(args);
-			fm.beginTransaction().add(f, TAG_LOCATOR).commit();
-		}
+		locationUpdater.updateLocation();
 
 		// FIXME fix this hard-coded thing
 		if (getActivity() instanceof ArtEdit) {
@@ -142,6 +136,19 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	public void onDragOverlay(double latitude, double longitude) {
 		if (tvCoords != null) {
 			tvCoords.setText(Utils.formatCoords(latitude, longitude));
+		}
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public static class LocationSettingsDialog extends DialogFragment {
+		public LocationSettingsDialog() {}
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			return Utils.getLocationSettingsDialog(getActivity());
 		}
 	}
 
@@ -161,23 +168,22 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	}
 
 	@Override
-	public void onLocationUpdateError(int errorCode) {
-		if (getActivity() == null) return;
-
-		Utils.d(TAG, "onLocationUpdateError(): errorCode=", errorCode);
-		if (errorCode == LocatorFragment.ERROR_NO_PROVIDER) {
-			FragmentManager fm = getFragmentManager();
-
-			if (fm == null) return; //FIXME wtf?! why is it null?!
-
-			Fragment f = fm.findFragmentByTag("dlgLocation");
-			if (f != null) {
-				getFragmentManager().beginTransaction().remove(f).commit();
-			}
-			dialog = new LocationSettingsDialog();
-			dialog.show(fm, "dlgLocation");
+	public void onSuggestLocationSettings() {
+		if (tvCoords != null) {
+			tvCoords.setText(R.string.location_update_failure);
 		}
 
+		FragmentManager fm = getFragmentManager();
+		Fragment f = fm.findFragmentByTag("dlgLocation");
+		if (f != null) {
+			getFragmentManager().beginTransaction().remove(f).commit();
+		}
+		dialog = new LocationSettingsDialog();
+		dialog.show(fm, "dlgLocation");
+	}
+
+	@Override
+	public void onLocationUpdateError() {
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
 		}
@@ -185,19 +191,6 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		//FIXME remove this
 		if (getActivity() instanceof ArtEdit) {
 			((ArtEdit) getActivity()).toggleLoading(false);
-		}
-	}
-
-	public Location getLocation() {
-		return location;
-	}
-
-	public static class LocationSettingsDialog extends DialogFragment {
-		public LocationSettingsDialog() {}
-
-		@Override
-		public Dialog onCreateDialog(Bundle savedInstanceState) {
-			return Utils.getLocationSettingsDialog(getActivity());
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package us.artaround.android.common;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -23,7 +22,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 
 public class LocationUpdater implements TimeoutCallback {
-	public final static String TAG = "ArtAround.Location";
+	public final static String TAG = "Location";
 
 	private static final int MIN_TIME = 5000;
 	private static final int MIN_DISTANCE = 100;
@@ -32,8 +31,10 @@ public class LocationUpdater implements TimeoutCallback {
 	private static final int MAX_CACHE_SIZE = 10;
 	private static final LinkedHashMap<String, String> cache = new LinkedHashMap<String, String>();
 
-	private WeakReference<Context> context;
+	private final LocationUpdaterCallback callback;
+	private final AddressUpdaterCallback addrCallback;
 	private final LocationManager manager;
+	private final Geocoder geocoder;
 
 	private final LocationListener fineListener, coarseListener;
 	private List<String> fineProviders, coarseProviders;
@@ -47,13 +48,19 @@ public class LocationUpdater implements TimeoutCallback {
 
 	private Object tag; // this can be used to attach any other info
 
-	public LocationUpdater(Context context) {
-		attach(context);
+	public LocationUpdater(Context context, LocationUpdaterCallback callback) {
+		this(context, callback, null);
+	}
+
+	public LocationUpdater(Context context, LocationUpdaterCallback callback, AddressUpdaterCallback addrCallback) {
+		this.callback = callback;
+		this.addrCallback = addrCallback;
 
 		timers = Collections.synchronizedList(new ArrayList<TimeoutTimer>());
 		handler = new Handler();
 
 		manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		geocoder = new Geocoder(context);
 		fineListener = getNewListener();
 		coarseListener = getNewListener();
 	}
@@ -71,8 +78,7 @@ public class LocationUpdater implements TimeoutCallback {
 		updateEnabledProviders();
 
 		if (providersNotEnabled()) {
-			LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-			if (ctx != null) ctx.onSuggestLocationSettings();
+			callback.onSuggestLocationSettings();
 			return;
 		}
 
@@ -100,37 +106,23 @@ public class LocationUpdater implements TimeoutCallback {
 		Utils.d(TAG, "Removed all location updates.");
 	}
 
-	public void attach(Context context) {
-		this.context = new WeakReference<Context>(context);
-
-		if (!(context instanceof LocationUpdaterCallback)) {
-			throw new IllegalArgumentException("Your Context needs to implement the LocationUpdaterCallback!");
-		}
-	}
-
 	public void detach() {
 		removeUpdates();
 	}
 
 	public void updateAddress(Location location) {
-		if (!(context.get() instanceof AddressUpdaterCallback)) {
+		if (addrCallback == null) {
 			throw new IllegalArgumentException("Your Context needs to implement the AddressUpdaterCallback!");
 		}
 
-		AddressUpdaterCallback ctx = (AddressUpdaterCallback) context.get();
-		if (ctx == null) {
-			return;
-		}
-
 		if (location == null) {
-
-			ctx.onAddressUpdateError();
+			addrCallback.onAddressUpdateError();
 			Utils.d(TAG, "Address update error - location is null.");
 		}
 
 		String address = getFromCache(location);
 		if (!TextUtils.isEmpty(address)) {
-			ctx.onAddressUpdate(address);
+			addrCallback.onAddressUpdate(address);
 			Utils.d(TAG, "Address for location already in cache");
 		}
 		else {
@@ -145,8 +137,7 @@ public class LocationUpdater implements TimeoutCallback {
 				boolean notOk = (status == LocationProvider.OUT_OF_SERVICE || status == LocationProvider.TEMPORARILY_UNAVAILABLE);
 				if (notOk) {
 					endTimerForProvider(provider, this);
-					LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-					if (ctx != null) ctx.onLocationUpdateError();
+					callback.onLocationUpdateError();
 				}
 			}
 
@@ -160,8 +151,7 @@ public class LocationUpdater implements TimeoutCallback {
 			public void onLocationChanged(Location location) {
 				Utils.d(TAG, "Location update success:", location);
 				foundLocation = true;
-				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-				if (ctx != null) ctx.onLocationUpdate(location);
+				callback.onLocationUpdate(location);
 				endTimerForProvider(location.getProvider(), this);
 			}
 		};
@@ -235,8 +225,7 @@ public class LocationUpdater implements TimeoutCallback {
 			location = manager.getLastKnownLocation(provider);
 			if (location != null) {
 				Utils.d(TAG, "Last location from", provider, location);
-				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-				if (ctx != null) ctx.onLocationUpdate(location);
+				callback.onLocationUpdate(location);
 				return true;
 			}
 		}
@@ -247,8 +236,7 @@ public class LocationUpdater implements TimeoutCallback {
 			location = manager.getLastKnownLocation(provider);
 			if (location != null) {
 				Utils.d(TAG, "Last known location is", location, provider);
-				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-				if (ctx != null) ctx.onLocationUpdate(location);
+				callback.onLocationUpdate(location);
 				return true;
 			}
 		}
@@ -270,17 +258,13 @@ public class LocationUpdater implements TimeoutCallback {
 		}
 		else {
 			if (!foundLocation) {
-				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
-				if (ctx != null) ctx.onLocationUpdateError();
+				callback.onLocationUpdateError();
 			}
 		}
 	}
 
 	@Override
 	public void onTimeout(final TimeoutTimer timer) {
-		if (context.get() == null) {
-			return;
-		}
 		endTimerForProvider(timer.getId(), (LocationListener) timer.getTag());
 		updateFromLocationListener();
 
@@ -288,7 +272,7 @@ public class LocationUpdater implements TimeoutCallback {
 	}
 
 	private void requestReverseGeocoding(Location location) {
-		addressUpdater = (AddressUpdater) new AddressUpdater(context.get()).execute(location);
+		addressUpdater = (AddressUpdater) new AddressUpdater().execute(location);
 		Utils.d(TAG, "Started reverse geocoding location:", location);
 	}
 
@@ -335,11 +319,6 @@ public class LocationUpdater implements TimeoutCallback {
 
 	private class AddressUpdater extends AsyncTask<Location, Void, String> {
 		private Location location;
-		private final WeakReference<Context> context;
-
-		public AddressUpdater(Context context) {
-			this.context = new WeakReference<Context>(context);
-		}
 
 		@Override
 		protected String doInBackground(Location... params) {
@@ -350,9 +329,8 @@ public class LocationUpdater implements TimeoutCallback {
 
 			location = params[0];
 			try {
-				Context ctx = context.get();
-				if (ctx != null) {
-					List<Address> addresses = new Geocoder(ctx).getFromLocation(location.getLatitude(),
+
+				List<Address> addresses = geocoder.getFromLocation(location.getLatitude(),
 							location.getLongitude(), 1);
 					String address = getFullAddress(addresses);
 
@@ -360,10 +338,7 @@ public class LocationUpdater implements TimeoutCallback {
 						addToCache(location, address);
 					}
 					return address;
-				}
-				else {
-					return null;
-				}
+
 
 			}
 			catch (IOException e) {
@@ -376,12 +351,10 @@ public class LocationUpdater implements TimeoutCallback {
 		protected void onPostExecute(String address) {
 			Utils.d(TAG, "The reverse geocoding found address:", address);
 			if (address != null) {
-				AddressUpdaterCallback ctx = (AddressUpdaterCallback) context.get();
-				if (ctx != null) ctx.onAddressUpdate(address);
+				addrCallback.onAddressUpdate(address);
 			}
 			else {
-				AddressUpdaterCallback ctx = (AddressUpdaterCallback) context.get();
-				if (ctx != null) ctx.onAddressUpdateError();
+				addrCallback.onAddressUpdateError();
 			}
 
 			addressUpdater = null;
