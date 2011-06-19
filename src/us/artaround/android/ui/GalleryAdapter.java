@@ -51,22 +51,27 @@ public class GalleryAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(context).inflate(R.layout.gallery_thumb, parent, false);
+		}
+
+		ImageView imgView = (ImageView) view.findViewById(R.id.img_add_photo);
+		View progress = view.findViewById(R.id.progress);
+
 		PhotoWrapper photo = photos.get(position);
 		if (photo != null) {
-			ImageView imageView = (ImageView) convertView;
-			if (imageView == null) {
-				imageView = (ImageView) LayoutInflater.from(context).inflate(R.layout.gallery_thumb, parent, false);
-			}
 
 			if (photo.drawable != null) {
-				imageView.setImageDrawable(photo.drawable);
+				imgView.setImageDrawable(photo.drawable);
 			}
 			else if (photo.uri != null && photo.id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
-				imageView.setImageBitmap(Utils.decodeBitmap(photo.uri, imageView));
+				imgView.setImageBitmap(Utils.decodeBitmap(photo.uri, imgView));
 			}
-			return imageView;
+			progress.setVisibility(View.GONE);
 		}
-		return null;
+
+		return view;
 	}
 
 	public void hideLoaders() {

@@ -33,6 +33,8 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	public static final String ARG_PHOTO = "photo";
 	public static final String ARG_TITLE = "title";
 
+	private static final int LOADER_PHOTO = 500;
+
 	private Gallery gallery;
 	private GalleryAdapter adapter;
 
@@ -53,10 +55,11 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		super.onAttach(activity);
 		Utils.d(Utils.TAG, "onAttach()");
 
-		setRetainInstance(true);
+		//setRetainInstance(true);
 
 		photos = (ArrayList<PhotoWrapper>) getArguments().getSerializable(ARG_PHOTOS);
 		title = getArguments().getString(ARG_TITLE);
+		Utils.d(Utils.TAG, "onAttach(): photos=", photos);
 	}
 
 	@Override
@@ -106,34 +109,52 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	private void setupState() {
 		if (photos == null || photos.isEmpty()) return;
 
-		Bundle args = new Bundle();
-
-
 		int size = photos.size();
+		String firstId = null;
 		for (int i = 0; i < size; i++) {
 			String id = photos.get(i).id;
-			if (TextUtils.isEmpty(id) || id.contains(MiniGalleryAdapter.NEW_PHOTO)) continue;
-
-			toLoadCount++;
-			args.putString(ARG_PHOTO, id);
-			int hashCode = id.hashCode();
-			getLoaderManager().restartLoader(hashCode, args, this);
+			if (!TextUtils.isEmpty(id) && !id.contains(MiniGalleryAdapter.NEW_PHOTO)) {
+				toLoadCount++;
+				if (firstId == null) {
+					firstId = id;
+				}
+			}
 		}
+
+		Utils.d(Utils.TAG, "There are", toLoadCount, "photos to load");
+
+		if (firstId != null) {
+			toggleLoading(true);
+
+			Bundle args = new Bundle();
+			args.putString(ARG_PHOTO, firstId);
+			getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
+		}
+	}
+
+	private String findNextIdToLoad(int start) {
+		int size = photos.size();
+
+		for (int i = start; i < size; i++) {
+			String id = photos.get(i).id;
+			if (!TextUtils.isEmpty(id) && !id.contains(MiniGalleryAdapter.NEW_PHOTO)) {
+				return id;
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public Loader<Boolean> onCreateLoader(int id, final Bundle args) {
-		loadedCount.incrementAndGet();
-		toggleLoading(true);
 
 		return new AsyncLoader<Boolean>(getActivity()) {
 			@Override
 			public Boolean loadInBackground() {
 				FlickrService srv = FlickrService.getInstance();
 				String photoId = args.getString(ARG_PHOTO);
-				FlickrPhoto photo;
+
 				try {
-					photo = srv.parsePhoto(srv.getPhotoJson(photoId), FlickrService.SIZE_ORIGINAL);
+					FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(photoId), FlickrService.SIZE_ORIGINAL);
 					if (photo != null) {
 						Drawable drawable = ImageDownloader.getImageDrawable(photo.url);
 						for (int i = 0; i < photos.size(); i++) {
@@ -154,13 +175,23 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	@Override
 	public void onLoadFinished(Loader<Boolean> loader, Boolean result) {
-		Utils.d(Utils.TAG, "onLoadFinished(): id=", loader.getId());
 		if (result == null || result == false) return;
 		adapter.notifyDataSetChanged();
 
-		if (loadedCount.get() == toLoadCount) {
+		if (loadedCount.getAndIncrement() == toLoadCount - 1) {
 			toggleLoading(false);
+			Utils.d(Utils.TAG, "onLoadFinished(): done loading all pictures!");
 		}
+		else {
+			String id = findNextIdToLoad(loadedCount.get());
+			Utils.d(Utils.TAG, "onLoadFinished(): loading next picture=", id);
+			if (id != null) {
+				Bundle args = new Bundle();
+				args.putString(ARG_PHOTO, id);
+				getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
+			}
+		}
+		loader.stopLoading();
 	}
 
 	@Override
