@@ -16,6 +16,7 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentTop="true"
 		android:background="@drawable/gallery_actionbar_background"
+		android:padding="6dp"
 		android:gravity="center">
 
 <!-- 		<ImageButton -->
@@ -27,12 +28,13 @@
 
 		<TextView
 			android:id="@+id/title"
-			android:layout_width="wrap_content"
+			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:textColor="#FFFFFF"
 			android:textStyle="bold"
 			android:typeface="serif"
-			android:layout_centerInParent="true" />
+			android:gravity="center"
+			android:text="cenva" />
 
 		<ImageView
 			android:id="@+id/img_loader"
@@ -40,7 +42,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginRight="6dp"
 			android:layout_centerVertical="true"
-			android:layout_toLeftOf="@+id/btn_add_image"
+			android:layout_alignParentRight="true"
 			android:src="@drawable/ic_gallery_loading"
 			android:visibility="gone" />
 

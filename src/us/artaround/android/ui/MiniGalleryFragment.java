@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.ImageDownloader;
+import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.PhotoWrapper;
 import us.artaround.android.common.Utils;
 import us.artaround.android.services.FlickrService;
@@ -20,7 +21,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -43,13 +43,15 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
 
 //FIXME why this fragment doesn't save its own state?
-public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<PhotoWrapper> {
+public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<LoaderPayload> {
 	private static final String TAG = "MiniGallery";
 
 	public static final String ARG_EDIT_MODE = "edit_mode";
 	public static final String ARG_TITLE = "title";
+	public static final String ARG_PHOTO_IDS = "photo_ids";
 	public static final String ARG_PHOTOS = "photos";
 	public static final String ARG_PHOTO = "photo";
+	public static final String ARG_SIZE = "size";
 
 	private static final String SAVE_PHOTOS = "photos";
 	private static final String SAVE_NEW_PHOTO_URIS = "new_photo_uris";
@@ -59,9 +61,9 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	private static final int REQUEST_CODE_GALLERY = 1;
 	private static final int REQUEST_CODE_CROP_FROM_CAMERA = 2;
 
-	private static final String DIALOG_ADD_PHOTO = "add_photo";
+	private static final int LOADER_PHOTO = 10000;
 
-	private static final int TIMEOUT = 20000;
+	private static final String DIALOG_ADD_PHOTO = "add_photo";
 
 	private Gallery miniGallery;
 	private MiniGalleryAdapter adapter;
@@ -77,12 +79,14 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	private MiniGallerySaver gallerySaver;
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		setRetainInstance(true);
 
-		photoIds = getArguments().getStringArrayList(ARG_PHOTOS);
+		photoIds = getArguments().getStringArrayList(ARG_PHOTO_IDS);
+		photos = (ArrayList<PhotoWrapper>) getArguments().getSerializable(ARG_PHOTOS);
 		isEditMode = getArguments().getBoolean(ARG_EDIT_MODE);
 		artTitle = getArguments().getString(ARG_TITLE);
 
@@ -120,8 +124,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		//Utils.d(TAG, "onActivityCreated(): savedInstanceState=" + savedInstanceState);
-		//setupState(savedInstanceState);
 		Bundle savedState = gallerySaver.restoreMiniGalleryState();
 		setupState(savedState);
 		Utils.d(TAG, "onActivityCreated(): savedState=", savedState);
@@ -144,17 +146,26 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	@SuppressWarnings("unchecked")
 	private void setupState(Bundle savedInstanceState) {
+
 		if (savedInstanceState != null) {
 			photos = (ArrayList<PhotoWrapper>) savedInstanceState.getSerializable(SAVE_PHOTOS);
 			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
 			loadedPhotosCount = new AtomicInteger(savedInstanceState.getInt(SAVE_LOADED_PHOTOS_COUNT, 0));
-
 			adapter.addItems(photos);
+			return;
+		}
+
+		newPhotoUris = new ArrayList<String>();
+
+		// load photos from server
+		if (photos == null) {
+			loadedPhotosCount = new AtomicInteger(0);
+			photos = new ArrayList<PhotoWrapper>();
 		}
 		else {
-			photos = new ArrayList<PhotoWrapper>();
-			newPhotoUris = new ArrayList<String>();
-			loadedPhotosCount = new AtomicInteger(0);
+			loadedPhotosCount = new AtomicInteger(getPhotoCount() - 1);
+			adapter.addItems(photos);
+			return;
 		}
 
 		int size = getPhotoCount();
@@ -162,18 +173,11 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			return;
 		}
 
-		// load photos from Flick or from cache (sdcard)
+		String id = photoIds.get(0);
+		if (TextUtils.isEmpty(id)) return;
+
 		adapter.setShowLoaders(true);
-
-		new CountDownTimer(TIMEOUT, 1) {
-			@Override
-			public void onTick(long millisUntilFinished) {}
-
-			@Override
-			public void onFinish() {
-				adapter.setShowLoaders(false);
-			}
-		}.start();
+		miniGallery.setClickable(false);
 
 		Resources res = getResources();
 		Bundle args = new Bundle();
@@ -181,14 +185,9 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
 		args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 		args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
+		args.putString(ARG_PHOTO, id);
 
-		for (int i = 0; i < size; ++i) {
-			String id = photoIds.get(i);
-			if (TextUtils.isEmpty(id)) continue;
-
-			args.putString(ARG_PHOTO, id);
-			getLoaderManager().restartLoader(id.hashCode(), args, this);
-		}
+		getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
 	}
 
 	protected void gotoGallery() {
@@ -206,60 +205,72 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			ft.remove(prevDialog);
 		}
 		ft.addToBackStack(null);
-
 		new AddPhotoDialog(this).show(ft, DIALOG_ADD_PHOTO);
 	}
 
 	@Override
-	public Loader<PhotoWrapper> onCreateLoader(int id, final Bundle args) {
-		loadedPhotosCount.incrementAndGet();
-		miniGallery.setClickable(false);
+	public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
+		if (id != LOADER_PHOTO) return null;
 
-		return new AsyncLoader<PhotoWrapper>(getActivity()) {
+		return new AsyncLoader<LoaderPayload>(getActivity()) {
 			@Override
-			public PhotoWrapper loadInBackground() {
-				FlickrService srv = FlickrService.getInstance();
-				FlickrPhoto photo;
+			public LoaderPayload loadInBackground() {
 				try {
 					String photoId = args.getString(ARG_PHOTO);
-					photo = srv.parsePhoto(srv.getPhotoJson(photoId), args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
+					Utils.d(TAG, "onCreateLoader(): loading photo id=", photoId);
 
-					if (photo != null) {
-						args.putString(ImageDownloader.EXTRA_PHOTO_ID, photoId);
-						args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
-						Uri uri = ImageDownloader.getImageUri(args);
-						Utils.d(TAG, "onCreateLoader(): uri=", uri.toString());
-						return (uri != null) ? new PhotoWrapper(photoId, uri.toString()) : null;
+					Uri uri = ImageDownloader.quickGetImageUri(photoId);
+					if (uri == null) {
+						FlickrService srv = FlickrService.getInstance();
+						FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(photoId),
+								args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
+						if (photo != null) {
+							args.putString(ImageDownloader.EXTRA_PHOTO_ID, photoId);
+							args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
+							uri = ImageDownloader.getImageUri(args);
+
+						}
 					}
+					return new LoaderPayload(LoaderPayload.STATUS_OK, (uri != null) ? new PhotoWrapper(photoId,
+							uri.toString()) : null, args);
 				}
 				catch (ArtAroundException e) {
-					Utils.d(TAG, "loadInBackground(): exc=", e);
+					return new LoaderPayload(LoaderPayload.STATUS_ERROR, e);
 				}
-				return null;
 			}
 		};
 	}
 
 	@Override
-	public void onLoadFinished(Loader<PhotoWrapper> loader, PhotoWrapper wrapper) {
-		Utils.d(TAG, "onLoadFinished(): id=", loader.getId());
-		adapter.setShowLoaders(false);
+	public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
+		if (loader.getId() != LOADER_PHOTO) return;
+		Utils.d(TAG, "onLoadFinished(): payload=", payload);
 
-		if (wrapper == null) {
-			return;
+		if (payload.getStatus() == LoaderPayload.STATUS_OK) {
+			PhotoWrapper wrapper = (PhotoWrapper) payload.getResult();
+			if (wrapper != null && wrapper.uri != null) {
+				adapter.addItem(wrapper);
+				photos.add(wrapper);
+			}
+		}
+		else {
+			//TODO error msg
 		}
 
-		if (loadedPhotosCount.get() == photoIds.size()) {
+		if (loadedPhotosCount.incrementAndGet() >= photoIds.size()) {
 			miniGallery.setClickable(true);
+			adapter.setShowLoaders(false);
 		}
-		if (wrapper.uri != null) {
-			adapter.addItem(wrapper);
-			photos.add(wrapper);
+		else {
+			Bundle args = payload.getArgs();
+			args.putString(ARG_PHOTO, photoIds.get(loadedPhotosCount.get()));
+			getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
 		}
+		loader.stopLoading();
 	}
 
 	@Override
-	public void onLoaderReset(Loader<PhotoWrapper> loader) {}
+	public void onLoaderReset(Loader<LoaderPayload> loader) {}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -286,7 +297,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			break;
 		case REQUEST_CODE_GALLERY:
 		case REQUEST_CODE_CROP_FROM_CAMERA:
-			String uriStr = tempPhotoUri.toString();
+			String uriStr = tempPhotoUri.toString().replace("file://", "");
 			newPhotoUris.add(uriStr);
 
 			PhotoWrapper wrapper = new PhotoWrapper(newPhotoUri(uriStr), uriStr);

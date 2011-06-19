@@ -22,8 +22,6 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 public class ImageDownloader {
-	private static final String TAG = "ArtAround.ImageDownloader";
-
 	public static final String EXTRA_PHOTO_ID = "photo_id";
 	public static final String EXTRA_PHOTO_URL = "photo_url";
 	public static final String EXTRA_PHOTO_SIZE = "photo_size";
@@ -52,16 +50,16 @@ public class ImageDownloader {
 		if (uri == null) {
 			downloadAndCacheImage(args);
 			uri = quickGetImageUri(photoId);
-			Utils.d(TAG, "Fetched image", photoId, " from server.");
+			Utils.d(Utils.TAG, "Fetched image", photoId, " from server.");
 		}
 		else {
-			Utils.d(TAG, "Fetched image", photoId, "from cache.");
+			Utils.d(Utils.TAG, "Fetched image", photoId, "from cache.");
 		}
 		return uri;
 	}
 
 	// will not make a network call, if file exists on disk
-	private static Uri quickGetImageUri(String photoId) {
+	public static Uri quickGetImageUri(String photoId) {
 		File imageFile = getFile(photoId);
 		if (imageFile == null || !imageFile.exists())
 			return null;
@@ -72,7 +70,7 @@ public class ImageDownloader {
 	private static File getFile(String photoId) {
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
 				|| Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-			Utils.d(TAG, "Could not cache the image on the sdcard! Check sdcard status.");
+			Utils.d(Utils.TAG, "Could not cache the image on the sdcard! Check sdcard status.");
 			return null;
 		}
 
@@ -91,7 +89,7 @@ public class ImageDownloader {
 		String url = args.getString(EXTRA_PHOTO_URL);
 
 		if (TextUtils.isEmpty(url)) {
-			Utils.d(TAG, "Could not download and/or cache image! Url is null.");
+			Utils.d(Utils.TAG, "Could not download and/or cache image! Url is null.");
 			return;
 		}
 
@@ -111,7 +109,8 @@ public class ImageDownloader {
 
 			final int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode != HttpStatus.SC_OK) {
-				Utils.d(TAG, "Could not download image! Status code", statusCode, "while retrieving bitmap from", url);
+				Utils.d(Utils.TAG, "Could not download image! Status code", statusCode, "while retrieving bitmap from",
+						url);
 				return;
 			}
 
@@ -145,7 +144,7 @@ public class ImageDownloader {
 			if (request != null) {
 				request.abort();
 			}
-			Utils.d(TAG, "Could not download and/or cache image!", e);
+			Utils.d(Utils.TAG, "Could not download and/or cache image!", e);
 		}
 		finally {
 			if (client != null) {
@@ -162,7 +161,7 @@ public class ImageDownloader {
 				}
 			}
 			catch (IOException e) {
-				Utils.d(TAG, "Could not download and/or cache image!", e);
+				Utils.d(Utils.TAG, "Could not download and/or cache image!", e);
 			}
 		}
 	}
@@ -174,16 +173,16 @@ public class ImageDownloader {
 			bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 			out.close();
 
-			Utils.d(TAG, "Cached image with id ", photoId);
+			Utils.d(Utils.TAG, "Cached image with id ", photoId);
 		}
 		catch (final Throwable e) {
-			Utils.d(TAG, "Could not download and/or cache image!", e);
+			Utils.d(Utils.TAG, "Could not download and/or cache image!", e);
 		}
 	}
 
 	private static Drawable downloadImage(String url) {
 		if (TextUtils.isEmpty(url)) {
-			Utils.d(TAG, "Could not download image! Url is null.");
+			Utils.d(Utils.TAG, "Could not download image! Url is null.");
 			return null;
 		}
 
@@ -198,7 +197,8 @@ public class ImageDownloader {
 
 			final int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode != HttpStatus.SC_OK) {
-				Utils.d(TAG, "Could not download image! Status code", statusCode, "while retrieving bitmap from", url);
+				Utils.d(Utils.TAG, "Could not download image! Status code", statusCode, "while retrieving bitmap from",
+						url);
 				return null;
 			}
 
@@ -212,7 +212,7 @@ public class ImageDownloader {
 			if (request != null) {
 				request.abort();
 			}
-			Utils.d(TAG, "Could not download image!", e);
+			Utils.d(Utils.TAG, "Could not download image!", e);
 		}
 		finally {
 			if (client != null) {
@@ -229,7 +229,7 @@ public class ImageDownloader {
 				}
 			}
 			catch (IOException e) {
-				Utils.d(TAG, "Could not download image!", e);
+				Utils.d(Utils.TAG, "Could not download image!", e);
 			}
 		}
 		return null;

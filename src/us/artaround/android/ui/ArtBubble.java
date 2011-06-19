@@ -1,9 +1,7 @@
 package us.artaround.android.ui;
 
 import us.artaround.R;
-import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.ImageDownloader;
-import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.Utils;
 import us.artaround.android.services.FlickrService;
 import us.artaround.android.services.FlickrService.FlickrPhoto;
@@ -14,9 +12,6 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
 import android.text.Html;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -29,7 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class ArtBubble extends FrameLayout implements LoaderCallbacks<LoaderPayload> {
+public class ArtBubble extends FrameLayout {
 	//private final static String TAG = "ArtBubble";
 
 	private final static int TIMEOUT = 30000;
@@ -105,17 +100,55 @@ public class ArtBubble extends FrameLayout implements LoaderCallbacks<LoaderPayl
 		}
 
 		if (art.photoIds != null && art.photoIds.size() > 0) {
-			String id = art.photoIds.get(0);
+			final String id = art.photoIds.get(0);
 			Resources res = ctx.getResources();
 
-			Bundle args = new Bundle();
+			final Bundle args = new Bundle();
 			args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
 			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
 			args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
 			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
 
-			((FragmentActivity) getContext()).getSupportLoaderManager().restartLoader(id.hashCode(), args, this);
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						final Uri uri;
+						Uri temp = ImageDownloader.quickGetImageUri(id);
+
+						if (temp == null) {
+							FlickrService srv = FlickrService.getInstance();
+							FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(id), FlickrService.SIZE_SMALL);
+							if (photo != null) {
+								args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
+								temp = ImageDownloader.getImageUri(args);
+							}
+						}
+						uri = temp;
+
+						imgView.post(new Runnable() {
+							@Override
+							public void run() {
+								if (uri != null) {
+									imgView.setScaleType(ScaleType.FIT_XY);
+									imgView.setImageURI(uri);
+									imgView.setVisibility(View.VISIBLE);
+									progress.setVisibility(View.GONE);
+								}
+								else {
+									imgView.setVisibility(View.GONE);
+								}
+							}
+						});
+
+					}
+					catch (ArtAroundException e) {
+						Utils.d(Utils.TAG, "Cound not get image thumb:", e);
+					}
+				}
+			}).start();
+
 			new CountDownTimer(TIMEOUT, 1) {
 				@Override
 				public void onTick(long millisUntilFinished) {}
@@ -134,58 +167,4 @@ public class ArtBubble extends FrameLayout implements LoaderCallbacks<LoaderPayl
 		imgView.setVisibility(View.GONE);
 		imgView.setImageURI(null);
 	}
-
-	@Override
-	public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
-		return new AsyncLoader<LoaderPayload>(getContext()) {
-
-			@Override
-			public LoaderPayload loadInBackground() {
-				LoaderPayload payload = null;
-
-				try {
-					FlickrService srv = FlickrService.getInstance();
-					FlickrPhoto photo = srv.parsePhoto(
-							srv.getPhotoJson(args.getString(ImageDownloader.EXTRA_PHOTO_ID)),
-							args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
-					if (photo != null) {
-						args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
-						payload = new LoaderPayload(LoaderPayload.STATUS_OK, ImageDownloader.getImageUri(args));
-					}
-				}
-				catch (ArtAroundException e) {
-					payload = new LoaderPayload(LoaderPayload.STATUS_ERROR, e.getMessage());
-				}
-				payload.setArgs(args);
-				return payload;
-			}
-		};
-	}
-
-	@Override
-	public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
-		if (payload.getStatus() == LoaderPayload.STATUS_OK) {
-			Uri uri = (Uri) payload.getResult();
-			// if we show another bubble while the first one is not loaded yet
-			// we need to show only the last task result
-			if (loader.getId() == payload.getArgs().getString(ImageDownloader.EXTRA_PHOTO_ID).hashCode()) {
-				if (uri != null) {
-					imgView.setScaleType(ScaleType.FIT_XY);
-					imgView.setImageURI(uri);
-					imgView.setVisibility(View.VISIBLE);
-					progress.setVisibility(View.GONE);
-				}
-				else {
-					imgView.setVisibility(View.GONE);
-				}
-			}
-		}
-		else {
-			//TODO error message
-		}
-		loader.stopLoading();
-	}
-
-	@Override
-	public void onLoaderReset(Loader<LoaderPayload> loader) {}
 }

@@ -108,6 +108,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 		Bundle args = new Bundle();
 
+
 		int size = photos.size();
 		for (int i = 0; i < size; i++) {
 			String id = photos.get(i).id;

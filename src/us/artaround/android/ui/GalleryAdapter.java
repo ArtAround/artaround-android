@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 import us.artaround.R;
 import us.artaround.android.common.PhotoWrapper;
+import us.artaround.android.common.Utils;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +40,7 @@ public class GalleryAdapter extends BaseAdapter {
 
 	@Override
 	public int getViewTypeCount() {
-		return 2;
+		return 1;
 	}
 
 	public void addItem(String id, String uri, Drawable drawable) {
@@ -62,7 +62,7 @@ public class GalleryAdapter extends BaseAdapter {
 				imageView.setImageDrawable(photo.drawable);
 			}
 			else if (photo.uri != null && photo.id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
-				imageView.setImageURI(Uri.parse(photo.uri));
+				imageView.setImageBitmap(Utils.decodeBitmap(photo.uri, imageView));
 			}
 			return imageView;
 		}

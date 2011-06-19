@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import us.artaround.R;
 import us.artaround.android.common.PhotoWrapper;
+import us.artaround.android.common.Utils;
 import android.content.Context;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +47,7 @@ public class MiniGalleryAdapter extends BaseAdapter {
 
 	@Override
 	public int getViewTypeCount() {
-		return editMode ? 2 : 1;
+		return 1;
 	}
 
 	//FIXME find a better way of "filling-in" the gallery from center
@@ -105,38 +105,35 @@ public class MiniGalleryAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(context).inflate(R.layout.mini_gallery_thumb, parent, false);
+		}
+		ImageView imgView = (ImageView) view.findViewById(R.id.img_add_photo);
+		View progress = view.findViewById(R.id.progress);
+		View text = view.findViewById(R.id.txt_add_photo);
 
 		if (editMode) {
-			if (view == null) {
-				view = LayoutInflater.from(context).inflate(R.layout.mini_gallery_add_thumb, parent, false);
-			}
-
 			if (position == 1) {
-				view.findViewById(R.id.img_add_photo).setVisibility(View.VISIBLE);
-				view.findViewById(R.id.progress).setVisibility(View.GONE);
-				view.findViewById(R.id.txt_add_photo).setVisibility(View.VISIBLE);
-			}
-			else if (!showLoaders) {
-				view.findViewById(R.id.progress).setVisibility(View.GONE);
+				imgView.setImageResource(R.drawable.img_camera);
+				progress.setVisibility(View.GONE);
+				text.setVisibility(View.VISIBLE);
 			}
 		}
-		else {
-			if (view == null) {
-				view = LayoutInflater.from(context).inflate(R.layout.mini_gallery_thumb, parent, false);
-			}
-			ImageView imgView = (ImageView) view;
-
+		if (!showLoaders) {
 			PhotoWrapper wrapper = photos.get(position);
 			if (wrapper != null) {
 				if (wrapper.uri != null) {
-					imgView.setImageURI(Uri.parse(wrapper.uri));
+					imgView.setImageBitmap(Utils.decodeBitmap(wrapper.uri, imgView));
+					//imgView.setImageURI(Uri.parse(wrapper.uri));
 				}
-				imgView.setTag(wrapper.id);
+				view.setTag(wrapper.id);
 			}
-			imgView.setVisibility(View.VISIBLE);
+			progress.setVisibility(View.GONE);
 		}
 		return view;
 	}
+
+
 
 	public void setShowLoaders(boolean show) {
 		showLoaders = show;

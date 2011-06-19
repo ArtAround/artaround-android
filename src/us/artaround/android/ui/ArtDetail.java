@@ -47,10 +47,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
-	//public static final String TAG = "ArtDetail";
+	public static final String TAG = "ArtDetail";
+	private static final String TAG_MINI_GALLERY = "mini_gallery";
 
 	public static final String EXTRA_ART = "art";
 	public static final String EXTRA_EDIT = "edit";
+	public static final String EXTRA_PHOTOS = "photos";
 
 	private static final String SAVE_COMMENTS = "comments";
 	private static final String SAVE_COMMENTS_COUNT = "comments_count";
@@ -99,7 +101,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 			art = (Art) intent.getSerializableExtra(EXTRA_ART);
 		}
 		if (art == null) {
-			Utils.d(Utils.TAG, "onCreate(): art=", art);
+			Utils.d(TAG, "onCreate(): art=", art);
 			return;
 		}
 
@@ -127,7 +129,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	private void onLoadComments() {
-		Utils.d(Utils.TAG, "onLoadComments()");
+		Utils.d(TAG, "onLoadComments()");
 
 		LoaderManager lm = getSupportLoaderManager();
 		Bundle args = new Bundle();
@@ -155,6 +157,9 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 			public void onClick(View v) {
 				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
 				iEdit.putExtra(ArtEdit.EXTRA_ART, art);
+				iEdit.putExtra(EXTRA_PHOTOS,
+						((MiniGalleryFragment) getSupportFragmentManager().findFragmentByTag(TAG_MINI_GALLERY))
+								.getPhotos());
 				iEdit.putExtra(EXTRA_EDIT, true);
 				startActivityForResult(iEdit, 0);
 			}
@@ -351,7 +356,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 
 	private void setupMiniGallery() {
 		Bundle args = new Bundle();
-		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTOS, art.photoIds);
+		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTO_IDS, art.photoIds);
 		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
 		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, false);
 
@@ -359,7 +364,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		f.setArguments(args);
 
 		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f).commit();
+		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f, TAG_MINI_GALLERY).commit();
 	}
 
 	private void setupMiniMap() {
@@ -387,7 +392,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
-			Utils.d(Utils.TAG, "onLoadFinished(): payload=", payload);
+			Utils.d(TAG, "onLoadFinished(): payload=", payload);
 
 			switch (loader.getId()) {
 			case LOADER_ASYNC_COMMENTS:
@@ -441,6 +446,8 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 				}
 				break;
 			}
+
+			loader.stopLoading();
 		}
 
 		@Override
@@ -516,6 +523,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite, Toast.LENGTH_SHORT).show();
 				}
 			}
+			loader.stopLoading();
 		}
 
 		@Override

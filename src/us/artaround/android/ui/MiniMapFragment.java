@@ -169,6 +169,11 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 	@Override
 	public void onSuggestLocationSettings() {
+		// FIXME fix this hard-coded thing
+		if (getActivity() instanceof ArtEdit) {
+			((ArtEdit) getActivity()).toggleLoading(true);
+		}
+
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
 		}
@@ -184,13 +189,13 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 	@Override
 	public void onLocationUpdateError() {
-		if (tvCoords != null) {
-			tvCoords.setText(R.string.location_update_failure);
+		// FIXME fix this hard-coded thing
+		if (getActivity() instanceof ArtEdit) {
+			((ArtEdit) getActivity()).toggleLoading(true);
 		}
 
-		//FIXME remove this
-		if (getActivity() instanceof ArtEdit) {
-			((ArtEdit) getActivity()).toggleLoading(false);
+		if (tvCoords != null) {
+			tvCoords.setText(R.string.location_update_failure);
 		}
 	}
 }

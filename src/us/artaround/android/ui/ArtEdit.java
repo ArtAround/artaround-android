@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.LoaderPayload;
+import us.artaround.android.common.PhotoWrapper;
 import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -94,6 +95,8 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	private ScrollView scrollView;
 	private int scrollY;
 	private boolean hasChanges;
+	private ArrayList<PhotoWrapper> photos;
+	private ArrayList<String> uris;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +112,28 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 		setupMiniMap(savedInstanceState);
 		setupMiniGallery(savedInstanceState);
 		setupState();
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
+		outState.putSerializable(SAVE_ART, art);
+		outState.putBoolean(SAVE_HAS_CHANGES, hasChanges);
+		outState.putBundle(SAVE_MINI_GALLERY, savedGalleryState);
+		super.onSaveInstanceState(outState);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void setupVars(Bundle savedInstanceState) {
+		Intent i = getIntent();
+		if (i.hasExtra(EXTRA_ART)) {
+			art = (Art) i.getSerializableExtra(EXTRA_ART);
+		}
+		else {
+			art = new Art(); // will be used as a "holder" for user input
+		}
+		photos = (ArrayList<PhotoWrapper>) i.getSerializableExtra(ArtDetail.EXTRA_PHOTOS);
+		restoreState(savedInstanceState);
 	}
 
 	private void restoreState(Bundle savedInstanceState) {
@@ -127,26 +152,6 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				savedGalleryState = savedInstanceState.getBundle(SAVE_MINI_GALLERY);
 			}
 		}
-	}
-
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
-		outState.putSerializable(SAVE_ART, art);
-		outState.putBoolean(SAVE_HAS_CHANGES, hasChanges);
-		outState.putBundle(SAVE_MINI_GALLERY, savedGalleryState);
-		super.onSaveInstanceState(outState);
-	}
-
-	private void setupVars(Bundle savedInstanceState) {
-		Intent i = getIntent();
-		if (i.hasExtra(EXTRA_ART)) {
-			art = (Art) i.getSerializableExtra(EXTRA_ART);
-		}
-		else {
-			art = new Art(); // will be used as a "holder" for user input
-		}
-		restoreState(savedInstanceState);
 	}
 
 	private void setupState() {
@@ -216,7 +221,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 			return; //something bad happened
 		}
 
-		ArrayList<String> uris = f.getNewPhotoUris();
+		uris = f.getNewPhotoUris();
 		if (uris == null || uris.isEmpty()) {
 			Utils.d(Utils.TAG, "There are no photos to be uploaded!");
 			return;
@@ -229,9 +234,6 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 		if (position == uris.size()) {
 			hasChanges = false;
 			dismissDialog(DIALOG_PROGRESS);
-
-			// delete all temporary photos			
-			Utils.deleteCachedFiles(uris);
 
 			onFinish();
 			return;
@@ -398,9 +400,10 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 		if (savedInstanceState != null) return;
 
 		Bundle args = new Bundle();
-		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTOS, art.photoIds);
+		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTO_IDS, art.photoIds);
 		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
 		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, true);
+		args.putSerializable(MiniGalleryFragment.ARG_PHOTOS, photos);
 
 		MiniGalleryFragment f = new MiniGalleryFragment();
 		f.setArguments(args);
@@ -434,11 +437,6 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 			imgLoader.setVisibility(View.INVISIBLE);
 		}
 	}
-
-	//	@Override
-	//	protected boolean isRouteDisplayed() {
-	//		return false;
-	//	}
 
 	private final LoaderCallbacks<Cursor> cursorLoaderCallback = new LoaderCallbacks<Cursor>() {
 
@@ -757,6 +755,9 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	private void onFinish() {
+		// delete all temporary photos			
+		Utils.deleteCachedFiles(uris);
+
 		if (getIntent().hasExtra(ArtDetail.EXTRA_EDIT)) {
 			if (hasChanges) {
 				showDialog(DIALOG_DISCARD_EDIT);

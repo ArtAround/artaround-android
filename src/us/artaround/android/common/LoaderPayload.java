@@ -22,8 +22,13 @@ public class LoaderPayload {
 	}
 
 	public LoaderPayload(int status, Object result) {
+		this(status, result, null);
+	}
+
+	public LoaderPayload(int status, Object result, Bundle args) {
 		this.status = status;
 		this.result = result;
+		this.args = args;
 	}
 
 	public int getStatus() {

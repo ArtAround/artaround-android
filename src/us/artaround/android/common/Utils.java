@@ -1,6 +1,7 @@
 package us.artaround.android.common;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -25,6 +26,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.net.Uri;
@@ -38,6 +40,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
@@ -86,10 +89,10 @@ public class Utils {
 	public static final int THEME_DEFAULT = 0;
 	private static int theme = THEME_DEFAULT;
 
-	//	private static final int OUTPUT_X = 800;
-	//	private static final int OUTPUT_Y = 600;
-	//private static final int ASPECT_X = 1;
-	//private static final int ASPECT_Y = 1;
+	private static final int OUTPUT_X = 800;
+	private static final int OUTPUT_Y = 600;
+	private static final int ASPECT_X = 0;
+	private static final int ASPECT_Y = 0;
 	private static final boolean SCALE = true;
 	private static final boolean FACE_DETECTION = true;
 	private static final String OUTPUT_FORMAT = Bitmap.CompressFormat.JPEG.toString();
@@ -235,10 +238,10 @@ public class Utils {
 
 	public static Intent getCropImageIntent(Intent intent, Uri output) {
 		intent.putExtra("crop", "true");
-		//intent.putExtra("aspectX", ASPECT_X);
-		//intent.putExtra("aspectY", ASPECT_Y);
-		//intent.putExtra("outputX", OUTPUT_X);
-		//intent.putExtra("outputY", OUTPUT_Y);
+		intent.putExtra("aspectX", ASPECT_X);
+		intent.putExtra("aspectY", ASPECT_Y);
+		intent.putExtra("outputX", OUTPUT_X);
+		intent.putExtra("outputY", OUTPUT_Y);
 		intent.putExtra("scale", SCALE);
 		intent.putExtra("noFaceDetection", !FACE_DETECTION);
 		intent.putExtra("outputFormat", OUTPUT_FORMAT);
@@ -372,21 +375,20 @@ public class Utils {
 		}
 	}
 
-	public static String makeSlug(String name) {
-		String[] str = name.split("\\s");
-		int length = str.length;
-		boolean first = true;
-		StringBuilder slug = new StringBuilder();
+	// this is because of OutOfMemoryException with large images from sdcard
+	public static Bitmap decodeBitmap(String path, ImageView imgView) {
+		//imgView is passed to set it null to remove it from external memory
+		imgView = null;
 
-		for (int i = 0; i < length; i++) {
-			if (first) {
-				first = false;
-			}
-			else {
-				slug.append("-");
-			}
-			slug.append(str[i].toLowerCase());
+		try {
+			InputStream stream = new FileInputStream(path);
+			Bitmap bitmap = BitmapFactory.decodeStream(stream, null, null);
+			stream.close();
+			stream = null;
+			return bitmap;
 		}
-		return slug.toString();
+		catch (Exception e) {
+			return null;
+		}
 	}
 }
