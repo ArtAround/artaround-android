@@ -126,10 +126,10 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 		}
 		locationUpdater.updateLocation();
 
-		// FIXME fix this hard-coded thing
-		if (getActivity() instanceof ArtEdit) {
-			((ArtEdit) getActivity()).toggleLoading(true);
-		}
+		//		// FIXME fix this hard-coded thing
+		//		if (getActivity() instanceof ArtEdit) {
+		//			((ArtEdit) getActivity()).toggleLoading(true);
+		//		}
 	}
 
 	@Override
@@ -161,18 +161,18 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 		centerMiniMap();
 
-		//FIXME remove this
-		if (getActivity() instanceof ArtEdit) {
-			((ArtEdit) getActivity()).toggleLoading(false);
-		}
+		//		//FIXME remove this
+		//		if (getActivity() instanceof ArtEdit) {
+		//			((ArtEdit) getActivity()).toggleLoading(false);
+		//		}
 	}
 
 	@Override
 	public void onSuggestLocationSettings() {
 		// FIXME fix this hard-coded thing
-		if (getActivity() instanceof ArtEdit) {
-			((ArtEdit) getActivity()).toggleLoading(true);
-		}
+		//		if (getActivity() instanceof ArtEdit) {
+		//			((ArtEdit) getActivity()).toggleLoading(false);
+		//		}
 
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
@@ -190,9 +190,9 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 	@Override
 	public void onLocationUpdateError() {
 		// FIXME fix this hard-coded thing
-		if (getActivity() instanceof ArtEdit) {
-			((ArtEdit) getActivity()).toggleLoading(true);
-		}
+		//		if (getActivity() instanceof ArtEdit) {
+		//			((ArtEdit) getActivity()).toggleLoading(false);
+		//		}
 
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
