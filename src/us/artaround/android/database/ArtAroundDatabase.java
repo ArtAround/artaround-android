@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import us.artaround.android.common.Utils;
 import us.artaround.models.Art;
-import us.artaround.models.Artist;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,13 +13,14 @@ import android.text.TextUtils;
 public class ArtAroundDatabase {
 	public static final String ARTAROUND_AUTHORITY = "us.artaround";
 
-	public static final String[] ARTS_PROJECTION = { Arts._ID, Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
+	public static final String[] ARTS_PROJECTION = { Arts.SLUG, Arts.TITLE, Arts.CATEGORY, Arts.CREATED_AT,
 			Arts.UPDATED_AT, Arts.LATITUDE, Arts.LONGITUDE, Arts.NEIGHBORHOOD, Arts.PHOTO_IDS, Arts.WARD, Arts.YEAR,
-			Arts.LOCATION_DESCRIPTION, Arts.ARTIST, Arts.DESCRIPTION, Arts.MEDIUM_DISTANCE, Arts.CITY, Artists.NAME };
+			Arts.LOCATION_DESCRIPTION, Arts.ARTIST, Arts.DESCRIPTION, Arts.MEDIUM_DISTANCE, Arts.CITY, Arts.ARTIST,
+			Arts.FAVORITE };
 
 	public static final String[] CATEGORIES_PROJECTION = { Categories._ID, Categories.NAME };
 	public static final String[] NEIGHBORHOODS_PROJECTION = { Neighborhoods._ID, Neighborhoods.NAME };
-	public static final String[] ARTISTS_PROJECTION = { Artists._ID, Artists.SLUG, Artists.NAME };
+	public static final String[] ARTISTS_PROJECTION = { Artists._ID, Artists.NAME };
 
 	// We don't need to instantiate this class.
 	private ArtAroundDatabase() {}
@@ -47,17 +47,9 @@ public class ArtAroundDatabase {
 		public static final String DESCRIPTION = "description";
 		public static final String MEDIUM_DISTANCE = "medium_distance";
 		public static final String CITY = "city";
+		public static final String FAVORITE = "favorite";
 
 		public static final String DEFAULT_SORT_ORDER = MEDIUM_DISTANCE + " DESC";
-	}
-
-	public static final class ArtFavorites implements BaseColumns {
-		public static final String TABLE_NAME = "art_favorites";
-		public static final Uri CONTENT_URI = Uri.parse("content://" + ARTAROUND_AUTHORITY + "/" + TABLE_NAME);
-		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
-		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
-
-		public static final String SLUG = "art_slug";
 	}
 
 	public static final class Artists implements BaseColumns {
@@ -66,7 +58,6 @@ public class ArtAroundDatabase {
 		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.us.artaround." + TABLE_NAME;
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.us.artaround." + TABLE_NAME;
 
-		public static final String SLUG = "artist_slug";
 		public static final String NAME = "name";
 
 		public static final String DEFAULT_SORT_ORDER = NAME + " ASC";
@@ -110,24 +101,12 @@ public class ArtAroundDatabase {
 		b.append(Arts.DESCRIPTION).append(" TEXT,");
 		b.append(Arts.MEDIUM_DISTANCE).append(" REAL,");
 		b.append(Arts.CITY).append(" TEXT,");
+		b.append(Arts.FAVORITE).append(" INTEGER,");
 		b.append(Arts.ARTIST).append(" TEXT);");
 
 		// index on id
 		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Arts.TABLE_NAME).append("(").append(Arts.SLUG)
 				.append(");");
-
-		String str = b.toString();
-		//Log.d(Utils.TAG, "SQL: " + str);
-		return str;
-	}
-
-	public static String createArtFavoritesTable() {
-		StringBuilder b = new StringBuilder("CREATE TABLE ").append(ArtFavorites.TABLE_NAME).append(" (");
-		b.append(ArtFavorites._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(Arts.SLUG).append(" TEXT);");
-
-		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(ArtFavorites.TABLE_NAME).append("(")
-				.append(ArtFavorites.SLUG).append(");");
 
 		return b.toString();
 	}
@@ -136,20 +115,14 @@ public class ArtAroundDatabase {
 		StringBuilder b = new StringBuilder();
 		b.append("CREATE TABLE ").append(Artists.TABLE_NAME).append(" (");
 		b.append(Artists._ID).append(" INTEGER PRIMARY KEY,");
-		b.append(Artists.SLUG).append(" TEXT,");
 		b.append(Artists.NAME).append(" TEXT, ");
-
 		b.append("UNIQUE (").append(Artists.NAME).append("));");
 
 		// index on name
-		b.append("CREATE INDEX IF NOT EXISTS idu ON ").append(Artists.TABLE_NAME).append("(").append(Artists.SLUG)
-				.append(");");
 		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Artists.TABLE_NAME).append("(").append(Artists.NAME)
 				.append(");");
 
-		String str = b.toString();
-		//Log.d(Utils.TAG, "SQL: " + str);
-		return str;
+		return b.toString();
 	}
 
 	public static String createCategoriesTable() {
@@ -164,9 +137,7 @@ public class ArtAroundDatabase {
 		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Categories.TABLE_NAME).append("(")
 				.append(Categories.NAME).append(");");
 
-		String str = b.toString();
-		//Log.d(Utils.TAG, "SQL: " + str);
-		return str;
+		return b.toString();
 	}
 
 	public static String createNeighborhoodsTable() {
@@ -180,9 +151,7 @@ public class ArtAroundDatabase {
 		// index on name
 		b.append("CREATE INDEX IF NOT EXISTS idx ON ").append(Neighborhoods.TABLE_NAME).append("(")
 				.append(Neighborhoods.NAME).append(");");
-		String str = b.toString();
-		//Log.d(Utils.TAG, "SQL: " + str);
-		return str;
+		return b.toString();
 	}
 
 	//--- utility methods ---
@@ -212,13 +181,12 @@ public class ArtAroundDatabase {
 		art.ward = propi(c, Arts.WARD);
 		art.latitude = propd(c, Arts.LATITUDE);
 		art.longitude = propd(c, Arts.LONGITUDE);
-
-		art.artist = new Artist(prop(c, Arts.ARTIST), prop(c, Artists.NAME));
-
+		art.artist = prop(c, Arts.ARTIST);
 		art.year = propi(c, Arts.YEAR);
 		art.description = prop(c, Arts.DESCRIPTION);
 		art.mediumDistance = propd(c, Arts.MEDIUM_DISTANCE);
 		art.city = prop(c, Arts.CITY);
+		art.isFavorite = (propi(c, Arts.FAVORITE) == 1);
 
 		String photoIds = prop(c, Arts.PHOTO_IDS);
 		if (!TextUtils.isEmpty(photoIds)) {
@@ -271,18 +239,6 @@ public class ArtAroundDatabase {
 		return results;
 	}
 
-	public static ArrayList<String> artistsFromCursor(Cursor c) {
-		ArrayList<String> results = new ArrayList<String>();
-		if (c != null && c.moveToFirst()) {
-			int count = c.getCount();
-			for (int i = count - 1; i >= 0; i--) {
-				results.add(prop(c, Artists.NAME));
-				c.moveToNext();
-			}
-		}
-		return results;
-	}
-
 	public static ContentValues artToValues(Art art) {
 		ContentValues cv = new ContentValues();
 		cv.put(Arts.SLUG, art.slug);
@@ -299,7 +255,8 @@ public class ArtAroundDatabase {
 		cv.put(Arts.LONGITUDE, art.longitude);
 		cv.put(Arts.MEDIUM_DISTANCE, art.mediumDistance);
 		cv.put(Arts.CITY, art.city);
-		if (art.artist != null) cv.put(Arts.ARTIST, art.artist.uuid);
+		cv.put(Arts.ARTIST, art.artist);
+		cv.put(Arts.FAVORITE, art.isFavorite);
 		if (art.photoIds != null) cv.put(Arts.PHOTO_IDS, TextUtils.join(Utils.STR_SEP, art.photoIds));
 		return cv;
 	}

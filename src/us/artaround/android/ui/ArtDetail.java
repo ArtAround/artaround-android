@@ -7,7 +7,7 @@ import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.Utils;
-import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
+import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
@@ -18,7 +18,6 @@ import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,6 +44,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 	//public static final String TAG = "ArtDetail";
@@ -59,8 +59,8 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 	private static final String ARG_ART_SLUG = "art_slug";
 	private static final String ARG_NEW_COMMENT = "new_comment";
 
-	private static final int LOAD_FAVORITE = 0;
-	private static final int LOAD_COMMENTS = 1;
+	private static final int LOADER_ASYNC_FAVORITE = 0;
+	private static final int LOADER_ASYNC_COMMENTS = 1;
 	private static final int MAX_COMMENTS = 3;
 	private static final int SUBMIT_COMMENT = 4;
 
@@ -99,7 +99,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 			art = (Art) intent.getSerializableExtra(EXTRA_ART);
 		}
 		if (art == null) {
-			Utils.w(Utils.TAG, "onCreate(): art=" + art);
+			Utils.d(Utils.TAG, "onCreate(): art=", art);
 			return;
 		}
 
@@ -133,7 +133,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
 
-		lm.restartLoader(LOAD_COMMENTS, args, asyncCallback);
+		lm.restartLoader(LOADER_ASYNC_COMMENTS, args, asyncCallback);
 	}
 
 	private void setupUi() {
@@ -214,7 +214,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		}
 
 		btnFavorite = (ImageButton) findViewById(R.id.btn_favorite);
-		if (isFavorite()) {
+		if (art.isFavorite) {
 			btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
 		}
 		btnFavorite.setOnClickListener(new View.OnClickListener() {
@@ -236,29 +236,15 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 	protected void onFavoriteArt() {
 		Bundle args = new Bundle();
 		args.putString(ARG_ART_SLUG, art.slug);
-		getSupportLoaderManager().restartLoader(LOAD_FAVORITE, args, cursorCallback);
-
-	}
-
-	private boolean isFavorite() {
-		boolean isFavorite = false;
-		Cursor cursor = managedQuery(ArtFavorites.CONTENT_URI, null, ArtFavorites.TABLE_NAME + "." + ArtFavorites.SLUG
-				+ "=?", new String[] { art.slug }, null);
-
-		isFavorite = (cursor != null && cursor.moveToFirst());
-
-		if (cursor != null && !cursor.isClosed()) {
-			cursor.close();
-		}
-		return isFavorite;
+		getSupportLoaderManager().restartLoader(LOADER_ASYNC_FAVORITE, args, cursorCallback);
 	}
 
 	private void setupFields() {
 		StringBuilder str = new StringBuilder();
 
 		TextView tvArtist = (TextView) findViewById(R.id.art_detail_artist);
-		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			str.append(art.artist.name);
+		if (art.artist != null && !TextUtils.isEmpty(art.artist)) {
+			str.append(art.artist);
 
 			if (art.year > 0) {
 				str.append(" - ");
@@ -401,12 +387,12 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		@SuppressWarnings("unchecked")
 		@Override
 		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
-			Utils.d(Utils.TAG, "onLoadFinished(): payload=" + payload);
+			Utils.d(Utils.TAG, "onLoadFinished(): payload=", payload);
 
 			switch (loader.getId()) {
-			case LOAD_COMMENTS:
+			case LOADER_ASYNC_COMMENTS:
 
-				if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+				if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 					List<Comment> result = (List<Comment>) payload.getResult();
 
 					if (result == null || result.isEmpty()) {
@@ -434,24 +420,24 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 					}
 				}
 				else {
-					Utils.showToast(ArtDetail.this, R.string.load_data_failure);
+					Toast.makeText(ArtDetail.this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
 				}
 				break;
 			case SUBMIT_COMMENT:
 				toggleLoading(false);
 
-				if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+				if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 					Boolean result = (Boolean) payload.getResult();
 					if (result != null && result) {
-						Utils.showToast(ArtDetail.this, R.string.submit_comment_success);
+						Toast.makeText(ArtDetail.this, R.string.submit_comment_success, Toast.LENGTH_SHORT).show();
 						clearCommentFields();
 					}
 					else {
-						Utils.showToast(ArtDetail.this, R.string.submit_comment_failure);
+						Toast.makeText(ArtDetail.this, R.string.submit_comment_failure, Toast.LENGTH_LONG).show();
 					}
 				}
 				else {
-					Utils.showToast(ArtDetail.this, R.string.load_data_failure);
+					Toast.makeText(ArtDetail.this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
 				}
 				break;
 			}
@@ -460,12 +446,12 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		@Override
 		public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
 			switch (id) {
-			case LOAD_COMMENTS:
+			case LOADER_ASYNC_COMMENTS:
 				return new AsyncLoader<LoaderPayload>(ArtDetail.this) {
 					@Override
 					public LoaderPayload loadInBackground() {
 						try {
-							return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService()
+							return new LoaderPayload(LoaderPayload.STATUS_OK, ServiceFactory.getArtService()
 									.getComments(args.getString(ARG_ART_SLUG)));
 						}
 						catch (ArtAroundException e) {
@@ -479,7 +465,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 					public LoaderPayload loadInBackground() {
 						Comment comment = (Comment) args.getSerializable(ARG_NEW_COMMENT);
 						try {
-							return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService()
+							return new LoaderPayload(LoaderPayload.STATUS_OK, ServiceFactory.getArtService()
 									.submitComment(art.slug, comment));
 						}
 						catch (ArtAroundException e) {
@@ -498,21 +484,18 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		@Override
 		public Loader<Boolean> onCreateLoader(int id, final Bundle args) {
 			switch (id) {
-			case LOAD_FAVORITE:
+			case LOADER_ASYNC_FAVORITE:
 				return new AsyncLoader<Boolean>(ArtDetail.this) {
 					@Override
 					public Boolean loadInBackground() {
-						if (!isFavorite()) {
-							ContentValues values = new ContentValues(1);
-							values.put(ArtFavorites.SLUG, args.getString(ARG_ART_SLUG));
-							ArtAroundProvider.contentResolver.insert(ArtFavorites.CONTENT_URI, values);
-							return true;
+						ContentValues values = new ContentValues(1);
+						values.put(Arts.FAVORITE, !art.isFavorite ? 1 : 0);
+						int ok = ArtAroundProvider.contentResolver.update(Arts.CONTENT_URI, values, Arts.SLUG + "=?",
+								new String[] { args.getString(ARG_ART_SLUG) });
+						if (ok == 1) {
+							art.isFavorite = !art.isFavorite;
 						}
-						else {
-							ArtAroundProvider.contentResolver.delete(ArtFavorites.CONTENT_URI,
-									ArtFavorites.SLUG + "=?", new String[] { art.slug });
-							return false;
-						}
+						return art.isFavorite;
 					}
 				};
 			default:
@@ -523,14 +506,14 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		@Override
 		public void onLoadFinished(Loader<Boolean> loader, Boolean result) {
 			switch (loader.getId()) {
-			case LOAD_FAVORITE:
+			case LOADER_ASYNC_FAVORITE:
 				if (result != null && result) {
 					btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
-					Utils.showToast(ArtDetail.this, R.string.art_added_favorite);
+					Toast.makeText(ArtDetail.this, R.string.art_added_favorite, Toast.LENGTH_SHORT).show();
 				}
 				else {
 					btnFavorite.setImageResource(R.drawable.ic_add_favorite_background);
-					Utils.showToast(ArtDetail.this, R.string.art_removed_favorite);
+					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite, Toast.LENGTH_SHORT).show();
 				}
 			}
 		}
@@ -617,7 +600,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		StringBuilder b = new StringBuilder(getString(R.string.share_art_header));
 		b.append(Utils.NL).append(getString(R.string.share_artist));
 		if (art.artist != null) {
-			b.append(" ").append(art.artist.name);
+			b.append(" ").append(art.artist);
 		}
 		else {
 			b.append(getString(R.string.unknown));

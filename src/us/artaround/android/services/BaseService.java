@@ -97,7 +97,6 @@ public class BaseService {
 		}
 	}
 
-
 	//	protected void postMethod(StreamData data, String url, List<NameValuePair> params) throws ArtAroundException {
 	//		final AndroidHttpClient client = getNewHttpClient();
 	//		final HttpPost postRequest = new HttpPost(url);
@@ -185,7 +184,7 @@ public class BaseService {
 
 	protected void parseHttpResponse(StreamData data, String uri, HttpResponse response) throws ArtAroundException {
 		int statusCode = response.getStatusLine().getStatusCode();
-		Utils.d(TAG, "parseHttpResponse(): status code is " + statusCode);
+		Utils.d(TAG, "parseHttpResponse(): status code is", statusCode);
 
 		try {
 			switch (statusCode) {

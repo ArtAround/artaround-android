@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import android.graphics.drawable.Drawable;
 
-
 public class PhotoWrapper implements Serializable {
 	private static final long serialVersionUID = -662225757938609228L;
 	public String id;

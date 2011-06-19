@@ -31,7 +31,7 @@ public class ArtService extends BaseService {
 
 	public ArtService(City city) {
 		this.city = city;
-		Utils.d(TAG, "Constructor: using city " + city);
+		Utils.d(TAG, "Constructor: using city", city);
 	}
 
 	public City getCity() {
@@ -120,7 +120,7 @@ public class ArtService extends BaseService {
 
 	public String submitArt(Art art) throws ArtAroundException {
 		String json = BaseParser.writeArt(art);
-		Utils.d(Utils.TAG, "Sending new art json " + json);
+		Utils.d(Utils.TAG, "Sending new art json", json);
 
 		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
 		postMethod(data, ENDPOINT_ARTS + FORMAT, json);
@@ -133,7 +133,7 @@ public class ArtService extends BaseService {
 
 	public String editArt(Art art) throws ArtAroundException {
 		String json = BaseParser.writeArt(art);
-		Utils.d(Utils.TAG, "Sending new art json " + json);
+		Utils.d(Utils.TAG, "Sending new art json", json);
 
 		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
 		putMethod(data, ENDPOINT_ARTS + "/" + art.slug + FORMAT, json);
@@ -146,7 +146,7 @@ public class ArtService extends BaseService {
 
 	public Boolean submitComment(String artSlug, Comment comment) throws ArtAroundException {
 		String json = BaseParser.writeComment(comment);
-		Utils.d(Utils.TAG, "Sending new comment json " + json);
+		Utils.d(Utils.TAG, "Sending new comment json", json);
 
 		StreamData data = new StreamData(BaseParser.TYPE_RESPONSE);
 		postMethod(data, ENDPOINT_ARTS + "/" + artSlug + ENDPOINT_COMMENTS + FORMAT, json);
@@ -156,4 +156,4 @@ public class ArtService extends BaseService {
 		}
 		return null;
 	}
-} 
+}

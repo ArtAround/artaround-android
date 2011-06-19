@@ -93,14 +93,14 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 			timers.put(provider, timer);
 			timer.start();
 			locationManager.requestLocationUpdates(provider, 0, 0, listener);
-			Utils.d(TAG, "updateFromProvider(): provider=" + provider);
+			Utils.d(TAG, "updateFromProvider(): provider=", provider);
 			return true;
 		}
 		return false;
 	}
 
 	protected void onTimeoutProvider(String provider, boolean success) {
-		Utils.d(TAG, "timeoutProvider(): provider=" + provider + ", success=" + success);
+		Utils.d(TAG, "timeoutProvider(): provider=", provider, ", success=", success);
 		Iterator<Entry<String, CountDownTimer>> it = timers.entrySet().iterator();
 		while (it.hasNext()) {
 			Entry<String, CountDownTimer> entry = it.next();
@@ -182,7 +182,7 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 					}
 				}
 				catch (IOException e) {
-					Utils.w(TAG, "loadInBackground(): exception=" + e);
+					Utils.d(TAG, "loadInBackground(): exception=", e);
 				}
 				return null;
 			}
@@ -243,7 +243,7 @@ public class LocatorFragment extends Fragment implements LoaderCallbacks<String>
 		if (cache.size() > 0 && cache.size() == MAX_CACHE_SIZE) cache.remove(cache.keySet().iterator().next());
 
 		cache.put(location.getLatitude() + "-" + location.getLongitude(), address);
-		Utils.d(TAG, "addToCache(): address " + address + "  for location " + location);
+		Utils.d(TAG, "addToCache(): address", address, location);
 	}
 
 	public static String getFromCache(Location location) {

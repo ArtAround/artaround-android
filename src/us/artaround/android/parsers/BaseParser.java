@@ -5,9 +5,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -23,26 +21,20 @@ import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
-import us.artaround.models.Artist;
 import us.artaround.models.Comment;
 import android.content.ContentValues;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class BaseParser {
 	public static final String TAG = "ArtAround.Parser";
 
 	public static final int TYPE_ARTS = 0;
-	public static final int TYPE_ARTISTS = 1;
 	public static final int TYPE_CATEGORIES = 2;
 	public static final int TYPE_NEIGHBORHOODS = 3;
 	public static final int TYPE_COMMENTS = 4;
 	public static final int TYPE_RESPONSE = 5;
 	public static final int TYPE_NONE = 6;
 
-
-	private static final HashMap<String, Artist> temp = new HashMap<String, Artist>();
-	
 	private BaseParser() {}
 
 	public static void parseResponse(StreamData data) {
@@ -51,9 +43,6 @@ public class BaseParser {
 		switch (parserType) {
 		case TYPE_ARTS:
 			parseArts(data);
-			break;
-		case TYPE_ARTISTS:
-			parseArtists(data);
 			break;
 		case TYPE_CATEGORIES:
 			parseCategories(data);
@@ -79,7 +68,7 @@ public class BaseParser {
 				jp.close();
 			}
 			catch (IOException e) {
-				Log.w(TAG, "Could not close json parser.", e);
+				Utils.d(TAG, "Could not close json parser.", e);
 			}
 		}
 	}
@@ -137,6 +126,7 @@ public class BaseParser {
 					while (jp.nextToken() != JsonToken.END_ARRAY) {
 
 						ContentValues art = new ContentValues();
+						ContentValues artist = new ContentValues();
 						ContentValues category = new ContentValues();
 						ContentValues neighborhood = new ContentValues();
 
@@ -191,7 +181,7 @@ public class BaseParser {
 									art.put(Arts.WARD, ward);
 								}
 								catch (NumberFormatException e) {
-									Utils.w(TAG, "Could not parse ward " + ward);
+									Utils.d(TAG, "Could not parse ward", ward);
 								}
 							}
 							else if (YEAR_KEY.equalsIgnoreCase(artKey)) {
@@ -200,7 +190,7 @@ public class BaseParser {
 									art.put(Arts.YEAR, year);
 								}
 								catch (NumberFormatException e) {
-									Utils.w(TAG, "Could not parse year " + year);
+									Utils.d(TAG, "Could not parse year", year);
 								}
 							}
 							else if (CREATED_AT_KEY.equalsIgnoreCase(artKey)) {
@@ -221,22 +211,9 @@ public class BaseParser {
 							}
 							else if (ARTIST_KEY.equalsIgnoreCase(artKey)) {
 								String name = jp.getText().trim();
-
-								if (temp.containsKey(name)) { // we already parsed this artist
-									art.put(Arts.ARTIST, temp.get(name).uuid);
-								}
-								else if (!TextUtils.isEmpty(name)) {
-									String artistUUID = UUID.randomUUID().toString();
-									Artist newArtist = new Artist(artistUUID, name);
-									temp.put(name, newArtist);
-
-									ContentValues artist = new ContentValues();
-									artist.put(Artists.SLUG, artistUUID);
-									artist.put(Artists.NAME, name);
-									artists.add(artist);
-
-									art.put(Arts.ARTIST, artistUUID);
-								}
+								artist.put(Artists.NAME, name);
+								artists.add(artist);
+								art.put(Arts.ARTIST, name);
 							}
 							else if (DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
 								String desc = jp.getText().trim();
@@ -262,9 +239,9 @@ public class BaseParser {
 
 			jp.close(); // close a.s.a.p
 
-			Utils.d(Utils.TAG, "Parsed arts =" + arts.size());
-			Utils.d(Utils.TAG, "Parsed artists =" + artists.size());
+			Utils.d(Utils.TAG, "Parsed arts =", arts.size());
 
+			// save arts
 			ArtAroundProvider.contentResolver
 					.bulkInsert(Arts.CONTENT_URI, arts.toArray(new ContentValues[arts.size()]));
 
@@ -283,7 +260,6 @@ public class BaseParser {
 			Boolean notifyMe = (Boolean) data.getAuxData()[0];
 			if (notifyMe != null && notifyMe) {
 				ArtAroundProvider.contentResolver.notifyChange(Arts.CONTENT_URI, null);
-				ArtAroundProvider.contentResolver.notifyChange(Artists.CONTENT_URI, null);
 				ArtAroundProvider.contentResolver.notifyChange(Categories.CONTENT_URI, null);
 				ArtAroundProvider.contentResolver.notifyChange(Neighborhoods.CONTENT_URI, null);
 			}
@@ -291,18 +267,14 @@ public class BaseParser {
 			data.setAuxData(result);
 		}
 		catch (JsonParseException e) {
-			Log.w(TAG, "parseArt(): exception", e);
+			Utils.d(TAG, "parseArt(): exception", e);
 		}
 		catch (IOException e) {
-			Log.w(TAG, "parseArt(): exception", e);
+			Utils.d(TAG, "parseArt(): exception", e);
 		}
 		finally {
 			closeParser(jp);
 		}
-	}
-
-	private static void parseArtists(StreamData data) {
-		// TODO Auto-generated method stub
 	}
 
 	private static void parseCategories(StreamData data) {
@@ -339,10 +311,10 @@ public class BaseParser {
 			data.setHttpData(null);
 		}
 		catch (JsonParseException e) {
-			Log.w(TAG, "parseCategories(): exception", e);
+			Utils.d(TAG, "parseCategories(): exception", e);
 		}
 		catch (IOException e) {
-			Log.w(TAG, "parseCategories(): exception", e);
+			Utils.d(TAG, "parseCategories(): exception", e);
 		}
 		finally {
 			closeParser(jp);
@@ -383,10 +355,10 @@ public class BaseParser {
 			data.setHttpData(null);
 		}
 		catch (JsonParseException e) {
-			Log.w(TAG, "parseNeighborhoods(): exception", e);
+			Utils.d(TAG, "parseNeighborhoods(): exception", e);
 		}
 		catch (IOException e) {
-			Log.w(TAG, "parseNeighborhoods(): exception", e);
+			Utils.d(TAG, "parseNeighborhoods(): exception", e);
 		}
 		finally {
 			closeParser(jp);
@@ -441,7 +413,7 @@ public class BaseParser {
 											}
 										}
 										catch (ParseException e) {
-											Utils.w(TAG, "Date not parsed correctly: " + date);
+											Utils.d(TAG, "Date not parsed correctly:", date);
 										}
 									}
 									else if (URL_KEY.equalsIgnoreCase(commKey)) {
@@ -472,10 +444,10 @@ public class BaseParser {
 
 		}
 		catch (JsonParseException e) {
-			Log.w(TAG, "parseComments(): exception", e);
+			Utils.d(TAG, "parseComments(): exception", e);
 		}
 		catch (IOException e) {
-			Log.w(TAG, "parseComments(): exception", e);
+			Utils.d(TAG, "parseComments(): exception", e);
 		}
 		finally {
 			closeParser(jp);
@@ -491,8 +463,7 @@ public class BaseParser {
 
 			JsonToken token = jp.nextToken();
 			if (token != JsonToken.START_OBJECT) {
-				Utils.d(TAG,
-						"parseStringResponse(): cannot move current json token on START_OBJECT.");
+				Utils.d(TAG, "parseStringResponse(): cannot move current json token on START_OBJECT.");
 				return;
 			}
 
@@ -502,16 +473,17 @@ public class BaseParser {
 
 				if (keyName.equalsIgnoreCase(key)) {
 					data.setAuxData(jp.getText());
-				} else {
+				}
+				else {
 					jp.skipChildren();
 				}
 			}
 		}
 		catch (JsonParseException e) {
-			Log.w(TAG, "parseStringResponse(): exception", e);
+			Utils.d(TAG, "parseStringResponse(): exception", e);
 		}
 		catch (IOException e) {
-			Log.w(TAG, "parseStringResponse(): exception", e);
+			Utils.d(TAG, "parseStringResponse(): exception", e);
 		}
 		finally {
 			closeParser(jp);
@@ -530,10 +502,8 @@ public class BaseParser {
 			g.writeStringField(NEIGHBORHOOD_KEY, art.neighborhood);
 			g.writeStringField(LOCATION_DESCRIPTION_KEY, art.locationDesc);
 			g.writeStringField(DESCRIPTION_KEY, art.description);
+			g.writeStringField(ARTIST_KEY, art.artist);
 
-			if (art.artist != null) {
-				g.writeStringField(ARTIST_KEY, art.artist.name);
-			}
 			g.writeNumberField(WARD_KEY, art.ward);
 			g.writeNumberField(YEAR_KEY, art.year);
 
@@ -549,7 +519,7 @@ public class BaseParser {
 			return writer.toString();
 		}
 		catch (IOException e) {
-			Log.w(TAG, "writeArt(): exception", e);
+			Utils.d(TAG, "writeArt(): exception", e);
 			return null;
 		}
 		finally {
@@ -574,7 +544,7 @@ public class BaseParser {
 			return writer.toString();
 		}
 		catch (IOException e) {
-			Log.w(TAG, "writeArt(): exception", e);
+			Utils.d(TAG, "writeArt(): exception", e);
 			return null;
 		}
 		finally {
@@ -587,7 +557,7 @@ public class BaseParser {
 			wr.close();
 		}
 		catch (IOException e) {
-			Log.w(TAG, "Could not close the writer.", e);
+			Utils.d(TAG, "Could not close the writer.", e);
 		}
 	}
 

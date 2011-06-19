@@ -1,30 +1,25 @@
 package us.artaround.android.ui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
+import us.artaround.android.common.AsyncLoader;
+import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.LocationUpdater;
 import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
-import us.artaround.android.common.NotifyingAsyncQueryHandler;
-import us.artaround.android.common.NotifyingAsyncQueryHandler.NotifyingAsyncQueryListener;
 import us.artaround.android.common.SharedPreferencesCompat;
 import us.artaround.android.common.Utils;
-import us.artaround.android.common.task.ArtAroundAsyncCommand;
-import us.artaround.android.common.task.ClearCacheCommand;
-import us.artaround.android.common.task.LoadArtCommand;
 import us.artaround.android.database.ArtAroundDatabase;
-import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.parsers.ParseResult;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
-import us.artaround.models.ArtDispersionComparator;
 import us.artaround.models.City;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -42,6 +37,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.text.Html;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -55,19 +54,20 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 
-public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback,
-		NotifyingAsyncQueryListener {
+public class ArtMap extends FragmentActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback {
 
-	//private static final String TAG = "ArtMap";
+	private static final String TAG = "ArtMap";
 
 	//--- server call constants ---
-	public static final int ARTS_PER_PAGE = 100;
+	private static final int ARTS_PER_PAGE = 100;
+	private static final String ARG_PAGE = "page";
 
 	//--- zoom constants ---
-	public static final int ZOOM_DEFAULT_LEVEL = 15;
+	public static final int ZOOM_DEFAULT_LEVEL = 13;
 	private static final int[] MAX_PINS_PER_ZOOM = { 3, 5, 10, 30, 40, 60 };
 	private static final int ZOOM_MIN_LEVEL = 8;
 	private static final int ZOOM_MAX_LEVEL = ZOOM_MIN_LEVEL + MAX_PINS_PER_ZOOM.length;
@@ -83,13 +83,10 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private static final int DIALOG_CHANGELOG = 4;
 	private static final int DIALOG_WELCOME = 5;
 
-	//--- commands ids ---
-	private static final int LOAD_ARTS = 0;
-	private static final int CLEAR_CACHE = 100;
-
-	//--- queries ids ---
-	private static final int QUERY_ARTS = 0;
-	private static final int QUERY_FAVORITES = 1;
+	//--- loader ids ---
+	private static final int LOADER_CURSOR_ARTS = 0;
+	private static final int LOADER_ASYNC_ARTS = 1;
+	private static final int LOADER_CURSOR_FAVORITES = 2;
 
 	//--- handler msgs ---
 	private static final int MSG_LOAD_ARTS_FINISHED = 0;
@@ -128,10 +125,9 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private ArrayList<Art> allArt;
 	private ArrayList<Art> filteredArt;
 	private int nrPinsForZoomLevel;
-	private HashMap<Integer, ArrayList<String>> filters;
+	private HashMap<Integer, HashSet<String>> filters;
 
 	private SharedPreferences sharedPrefs;
-	private NotifyingAsyncQueryHandler queryHandler;
 	private LocationUpdater locationUpdater;
 	private Location currentLocation;
 	private GeoPoint currentMapCenter;
@@ -141,37 +137,44 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private final AtomicInteger crtPage = new AtomicInteger(1);
 
 	@Override
-	protected void onChildCreate(Bundle savedInstanceState) {
-		setContentView(R.layout.art_map);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-		//--- enable crash reporting ---
+		Utils.setTheme(this);
 		Utils.enableDump(this);
-		// -----------------------------
 
-		setupVars(savedInstanceState);
+		setContentView(R.layout.art_map);
+		Utils.d(TAG, "onCreate()");
+
+		ServiceFactory.init(getApplicationContext());
+		ArtAroundProvider.contentResolver.registerContentObserver(Arts.CONTENT_URI, false, new ArtsContentObserver(
+				handler));
+
+		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+		locationUpdater = new LocationUpdater(this);
+		items = new HashMap<Art, ArtOverlayItem>();
+
+		restoreState(savedInstanceState);
 		setupUi();
-	}
-
-	@Override
-	protected void onChildEndCreate(Bundle savedInstanceState) {
-		Utils.d(Utils.TAG, "onChildEndCreate()");
-		//setupState();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+		Utils.d(TAG, "onPause()");
 		locationUpdater.removeUpdates();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Utils.d(TAG, "onResume()");
+
 		if (currentLocation == null && !getIntent().hasExtra(SAVE_MAP_LATITUDE)) {
 			startLocationUpdate();
 		}
 
-		// Wi-fi status has been already checked
+		// WiFi status has been already checked
 		if (sharedPrefs.getBoolean(Utils.KEY_CHECK_WIFI, true)) {
 			checkWifiStatus();
 
@@ -182,15 +185,13 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		setupState();
 	}
 
-	@Override
-	protected void initActionbarUi() {
-		super.initActionbarUi();
-		Utils.d(Utils.TAG, "initActionbarUi()");
+	private void setupActionbarUi() {
+		Utils.d(TAG, "initActionbarUi()");
 
-		imgRefresh = (ImageView) actionbar.findViewById(R.id.img_loading);
+		imgRefresh = (ImageView) findViewById(R.id.img_loading);
 		rotateAnim = Utils.getRoateAnim(this);
 
-		btnLocation = (ImageButton) actionbar.findViewById(R.id.btn_locate);
+		btnLocation = (ImageButton) findViewById(R.id.btn_locate);
 		btnLocation.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -198,7 +199,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			}
 		});
 
-		btnSearch = (ImageButton) actionbar.findViewById(R.id.btn_search);
+		btnSearch = (ImageButton) findViewById(R.id.btn_search);
 		btnSearch.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -206,7 +207,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			}
 		});
 
-		btnFavorites = (ImageButton) actionbar.findViewById(R.id.btn_favorite);
+		btnFavorites = (ImageButton) findViewById(R.id.btn_favorite);
 		btnFavorites.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -215,48 +216,28 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		});
 	}
 
-	private void setupVars(Bundle savedInstanceState) {
-		ServiceFactory.init(getApplicationContext());
-		ArtAroundProvider.contentResolver.registerContentObserver(Arts.CONTENT_URI, false, new ArtsContentObserver(
-				handler));
-
-		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		locationUpdater = new LocationUpdater(this);
-		queryHandler = new NotifyingAsyncQueryHandler(ArtAroundProvider.contentResolver, this);
-		items = new HashMap<Art, ArtOverlayItem>();
-
-		restoreState(savedInstanceState);
-
-		if (filteredArt == null) {
-			filteredArt = new ArrayList<Art>();
-		}
-		if (filters == null) {
-			filters = new HashMap<Integer, ArrayList<String>>();
-		}
-	}
-
 	private void setupState() {
-		Utils.d(Utils.TAG, "setupState()");
+		Utils.d(TAG, "setupState()");
 
 		changeCity();
 		if (currentLocation == null && !getIntent().hasExtra(SAVE_MAP_LATITUDE)) {
 			startLocationUpdate();
 		}
 
-		if (hasRunningTasks(LOAD_ARTS)) {
-			toggleLoading(true);
+		if (Utils.isCacheOutdated(this)) {
+			Utils.d(TAG, "setupState(): cache outdated, loading...");
+			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_SHORT).show();
+			clearCache();
+			loadArt();
+		}
+		else if (allArt.isEmpty()) {
+			Utils.d(TAG, "setupState(): allArt is empty, loading...");
+			loadArt();
 		}
 		else {
-			toggleLoading(false);
-
-			if (Utils.isCacheOutdated(this)) {
-				Utils.d(Utils.TAG, "setupState(): cache outdated!");
-				Utils.showToast(this, R.string.update_cache_progress);
-				clearCache();
-			}
-			else {
-				loadArt();
-			}
+			Utils.d(TAG, "setupState(): filter & display existing arts.");
+			filterArt(allArt);
+			displayArt(filteredArt);
 		}
 	}
 
@@ -265,21 +246,16 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		if (currentMapCenter == null) {
 			currentMapCenter = currentCity.center;
 		}
-		Utils.d(Utils.TAG, "changeCity() " + currentCity.name);
-		//centerMapOnLocation();
 	}
 
 	private void clearCache() {
 		artsOverlay.doClear();
-		if (tasks != null && !tasks.isEmpty()) tasks.clear();
 		totalCount.set(0);
 		crtPage.set(1);
-
-		toggleLoading(true);
-		startTask(new ClearCacheCommand(CLEAR_CACHE, String.valueOf(CLEAR_CACHE)));
 	}
 
 	private void setupUi() {
+		setupActionbarUi();
 		setupFilterBarUi();
 		setupFooterBarUi();
 		setupMapUi();
@@ -351,7 +327,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	@SuppressWarnings("unchecked")
 	private void restoreState(Bundle savedInstanceState) {
-		Utils.d(Utils.TAG, "restoreState(): savedInstance=" + savedInstanceState);
+		Utils.d(TAG, "restoreState(): savedInstance=", savedInstanceState);
 
 		Intent intent = getIntent();
 		if (intent.hasExtra(SAVE_ZOOM)) {
@@ -386,17 +362,21 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 			currentLocation = savedInstanceState.getParcelable(SAVE_LOCATION);
 			newZoom = savedInstanceState.getInt(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
-
 			allArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_ARTS);
 			filteredArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_FILTERED_ARTS);
-			if (filteredArt == null) {
-				filteredArt = new ArrayList<Art>();
-			}
+			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
+		}
 
-			filters = (HashMap<Integer, ArrayList<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
-			if (filters == null) {
-				filters = new HashMap<Integer, ArrayList<String>>();
-			}
+		if (filters == null) {
+			filters = new HashMap<Integer, HashSet<String>>();
+		}
+
+		if (filteredArt == null) {
+			filteredArt = new ArrayList<Art>();
+		}
+
+		if (allArt == null) {
+			allArt = new ArrayList<Art>();
 		}
 	}
 
@@ -432,139 +412,19 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	}
 
 	private void loadArt() {
-		Utils.d(Utils.TAG, "loadArtFromDb(): start query");
+		Utils.d(TAG, "loadArt(): start query");
 
 		toggleLoading(true);
-		queryHandler.startQuery(QUERY_ARTS, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, ARTS_SELECTION,
-				new String[] { currentCity.name }, null);
-	}
-
-	@Override
-	public void onQueryComplete(int token, Object cookie, Cursor cursor) {
-		if (cursor == null) return;
-
-		startManagingCursor(cursor);
-
-		switch (token) {
-		case QUERY_ARTS:
-			allArt = ArtAroundDatabase.artsFromCursor(cursor);
-			Utils.d(Utils.TAG, "onQueryComplete() -QUERY_ARTS- " + allArt.size());
-
-			if (allArt.isEmpty()) {
-				loadArtFromServer();
-			}
-			else {
-				toggleLoading(false);
-				processArts();
-			}
-			break;
-		case QUERY_FAVORITES:
-			toggleLoading(false);
-
-			if (cursor != null && cursor.moveToFirst()) {
-				Utils.d(Utils.TAG, "There are " + cursor.getCount() + " favorites");
-
-				ArrayList<Art> favs = ArtAroundDatabase.artsFromCursor(cursor);
-
-				filtersHeading.setVisibility(View.VISIBLE);
-				filtersTitle.setText(R.string.favorites);
-				filterArt(favs);
-				displayArt(filteredArt);
-			}
-			else {
-				Utils.showToast(this, R.string.empty_favorites);
-			}
-		}
+		getSupportLoaderManager().restartLoader(LOADER_CURSOR_ARTS, null, cursorCallback);
 	}
 
 	private void loadArtFromServer() {
-		Utils.d(Utils.TAG, "loadArtFromServer(): start task " + crtPage.get());
-		startTask(new LoadArtCommand(LOAD_ARTS, String.valueOf(LOAD_ARTS), crtPage.getAndIncrement(), ARTS_PER_PAGE));
-	}
+		Utils.d(TAG, "loadArtFromServer(): start loading page=", crtPage.get());
 
-	@Override
-	public void onPreExecute(ArtAroundAsyncCommand command) {
-		super.onPreExecute(command);
-	}
+		Bundle args = new Bundle();
+		args.putInt(ARG_PAGE, crtPage.getAndIncrement());
 
-	@Override
-	public void onPostExecute(ArtAroundAsyncCommand command, Object result, ArtAroundException exception) {
-		super.onPostExecute(command, result, exception);
-
-		switch (command.token) {
-		case LOAD_ARTS:
-
-			if (exception != null) {
-				toggleLoading(false);
-				Utils.showToast(this, R.string.load_arts_error);
-				return;
-			}
-
-			ParseResult pr = (ParseResult) result;
-			if (pr == null) {
-				toggleLoading(false);
-				showDialog(DIALOG_WIFI_FAIL);
-				return;
-			}
-
-			Utils.d(Utils.TAG, "onPostExecute(): LOAD_ARTS parseResult=" + pr);
-
-			if (pr.page == 1 && !hasRunningTasks(LOAD_ARTS)) {
-				totalCount.set(pr.totalCount);
-
-				int tasksLeft = (int) (Math.ceil((double) (pr.totalCount - pr.count) / (double) pr.perPage));
-				for (int i = 0; i < tasksLeft; i++) {
-					Utils.d(Utils.TAG, "onPostExecute(): start task " + crtPage.get());
-					startTask(new LoadArtCommand(LOAD_ARTS, String.valueOf(LOAD_ARTS), crtPage.getAndIncrement(),
-							ARTS_PER_PAGE));
-				}
-			}
-			break;
-
-		case CLEAR_CACHE:
-			toggleLoading(true);
-			loadArt();
-			break;
-		}
-	}
-
-	@Override
-	public void onPublishProgress(ArtAroundAsyncCommand command, Object progress) {
-		super.onPublishProgress(command, progress);
-	}
-
-	private void processArts() {
-		calculateMaximumDispersion(allArt);
-		filterArt(allArt);
-		displayArt(filteredArt);
-	}
-
-	private void calculateMaximumDispersion(List<Art> art) {
-		Utils.d(Utils.TAG, "calculateMaximumDispersion() for " + art.size() + " arts");
-
-		final int size = art.size();
-		for (int i = 0; i < size; ++i) {
-			art.get(i).mediumDistance = 0;
-		}
-		for (int i = 0; i < size; ++i) {
-			Art a = art.get(i);
-			for (int j = i + 1; j < size; ++j) {
-				Art b = art.get(j);
-				float dist = getDistance(a, b);
-				a.mediumDistance += dist;
-				b.mediumDistance += dist;
-			}
-		}
-		for (int i = 0; i < size; ++i) {
-			art.get(i).mediumDistance /= size;
-		}
-		Collections.sort(art, new ArtDispersionComparator());
-	}
-
-	private float getDistance(Art a, Art b) {
-		float[] results = new float[1];
-		Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, results);
-		return results[0];
+		getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, args, asyncCallback);
 	}
 
 	private void filterArt(List<Art> art) {
@@ -572,7 +432,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 		int allNrPins = art.size();
 		HashMap<Integer, List<String>> onFilters = updateFilters();
-		Utils.d(Utils.TAG, "filterArt(): filters=" + onFilters);
+		Utils.d(TAG, "filterArt(): filters=", onFilters);
 
 		filteredArt.clear();
 		for (int i = 0; i < allNrPins; ++i) {
@@ -581,7 +441,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 				filteredArt.add(a);
 			}
 		}
-		Utils.d(Utils.TAG, "filterArt(): found " + filteredArt.size() + " matches");
+		Utils.d(TAG, "filterArt(): found", filteredArt.size(), "matches");
 	}
 
 	private boolean matchesFilter(List<String> byType, String prop) {
@@ -606,7 +466,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			else if (i == ArtFilter.TYPE_NEIGHBORHOOD && matchesFilter(byType, a.neighborhood)) {
 				++match;
 			}
-			else if (i == ArtFilter.TYPE_ARTIST && a.artist != null && matchesFilter(byType, a.artist.name)) {
+			else if (i == ArtFilter.TYPE_ARTIST && a.artist != null && matchesFilter(byType, a.artist)) {
 				++match;
 			}
 			else if (i == ArtFilter.TYPE_TITLE && matchesFilter(byType, a.title)) {
@@ -626,7 +486,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		}
 
 		for (int i = 0; i < length; i++) {
-			ArrayList<String> f = filters.get(i);
+			HashSet<String> f = filters.get(i);
 			if (f == null || f.isEmpty()) {
 				continue;
 			}
@@ -641,7 +501,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	private void displayArt(List<Art> art) {
 		getNrPinsToDisplay(art);
 		int nrPins = Math.min(art.size(), this.nrPinsForZoomLevel);
-		Utils.d(Utils.TAG, "displayArt(): " + nrPins + " pins");
+		Utils.d(TAG, "displayArt(): pins=", nrPins);
 
 		artsOverlay.doClear();
 		artsOverlay.hideBubble();
@@ -722,7 +582,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		case REQUEST_FILTER:
-			filters = (HashMap<Integer, ArrayList<String>>) data.getSerializableExtra(EXTRA_FILTERS);
+			filters = (HashMap<Integer, HashSet<String>>) data.getSerializableExtra(EXTRA_FILTERS);
 
 			boolean isEmpty = true;
 			for (int type : filters.keySet()) {
@@ -806,8 +666,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 
 	private void loadFavorites() {
 		toggleLoading(true);
-		queryHandler.startQuery(QUERY_FAVORITES, null, ArtFavorites.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
-				null, null, null);
+		getSupportLoaderManager().restartLoader(LOADER_CURSOR_FAVORITES, null, cursorCallback);
 	}
 
 	private void gotoFiltersPage() {
@@ -822,12 +681,11 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	@Override
 	public void onZoom(int oldZoom, int newZoom) {
 		this.newZoom = newZoom;
-		//Utils.d(Utils.TAG, "Zoom changed from " + oldZoom + " to " + newZoom);
 		displayArt(filteredArt);
 	}
 
 	private void startLocationUpdate() {
-		Utils.showToast(this, R.string.waiting_location);
+		Toast.makeText(this, R.string.waiting_location, Toast.LENGTH_SHORT).show();
 		toggleLoading(true);
 		btnLocation.setEnabled(false);
 		locationUpdater.updateLocation();
@@ -852,7 +710,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 		if (currentMapCenter == null) return;
 
 		mapView.getController().animateTo(currentMapCenter);
-		Utils.d(Utils.TAG, "centerMapOnLocation() " + currentMapCenter);
+		Utils.d(TAG, "centerMapOnLocation()", currentMapCenter);
 	}
 
 	@Override
@@ -866,7 +724,7 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 	@Override
 	public void onLocationUpdateError() {
 		endLocationUpdate();
-		Utils.showToast(this, R.string.location_update_failure);
+		Toast.makeText(this, R.string.location_update_failure, Toast.LENGTH_LONG).show();
 	}
 
 	@Override
@@ -904,10 +762,140 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 				break;
 
 			case MSG_PROCESS_ARTS:
-				processArts();
+				filterArt(allArt);
+				displayArt(filteredArt);
 				break;
 			}
 		}
+	};
+
+	private final LoaderCallbacks<Cursor> cursorCallback = new LoaderCallbacks<Cursor>() {
+
+		@Override
+		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+			switch (id) {
+			case LOADER_CURSOR_ARTS:
+				return new CursorLoader(ArtMap.this, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
+						ARTS_SELECTION, new String[] { currentCity.name }, null);
+
+			case LOADER_CURSOR_FAVORITES:
+				return new CursorLoader(ArtMap.this, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION, Arts.FAVORITE
+						+ "=1", null, null);
+			default:
+				return null;
+			}
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+			switch (loader.getId()) {
+			case LOADER_CURSOR_ARTS:
+				allArt = ArtAroundDatabase.artsFromCursor(cursor);
+				Utils.d(TAG, "onLoadFinished(): LOADER_ARTS", allArt.size());
+
+				if (allArt.isEmpty()) {
+					loadArtFromServer();
+				}
+				else {
+					toggleLoading(false);
+					//processArts();
+					filterArt(allArt);
+					displayArt(filteredArt);
+				}
+				break;
+
+			case LOADER_CURSOR_FAVORITES:
+				toggleLoading(false);
+
+				if (cursor != null && cursor.moveToFirst()) {
+					Utils.d(TAG, "Favorite arts=", cursor.getCount());
+
+					ArrayList<Art> favs = ArtAroundDatabase.artsFromCursor(cursor);
+
+					filtersHeading.setVisibility(View.VISIBLE);
+					filtersTitle.setText(R.string.favorites);
+					filterArt(favs);
+					displayArt(filteredArt);
+				}
+				else {
+					Toast.makeText(ArtMap.this, R.string.empty_favorites, Toast.LENGTH_SHORT).show();
+				}
+				break;
+			}
+		}
+
+		@Override
+		public void onLoaderReset(Loader<Cursor> loader) {}
+	};
+
+	private final LoaderCallbacks<LoaderPayload> asyncCallback = new LoaderCallbacks<LoaderPayload>() {
+
+		@Override
+		public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
+			switch (id) {
+			case LOADER_ASYNC_ARTS:
+				return new AsyncLoader<LoaderPayload>(ArtMap.this) {
+
+					@Override
+					public LoaderPayload loadInBackground() {
+						LoaderPayload payload;
+						try {
+							ParseResult result = ServiceFactory.getArtService().getArts(args.getInt(ARG_PAGE),
+									ARTS_PER_PAGE);
+							payload = new LoaderPayload(LoaderPayload.STATUS_OK, result);
+						}
+						catch (ArtAroundException e) {
+							payload = new LoaderPayload(LoaderPayload.STATUS_ERROR, e);
+						}
+						return payload;
+					}
+				};
+
+			default:
+				return null;
+			}
+		}
+
+		@Override
+		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
+			switch (loader.getId()) {
+			case LOADER_ASYNC_ARTS:
+				if (payload.getStatus() == LoaderPayload.STATUS_OK) {
+
+					ParseResult result = (ParseResult) payload.getResult();
+					Utils.d(TAG, "onLoadFinished(): LOADER_ASYNC_ARTS parseResult=", result);
+
+					if (result == null) {
+						toggleLoading(false);
+						showDialog(DIALOG_WIFI_FAIL);
+						return;
+					}
+
+					if (result.page == 1) {
+						totalCount.set(result.totalCount);
+
+						int tasksLeft = (int) (Math.ceil((double) (result.totalCount - result.count) / result.perPage));
+						if (tasksLeft > 0) {
+							Bundle args = new Bundle();
+							args.putInt(ARG_PAGE, crtPage.getAndIncrement());
+							getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, args, asyncCallback);
+
+							Utils.d(TAG, "onLoadFinished(): start loading page=", crtPage.get());
+						}
+					}
+				}
+				else {
+					toggleLoading(false);
+					Toast.makeText(ArtMap.this, R.string.load_arts_error, Toast.LENGTH_SHORT).show();
+				}
+				break;
+			}
+
+			loader.stopLoading();
+		}
+
+		@Override
+		public void onLoaderReset(Loader<LoaderPayload> loader) {}
 	};
 
 	private class ArtsContentObserver extends ContentObserver {
@@ -932,14 +920,14 @@ public class ArtMap extends ArtAroundMapActivity implements OverlayTapListener, 
 			startManagingCursor(cursor);
 
 			allArt = ArtAroundDatabase.artsFromCursor(cursor);
-			Utils.d(Utils.TAG, "onChange(): updated new arts from db " + allArt.size());
+			Utils.d(TAG, "onChange(): updated new arts from db", allArt.size());
 
 			if (allArt.size() > 0) {
 				handler.sendEmptyMessage(MSG_PROCESS_ARTS);
 
 				//FIXME fix the case where not all arts could be parsed
 				if (totalCount.get() == allArt.size()) {
-					Utils.d(Utils.TAG, "onChange(): finished loading arts!");
+					Utils.d(TAG, "onChange(): finished loading arts!");
 					handler.sendEmptyMessage(MSG_LOAD_ARTS_FINISHED);
 				}
 			}

@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 public class MiniGalleryAdapter extends BaseAdapter {
 	public static final String NEW_PHOTO = "new_photo";
@@ -48,25 +47,39 @@ public class MiniGalleryAdapter extends BaseAdapter {
 
 	@Override
 	public int getViewTypeCount() {
-		return 2;
+		return editMode ? 2 : 1;
 	}
 
 	//FIXME find a better way of "filling-in" the gallery from center
 	public void addItem(PhotoWrapper wrapper) {
-		if (!editMode && photos.get(1) == null) {
-			photos.set(1, wrapper);
-		}
-
-		else if (photos.get(0) == null) {
-			photos.set(0, wrapper);
-		}
-
-		else if (photos.get(2) == null) {
-			photos.set(2, wrapper);
+		if (editMode) {
+			// 0, _, 2, 3,...
+			if (photos.get(0) == null) {
+				photos.set(0, wrapper);
+			}
+			else if (photos.get(2) == null) {
+				photos.set(2, wrapper);
+			}
+			else {
+				photos.add(wrapper);
+			}
 		}
 		else {
-			photos.add(wrapper);
+			// 1, 0, 2, 3...
+			if (photos.get(1) == null) {
+				photos.set(1, wrapper);
+			}
+			else if (photos.get(0) == null) {
+				photos.set(0, wrapper);
+			}
+			else if (photos.get(2) == null) {
+				photos.set(2, wrapper);
+			}
+			else {
+				photos.add(wrapper);
+			}
 		}
+
 		notifyDataSetChanged();
 	}
 
@@ -91,47 +104,41 @@ public class MiniGalleryAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		if (editMode
-				&& (position == 0 && photos.get(0) == null || position == 1 || (position == 2 && photos.get(2) == null))) {
-			View view = null;
-			if (convertView instanceof LinearLayout) {
-				view = convertView;
-			}
+		View view = convertView;
+
+		if (editMode) {
 			if (view == null) {
 				view = LayoutInflater.from(context).inflate(R.layout.mini_gallery_add_thumb, parent, false);
 			}
 
 			if (position == 1) {
 				view.findViewById(R.id.img_add_photo).setVisibility(View.VISIBLE);
-				view.findViewById(R.id.txt_add_photo).setVisibility(View.VISIBLE);
 				view.findViewById(R.id.progress).setVisibility(View.GONE);
+				view.findViewById(R.id.txt_add_photo).setVisibility(View.VISIBLE);
 			}
 			else if (!showLoaders) {
 				view.findViewById(R.id.progress).setVisibility(View.GONE);
 			}
-			return view;
 		}
 		else {
-			ImageView imageView = null;
-			if (convertView instanceof ImageView) {
-				imageView = (ImageView) convertView;
+			if (view == null) {
+				view = LayoutInflater.from(context).inflate(R.layout.mini_gallery_thumb, parent, false);
 			}
-			if (imageView == null) {
-				imageView = (ImageView) LayoutInflater.from(context)
-						.inflate(R.layout.mini_gallery_thumb, parent, false);
-			}
+			ImageView imgView = (ImageView) view;
+
 			PhotoWrapper wrapper = photos.get(position);
 			if (wrapper != null) {
 				if (wrapper.uri != null) {
-					imageView.setImageURI(Uri.parse(wrapper.uri));
+					imgView.setImageURI(Uri.parse(wrapper.uri));
 				}
-				imageView.setTag(wrapper.id);
+				imgView.setTag(wrapper.id);
 			}
-			return imageView;
+			imgView.setVisibility(View.VISIBLE);
 		}
+		return view;
 	}
 
-	public void toggleLoaders(boolean show) {
+	public void setShowLoaders(boolean show) {
 		showLoaders = show;
 		notifyDataSetChanged();
 	}

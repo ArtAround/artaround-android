@@ -124,7 +124,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		//setupState(savedInstanceState);
 		Bundle savedState = gallerySaver.restoreMiniGalleryState();
 		setupState(savedState);
-		Utils.d(TAG, "onActivityCreated(): savedState=" + savedState);
+		Utils.d(TAG, "onActivityCreated(): savedState=", savedState);
 	}
 
 	@Override
@@ -163,19 +163,19 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 		}
 
 		// load photos from Flick or from cache (sdcard)
-		adapter.toggleLoaders(true);
+		adapter.setShowLoaders(true);
+
 		new CountDownTimer(TIMEOUT, 1) {
 			@Override
 			public void onTick(long millisUntilFinished) {}
 
 			@Override
 			public void onFinish() {
-				adapter.toggleLoaders(false);
+				adapter.setShowLoaders(false);
 			}
 		}.start();
 
 		Resources res = getResources();
-
 		Bundle args = new Bundle();
 		args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
 		args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
@@ -187,9 +187,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			if (TextUtils.isEmpty(id)) continue;
 
 			args.putString(ARG_PHOTO, id);
-
-			int hashCode = id.hashCode();
-			getLoaderManager().restartLoader(hashCode, args, this);
+			getLoaderManager().restartLoader(id.hashCode(), args, this);
 		}
 	}
 
@@ -214,8 +212,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	@Override
 	public Loader<PhotoWrapper> onCreateLoader(int id, final Bundle args) {
-		Utils.d(TAG, "onCreateLoader(): id=" + id + ", args=" + args);
-
 		loadedPhotosCount.incrementAndGet();
 		miniGallery.setClickable(false);
 
@@ -232,12 +228,12 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 						args.putString(ImageDownloader.EXTRA_PHOTO_ID, photoId);
 						args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
 						Uri uri = ImageDownloader.getImageUri(args);
-						Utils.d(TAG, "onCreateLoader(): uri=" + uri.toString());
+						Utils.d(TAG, "onCreateLoader(): uri=", uri.toString());
 						return (uri != null) ? new PhotoWrapper(photoId, uri.toString()) : null;
 					}
 				}
 				catch (ArtAroundException e) {
-					Utils.w(TAG, "loadInBackground(): exc=" + e);
+					Utils.d(TAG, "loadInBackground(): exc=", e);
 				}
 				return null;
 			}
@@ -246,8 +242,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 
 	@Override
 	public void onLoadFinished(Loader<PhotoWrapper> loader, PhotoWrapper wrapper) {
-		Utils.d(TAG, "onLoadFinished(): id=" + loader.getId());
-		adapter.toggleLoaders(false);
+		Utils.d(TAG, "onLoadFinished(): id=", loader.getId());
+		adapter.setShowLoaders(false);
 
 		if (wrapper == null) {
 			return;
@@ -263,9 +259,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 	}
 
 	@Override
-	public void onLoaderReset(Loader<PhotoWrapper> loader) {
-		Utils.d(TAG, "onLoaderReset(): id=" + loader.getId());
-	}
+	public void onLoaderReset(Loader<PhotoWrapper> loader) {}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -279,7 +273,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			Intent intent = new Intent("com.android.camera.action.CROP");
 			Uri uri = null;
 			if (data != null && (uri = data.getData()) != null) {
-				Utils.d(TAG, "Uri is " + uri.toString());
+				Utils.d(TAG, "Uri is", uri.toString());
 			}
 			else {
 				uri = tempPhotoUri;
@@ -292,7 +286,6 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Pho
 			break;
 		case REQUEST_CODE_GALLERY:
 		case REQUEST_CODE_CROP_FROM_CAMERA:
-			// FIXME delete temp file after submitting
 			String uriStr = tempPhotoUri.toString();
 			newPhotoUris.add(uriStr);
 

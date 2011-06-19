@@ -72,7 +72,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		Utils.d(TAG, "onActivityCreated(): savedInstanceState=" + savedInstanceState);
+		Utils.d(TAG, "onActivityCreated(): savedInstanceState=", savedInstanceState);
 
 		if (savedInstanceState != null) {
 			location = savedInstanceState.getParcelable(SAVE_LOCATION);
@@ -88,7 +88,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	private void centerMiniMap() {
 		if (latitude != 0 && longitude != 0) {
 			GeoPoint geo = Utils.geo(latitude, longitude);
-			Utils.d(TAG, "centerMiniMap(): geo=" + geo);
+			Utils.d(TAG, "centerMiniMap(): geo=", geo);
 			currentOverlay = new CurrentLocationOverlay(getActivity(), this, R.drawable.ic_pin, geo, null);
 			miniMap.getOverlays().add(currentOverlay);
 			miniMap.getController().animateTo(geo);
@@ -96,7 +96,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		}
 		else if (location != null) {
 			GeoPoint geo = Utils.geo(location);
-			Utils.d(TAG, "centerMiniMap(): geo=" + geo);
+			Utils.d(TAG, "centerMiniMap(): geo=", geo);
 			currentOverlay = new CurrentLocationOverlay(getActivity(), this, R.drawable.ic_pin, geo, R.id.mini_map_drag);
 			miniMap.getOverlays().add(currentOverlay);
 			miniMap.getController().animateTo(geo);
@@ -112,7 +112,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	public void onSaveInstanceState(Bundle outState) {
 		outState.putParcelable(SAVE_LOCATION, location);
 		super.onSaveInstanceState(outState);
-		Utils.d(TAG, "onSaveInstanceState(): outState=" + outState);
+		Utils.d(TAG, "onSaveInstanceState(): outState=", outState);
 	}
 
 	private void startLocationUpdate() {
@@ -129,7 +129,6 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 		if (f == null) {
 			f = new LocatorFragment(this);
 			f.setArguments(args);
-			//f.setTargetFragment(this, 0);
 			fm.beginTransaction().add(f, TAG_LOCATOR).commit();
 		}
 
@@ -150,7 +149,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	public void onLocationUpdate(Location location) {
 		if (getActivity() == null) return;
 
-		Utils.d(TAG, "onLocationUpdate(): location=" + location);
+		Utils.d(TAG, "onLocationUpdate(): location=", location);
 		this.location = location;
 
 		centerMiniMap();
@@ -165,7 +164,7 @@ public class MiniMapFragment extends Fragment implements LocatorCallback, Curren
 	public void onLocationUpdateError(int errorCode) {
 		if (getActivity() == null) return;
 
-		Utils.d(TAG, "onLocationUpdateError(): errorCode=" + errorCode);
+		Utils.d(TAG, "onLocationUpdateError(): errorCode=", errorCode);
 		if (errorCode == LocatorFragment.ERROR_NO_PROVIDER) {
 			FragmentManager fm = getFragmentManager();
 

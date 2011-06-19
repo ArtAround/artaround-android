@@ -39,7 +39,6 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 
@@ -120,35 +119,20 @@ public class Utils {
 		return rotate;
 	}
 
-	public static void showToast(Context context, int msgId) {
-		Toast.makeText(context, msgId, Toast.LENGTH_LONG).show();
+	private static String constructLog(Object... message) {
+		if (message == null) return "";
+
+		int size = message.length;
+		StringBuilder bld = new StringBuilder();
+		for (int i = 0; i < size; ++i)
+			bld.append(message[i]).append(" ");
+
+		return bld.toString();
 	}
 
-	public static void showToast(Context context, String msg) {
-		Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-	}
-
-	public static void d(String tag, String message) {
+	public static void d(String tag, Object... message) {
 		if (DEBUG_MODE) {
-			Log.d(tag, message);
-		}
-	}
-
-	public static void w(String tag, String message) {
-		if (DEBUG_MODE) {
-			Log.w(tag, message);
-		}
-	}
-
-	public static void w(String tag, String message, Throwable e) {
-		if (DEBUG_MODE) {
-			Log.w(tag, message, e);
-		}
-	}
-
-	public static void i(String tag, String message) {
-		if (DEBUG_MODE) {
-			Log.i(tag, message);
+			Log.d(tag, constructLog(message));
 		}
 	}
 
@@ -376,9 +360,9 @@ public class Utils {
 
 				if (currentFile != null) {
 					try {
-						Utils.d(Utils.TAG, "File exists? " + currentFile.exists());
+						Utils.d(Utils.TAG, "File exists?", currentFile.exists());
 						boolean ok = currentFile.delete();
-						Utils.d(Utils.TAG, "Deleted file " + currentFile.getName() + ", result=" + ok);
+						Utils.d(Utils.TAG, "Deleted file", currentFile.getName(), ", result=", ok);
 					}
 					catch (final SecurityException e) {
 						e.printStackTrace();
@@ -386,5 +370,23 @@ public class Utils {
 				}
 			}
 		}
+	}
+
+	public static String makeSlug(String name) {
+		String[] str = name.split("\\s");
+		int length = str.length;
+		boolean first = true;
+		StringBuilder slug = new StringBuilder();
+
+		for (int i = 0; i < length; i++) {
+			if (first) {
+				first = false;
+			}
+			else {
+				slug.append("-");
+			}
+			slug.append(str[i].toLowerCase());
+		}
+		return slug.toString();
 	}
 }

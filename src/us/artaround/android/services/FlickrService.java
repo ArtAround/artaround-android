@@ -77,7 +77,7 @@ public class FlickrService {
 		if (SIZE_SMALL.equalsIgnoreCase(size)) {
 			return "s";
 		}
- 		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
+		if (SIZE_ORIGINAL.equalsIgnoreCase(size)) {
 			return "o";
 		}
 		throw new ArtAroundException("Size " + size + " not supported!");
@@ -113,7 +113,7 @@ public class FlickrService {
 	}
 
 	public FlickrPhoto parsePhoto(String json, String desiredSize) throws ArtAroundException {
-		Utils.i(Utils.TAG, "Flickr response is " + json);
+		Utils.d(Utils.TAG, "Flickr response is", json);
 
 		try {
 			json = json.replace("jsonFlickrApi(", "");

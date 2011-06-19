@@ -122,8 +122,6 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	@Override
 	public Loader<Boolean> onCreateLoader(int id, final Bundle args) {
-		Utils.d(Utils.TAG, "onCreateLoader(): id=" + id + ", args=" + args);
-
 		loadedCount.incrementAndGet();
 		toggleLoading(true);
 
@@ -146,7 +144,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 					}
 				}
 				catch (ArtAroundException e) {
-					Utils.w(Utils.TAG, "loadInBackground(): exc=" + e);
+					Utils.d(Utils.TAG, "loadInBackground(): exc=", e);
 				}
 				return false;
 			}
@@ -155,7 +153,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 	@Override
 	public void onLoadFinished(Loader<Boolean> loader, Boolean result) {
-		Utils.d(Utils.TAG, "onLoadFinished(): id=" + loader.getId());
+		Utils.d(Utils.TAG, "onLoadFinished(): id=", loader.getId());
 		if (result == null || result == false) return;
 		adapter.notifyDataSetChanged();
 
@@ -165,9 +163,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	}
 
 	@Override
-	public void onLoaderReset(Loader<Boolean> loader) {
-		Utils.d(Utils.TAG, "onLoaderReset(): id=" + loader.getId());
-	}
+	public void onLoaderReset(Loader<Boolean> loader) {}
 
 	private void toggleLoading(boolean show) {
 		if (show) {

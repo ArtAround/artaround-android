@@ -2,6 +2,7 @@ package us.artaround.android.ui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import us.artaround.R;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -19,8 +20,12 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,12 +38,11 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 public class ArtFilterListFragment extends ListFragment {
-
 	private static final String SAVE_FILTERS = "filters";
 	private static final String SAVE_FILTER_INDEX = "index";
 	private static final String QUERY = "query";
 
-	private HashMap<Integer, ArrayList<String>> filters;
+	private HashMap<Integer, HashSet<String>> filters;
 	private ArrayList<String> categories;
 	private int filterIndex;
 	private int currentInputLength;
@@ -68,16 +72,16 @@ public class ArtFilterListFragment extends ListFragment {
 		InstantAutoComplete tvType = null;
 
 		if (savedInstanceState != null) {
-			filters = (HashMap<Integer, ArrayList<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
+			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
 			filterIndex = savedInstanceState.getInt(SAVE_FILTER_INDEX, 0);
 
 			tvType = (InstantAutoComplete) getActivity().findViewById(R.id.filter_type);
 			tvType.setText(ArtFilter.FILTER_TYPE_NAMES[filterIndex]);
 		}
 		if (filters == null) {
-			filters = new HashMap<Integer, ArrayList<String>>();
+			filters = new HashMap<Integer, HashSet<String>>();
 			for (int i = 0; i < ArtFilter.FILTER_TYPE_NAMES.length; i++) {
-				filters.put(i, new ArrayList<String>());
+				filters.put(i, new HashSet<String>());
 			}
 		}
 		categories = new ArrayList<String>();
@@ -184,9 +188,13 @@ public class ArtFilterListFragment extends ListFragment {
 						Categories.NAME }, selection, selectionArgs, null);
 
 			case ArtFilter.TYPE_NEIGHBORHOOD:
-				selection = (selectionArgs == null) ? null : Neighborhoods.NAME + selection;
+				StringBuilder b = new StringBuilder(Neighborhoods.NAME).append(" NOT NULL AND ")
+						.append(Neighborhoods.NAME).append("<> ''");
+				if (selectionArgs != null) {
+					b.append(" AND ").append(Neighborhoods.NAME).append(selection);
+				}
 				return new CursorLoader(getActivity(), Neighborhoods.CONTENT_URI, new String[] { Neighborhoods._ID,
-						Neighborhoods.NAME }, selection, selectionArgs, null);
+						Neighborhoods.NAME }, b.toString(), selectionArgs, null);
 
 			case ArtFilter.TYPE_TITLE:
 				selection = (selectionArgs == null) ? null : Arts.TITLE + selection;
@@ -194,9 +202,13 @@ public class ArtFilterListFragment extends ListFragment {
 						selection, selectionArgs, null);
 
 			case ArtFilter.TYPE_ARTIST:
-				selection = (selectionArgs == null) ? null : Artists.NAME + selection;
+				b = new StringBuilder(Artists.NAME).append(" NOT NULL AND ").append(Artists.NAME)
+						.append("<> ''");
+				if (selectionArgs != null) {
+					b.append(" AND ").append(Artists.NAME).append(selection);
+				}
 				return new CursorLoader(getActivity(), Artists.CONTENT_URI, new String[] { Artists._ID, Artists.NAME },
-						selection, selectionArgs, null);
+						b.toString(), selectionArgs, null);
 			default:
 				return null;
 			}
@@ -206,7 +218,8 @@ public class ArtFilterListFragment extends ListFragment {
 		public void onLoadFinished(final Loader<Cursor> loader, Cursor cursor) {
 			ListAdapter adapter = getListAdapter();
 			if (adapter instanceof MySimpleCursorAdapter) {
-				((SimpleCursorAdapter) adapter).swapCursor(cursor);
+				getListView().clearChoices();
+				((MySimpleCursorAdapter) adapter).swapCursor(cursor);
 			}
 			else if (adapter instanceof MyArrayAdapter) {
 
@@ -279,13 +292,10 @@ public class ArtFilterListFragment extends ListFragment {
 				filters.get(filterIndex).add((String) check.getTag());
 			}
 		}
-
-		//Utils.showToast(getActivity(), filters.toString());
 	}
 
 	private void selectAllCategories(int start, int end, boolean isChecked, ListView listView, MyArrayAdapter adapter) {
 		for (int i = start; i < end; i++) {
-			listView.setItemChecked(i, isChecked);
 
 			if (isChecked) {
 				filters.get(filterIndex).remove(adapter.getItem(i));
@@ -309,8 +319,7 @@ public class ArtFilterListFragment extends ListFragment {
 		@Override
 		public Cursor swapCursor(Cursor cursor) {
 			this.cursor = cursor;
-			getListView().clearChoices();
-			return super.swapCursor(cursor);
+			return super.swapCursor(this.cursor);
 		}
 
 		@Override
@@ -327,9 +336,7 @@ public class ArtFilterListFragment extends ListFragment {
 			check.setTag(text);
 
 			boolean checked = filters.get(filterIndex).contains(text);
-			check.setChecked(checked);
 			getListView().setItemChecked(position, checked);
-
 			return check;
 		}
 
@@ -346,27 +353,29 @@ public class ArtFilterListFragment extends ListFragment {
 			String text = getItem(position);
 			CheckBox check = (CheckBox) convertView;
 			if (check == null) {
-				//				if (text.equals(allVenues) || text.equals(getString(R.string.category_gallery))
-				//						|| text.equals(getString(R.string.category_market))
-				//						|| text.equals(getString(R.string.category_museum)))
-				//					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item2, null);
-				//				else
-					check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
+				check = (CheckBox) LayoutInflater.from(getActivity()).inflate(R.layout.art_filter_item, null);
 			}
 
-			check.setText(text);
+			if (text.equals(allPublic) || text.equals(allVenues)) {
+				SpannableString str = SpannableString.valueOf(text);
+				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), 0);
+				str.setSpan(
+						new ForegroundColorSpan(getActivity().getResources().getColor(R.color.ArtFilterHeadingText)),
+						0, str.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				check.setText(str);
+			}
+			else {
+				check.setText(text);
+			}
 			check.setTag(text);
 
 			boolean checked = filters.get(filterIndex).contains(text);
-			check.setChecked(checked);
-
 			getListView().setItemChecked(position, checked);
-
 			return check;
 		}
 	}
 
-	public HashMap<Integer, ArrayList<String>> getFilters() {
+	public HashMap<Integer, HashSet<String>> getFilters() {
 		return filters;
 	}
 

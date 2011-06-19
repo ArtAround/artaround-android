@@ -57,7 +57,6 @@ public class ServiceFactory {
 		return artService;
 	}
 
-
 	public static City getCurrentCity() {
 		return cities[sharedPrefs.getInt(Utils.KEY_CITY_CODE, Utils.DEFAULT_CITY_CODE)];
 	}

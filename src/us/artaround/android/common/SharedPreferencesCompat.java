@@ -13,7 +13,7 @@ import android.content.SharedPreferences.Editor;
 public class SharedPreferencesCompat {
 	private static final Method sApplyMethod = findApplyMethod();
 
-    private static Method findApplyMethod() {
+	private static Method findApplyMethod() {
 		try {
 			Class<Editor> cls = SharedPreferences.Editor.class;
 			return cls.getMethod("apply");

@@ -13,7 +13,6 @@ import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
 import us.artaround.android.services.ServiceFactory;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
-import us.artaround.models.Artist;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -44,6 +43,7 @@ import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.CursorToStringConverter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	//private static final String TAG = "ArtEdit";
@@ -112,7 +112,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	private void restoreState(Bundle savedInstanceState) {
-		Utils.d(Utils.TAG, "restoreState(): savedInstance=" + savedInstanceState);
+		Utils.d(Utils.TAG, "restoreState(): savedInstance=", savedInstanceState);
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey(SAVE_SCROLL_Y)) {
 				scrollY = savedInstanceState.getInt(SAVE_SCROLL_Y, 0);
@@ -174,7 +174,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 
 		scrollView = (ScrollView) findViewById(R.id.scroll_view);
 		if (scrollY > 0) {
-			Utils.d(Utils.TAG, "saved scrollY=" + scrollY);
+			Utils.d(Utils.TAG, "saved scrollY=", scrollY);
 			scrollView.post(new Runnable() {
 				@Override
 				public void run() {
@@ -212,7 +212,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	protected void onUploadPictures(int position) {
 		MiniGalleryFragment f = (MiniGalleryFragment) getSupportFragmentManager().findFragmentByTag(TAG_MINI_GALLERY);
 		if (f == null) {
-			Utils.w(Utils.TAG, "onUploadPictures(): MiniGalleryFragment is null!");
+			Utils.d(Utils.TAG, "onUploadPictures(): MiniGalleryFragment is null!");
 			return; //something bad happened
 		}
 
@@ -242,7 +242,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 		args.putInt(ARG_POSITION, position);
 		args.putString(ARG_FILE_NAME, filename);
 
-		Utils.d(Utils.TAG, "Uploading file " + filename);
+		Utils.d(Utils.TAG, "Uploading file", filename);
 		getSupportLoaderManager().restartLoader(UPLOAD_PHOTO, args, asyncLoader);
 	}
 
@@ -270,12 +270,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 					art.title = str;
 					break;
 				case R.id.art_edit_input_artist:
-					if (art.artist != null) {
-						art.artist.name = str;
-					}
-					else {
-						art.artist = new Artist(str);
-					}
+					art.artist = str;
 					break;
 				case R.id.art_edit_input_category:
 					art.category = str;
@@ -323,8 +318,8 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 
 		tvArtist = (AutoCompleteTextView) findViewById(R.id.art_edit_input_artist);
 		tvArtist.addTextChangedListener(watcher);
-		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			tvArtist.setText(art.artist.name);
+		if (art.artist != null && !TextUtils.isEmpty(art.artist)) {
+			tvArtist.setText(art.artist);
 		}
 		dropdownArtist = (ImageButton) findViewById(R.id.dropdown_artist);
 		dropdownArtist.setOnClickListener(new View.OnClickListener() {
@@ -412,7 +407,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 
 		FragmentManager fm = getSupportFragmentManager();
 		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f, TAG_MINI_GALLERY).commit();
-		Utils.d(Utils.TAG, "setupMiniGallery(): args=" + args);
+		Utils.d(Utils.TAG, "setupMiniGallery(): args=", args);
 	}
 
 	private void setupMiniMap(Bundle savedInstanceState) {
@@ -488,13 +483,17 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	private Loader<Cursor> onCreateCursorLoader(int id, Bundle args) {
-		Utils.d(Utils.TAG, "onCreateCursorLoader(): id=" + id);
+		Utils.d(Utils.TAG, "onCreateCursorLoader(): id=", id);
 		switch (id) {
 		case LOAD_CATEGORIES:
 			return new CursorLoader(this, Categories.CONTENT_URI, ArtAroundDatabase.CATEGORIES_PROJECTION, null, null,
 					null);
 		case LOAD_ARTISTS:
-			return new CursorLoader(this, Artists.CONTENT_URI, ArtAroundDatabase.ARTISTS_PROJECTION, null, null, null);
+			StringBuilder b = new StringBuilder(Artists.NAME).append(" NOT NULL AND ").append(Artists.NAME)
+					.append("<> ''");
+			return new CursorLoader(this, Artists.CONTENT_URI, new String[] { Artists._ID, Artists.NAME },
+					b.toString(), null,
+					null);
 		case LOAD_NEIGHBORHOODS:
 			return new CursorLoader(this, Neighborhoods.CONTENT_URI, ArtAroundDatabase.NEIGHBORHOODS_PROJECTION, null,
 					null, null);
@@ -504,11 +503,11 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	private void onCursorLoaderReset(Loader<Cursor> loader) {
-		Utils.d(Utils.TAG, "onCursorLoaderReset(): id=" + loader.getId());
+		Utils.d(Utils.TAG, "onCursorLoaderReset(): id=", loader.getId());
 	}
 
 	private void onCursorLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-		Utils.d(Utils.TAG, "onCursorLoadFinished(): id=" + loader.getId());
+		Utils.d(Utils.TAG, "onCursorLoadFinished(): id=", loader.getId());
 		loader.stopLoading();
 
 		if (cursor == null || !cursor.moveToFirst()) {
@@ -532,12 +531,12 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 			tvCategory.setAdapter(adapter);
 			break;
 		case LOAD_ARTISTS:
-			adapter = new SimpleCursorAdapter(this, R.layout.autocomplete_item, cursor,
-					new String[] { ArtAroundDatabase.Artists.NAME }, new int[] { R.id.text1 });
+			adapter = new SimpleCursorAdapter(this, R.layout.autocomplete_item, cursor, new String[] { Artists.NAME },
+					new int[] { R.id.text1 });
 			adapter.setCursorToStringConverter(new CursorToStringConverter() {
 				@Override
 				public CharSequence convertToString(Cursor cursor) {
-					final int columnIndex = cursor.getColumnIndexOrThrow(ArtAroundDatabase.Artists.NAME);
+					final int columnIndex = cursor.getColumnIndexOrThrow(Artists.NAME);
 					final String str = cursor.getString(columnIndex);
 					return str;
 				}
@@ -569,7 +568,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 
 					try {
 						ServiceFactory.getArtService().getCategories();
-						return new LoaderPayload(LoaderPayload.RESULT_OK);
+						return new LoaderPayload(LoaderPayload.STATUS_OK);
 					}
 					catch (ArtAroundException e) {
 						return new LoaderPayload(e);
@@ -582,7 +581,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				public LoaderPayload loadInBackground() {
 					try {
 						ServiceFactory.getArtService().getNeighborhoods();
-						return new LoaderPayload(LoaderPayload.RESULT_OK);
+						return new LoaderPayload(LoaderPayload.STATUS_OK);
 					}
 					catch (ArtAroundException e) {
 						return new LoaderPayload(e);
@@ -594,7 +593,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				@Override
 				public LoaderPayload loadInBackground() {
 					try {
-						return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService().submitArt(
+						return new LoaderPayload(LoaderPayload.STATUS_OK, ServiceFactory.getArtService().submitArt(
 								(Art) args.getSerializable(ARG_NEW_ART)));
 					}
 					catch (ArtAroundException e) {
@@ -607,7 +606,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				@Override
 				public LoaderPayload loadInBackground() {
 					try {
-						return new LoaderPayload(LoaderPayload.RESULT_OK, ServiceFactory.getArtService().editArt(
+						return new LoaderPayload(LoaderPayload.STATUS_OK, ServiceFactory.getArtService().editArt(
 								(Art) args.getSerializable(ARG_NEW_ART)));
 					}
 					catch (ArtAroundException e) {
@@ -622,8 +621,8 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 					try {
 						String response = ServiceFactory.getArtService().uploadPhoto(art.slug,
 								args.getString(ARG_FILE_NAME));
-						Utils.d(Utils.TAG, "uploading photo: response = " + response);
-						return new LoaderPayload(LoaderPayload.RESULT_OK, args.getInt(ARG_POSITION));
+						Utils.d(Utils.TAG, "uploading photo: response =", response);
+						return new LoaderPayload(LoaderPayload.STATUS_OK, args.getInt(ARG_POSITION));
 					}
 					catch (ArtAroundException e) {
 						return new LoaderPayload(e);
@@ -640,17 +639,17 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	private void onAsyncLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
 		switch (loader.getId()) {
 		case LOAD_CATEGORIES:
-			if (payload.getStatus() == LoaderPayload.RESULT_ERROR) {
-				Utils.showToast(this, R.string.load_categories_error);
+			if (payload.getStatus() == LoaderPayload.STATUS_ERROR) {
+				Toast.makeText(this, R.string.load_categories_error, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case LOAD_NEIGHBORHOODS:
-			if (payload.getStatus() == LoaderPayload.RESULT_ERROR) {
-				Utils.showToast(this, R.string.load_neighborhoods_error);
+			if (payload.getStatus() == LoaderPayload.STATUS_ERROR) {
+				Toast.makeText(this, R.string.load_neighborhoods_error, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case SUBMIT_ART:
-			if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+			if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 				String newSlug = (String) payload.getResult();
 				art.slug = newSlug;
 
@@ -662,19 +661,19 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				}
 			}
 			else {
-				Utils.showToast(this, R.string.submit_art_failure);
+				Toast.makeText(this, R.string.submit_art_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case EDIT_ART:
-			if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+			if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 				onUploadPictures(0);
 			}
 			else {
-				Utils.showToast(this, R.string.submit_art_failure);
+				Toast.makeText(this, R.string.submit_art_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case UPLOAD_PHOTO:
-			if (payload.getStatus() == LoaderPayload.RESULT_OK) {
+			if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 				Object obj = payload.getResult();
 				if (obj != null && obj instanceof Integer) {
 					int pos = (Integer) obj;
@@ -682,7 +681,7 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				}
 			}
 			else {
-				Utils.showToast(this, R.string.upload_picture_failure);
+				Toast.makeText(this, R.string.upload_picture_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		}

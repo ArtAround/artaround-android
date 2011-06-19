@@ -1,6 +1,5 @@
 package us.artaround.android.parsers;
 
-
 public class ParseResult {
 	public int totalCount;
 	public int count;

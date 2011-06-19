@@ -5,7 +5,7 @@ public class ArtAroundException extends Exception {
 
 	private String message;
 	private Throwable cause;
-	
+
 	public ArtAroundException(Throwable cause) {
 		super();
 		this.cause = cause;

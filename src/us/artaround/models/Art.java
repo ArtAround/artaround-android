@@ -3,8 +3,7 @@ package us.artaround.models;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Art implements Serializable
-{
+public class Art implements Serializable {
 	private static final long serialVersionUID = 7782974469872721623L;
 
 	//public String uuid; // let's hope the slug is unique enough
@@ -18,6 +17,7 @@ public class Art implements Serializable
 	public String updatedAt;
 
 	public int year, ward;
+	public boolean isFavorite;
 
 	public double latitude;
 	public double longitude;
@@ -26,8 +26,8 @@ public class Art implements Serializable
 	public String locationDesc;
 	public String description;
 	public String neighborhood;
+	public String artist;
 
-	public Artist artist;
 	public ArrayList<String> photoIds;
 	public ArrayList<Comment> comments;
 
@@ -69,8 +69,6 @@ public class Art implements Serializable
 		builder.append(description);
 		builder.append(", neighborhood=");
 		builder.append(neighborhood);
-		builder.append(", artist=");
-		builder.append(artist);
 		builder.append(", photoIds=");
 		builder.append(photoIds);
 		builder.append(", comments=");

@@ -53,6 +53,7 @@
 		
 	<!-- Art Filters -->
 	<color
-		name="ArtFiltersBackground">#706567</color>	
-	
+		name="ArtFiltersBackground">#706567</color>
+	<color
+		name="ArtFilterHeadingText">#C2C62E</color>	
 </resources>

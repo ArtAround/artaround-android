@@ -192,11 +192,11 @@ public class ArtBubblesOverlay extends ItemizedOverlay<ArtOverlayItem> {
 
 		}
 		catch (SecurityException e) {
-			Utils.w(Utils.TAG, "setBubbleTouchListener reflection SecurityException", e);
+			Utils.d(Utils.TAG, "setBubbleTouchListener reflection SecurityException", e);
 			return;
 		}
 		catch (NoSuchMethodException e) {
-			Utils.w(Utils.TAG, "setBubbleTouchListener does not exist", e);
+			Utils.d(Utils.TAG, "setBubbleTouchListener does not exist", e);
 			// method not overridden - do nothing
 			return;
 		}

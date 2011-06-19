@@ -29,7 +29,7 @@ public class ArtGallery extends FragmentActivity {
 		Intent intent = getIntent();
 		if (intent.hasExtra(EXTRA_PHOTOS)) {
 			photos = (ArrayList<PhotoWrapper>) intent.getExtras().getSerializable(EXTRA_PHOTOS);
-			Utils.d(TAG, "onCreate(): photos= " + photos);
+			Utils.d(TAG, "onCreate(): photos=", photos);
 		}
 		if (intent.hasExtra(EXTRA_TITLE)) {
 			title = intent.getExtras().getString(EXTRA_TITLE);

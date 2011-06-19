@@ -37,9 +37,9 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 	private final String PARAM_OS_VERSION = "os_version";
 
 	private static ArtAroundExceptionHandler instance;
-	private Thread.UncaughtExceptionHandler previousHandler;
+	private final Thread.UncaughtExceptionHandler previousHandler;
 
-	private String filePath;
+	private final String filePath;
 	private String appVersion;
 	private final String osVersion;
 	private final String deviceName;
@@ -121,10 +121,10 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 			bw.write(stacktrace);
 			bw.flush();
 			bw.close();
-			Utils.d(TAG, "Writing crash file " + fileName);
+			Utils.d(TAG, "Writing crash file", fileName);
 		}
 		catch (final IOException e) {
-			Utils.w(TAG, TAG, e);
+			Utils.d(TAG, e);
 		}
 	}
 
@@ -144,13 +144,13 @@ public class ArtAroundExceptionHandler implements UncaughtExceptionHandler {
 			client.execute(postRequest);
 		}
 		catch (UnsupportedEncodingException e) {
-			Utils.w(TAG, TAG, e);
+			Utils.d(TAG, e);
 		}
 		catch (IOException e) {
-			Utils.w(TAG, TAG, e);
+			Utils.d(TAG, e);
 		}
 		catch (OutOfMemoryError e) {
-			Utils.w(TAG, TAG, e);
+			Utils.d(TAG, e);
 		}
 		finally {
 			if (postRequest != null) {

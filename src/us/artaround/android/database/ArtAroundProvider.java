@@ -1,7 +1,6 @@
 package us.artaround.android.database;
 
 import static us.artaround.android.database.ArtAroundDatabase.ARTAROUND_AUTHORITY;
-import static us.artaround.android.database.ArtAroundDatabase.createArtFavoritesTable;
 import static us.artaround.android.database.ArtAroundDatabase.createArtistsTable;
 import static us.artaround.android.database.ArtAroundDatabase.createArtsTable;
 import static us.artaround.android.database.ArtAroundDatabase.createCategoriesTable;
@@ -10,7 +9,6 @@ import static us.artaround.android.database.ArtAroundDatabase.createNeighborhood
 import java.util.HashMap;
 
 import us.artaround.android.common.Utils;
-import us.artaround.android.database.ArtAroundDatabase.ArtFavorites;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
 import us.artaround.android.database.ArtAroundDatabase.Arts;
 import us.artaround.android.database.ArtAroundDatabase.Categories;
@@ -39,16 +37,11 @@ public class ArtAroundProvider extends ContentProvider {
 	private static HashMap<String, String> artistsMap;
 	private static HashMap<String, String> categoriesMap;
 	private static HashMap<String, String> neighborhoodsMap;
-	private static HashMap<String, String> artFavoritesMap;
 
 	private static final int ARTS = 0;
-	private static final int ARTISTS = 2;
-	private static final int CATEGORIES = 4;
-	private static final int NEIGHBORHOODS = 5;
-	private static final int ART_FAVORITES = 6;
-
-	private static final String ARTS_TABLES;
-	private static final String ART_FAVORITES_TABLES;
+	private static final int ARTISTS = 1;
+	private static final int CATEGORIES = 2;
+	private static final int NEIGHBORHOODS = 3;
 
 	private static final UriMatcher uriMatcher;
 
@@ -86,8 +79,6 @@ public class ArtAroundProvider extends ContentProvider {
 			return Categories.CONTENT_TYPE;
 		case NEIGHBORHOODS:
 			return Neighborhoods.CONTENT_TYPE;
-		case ART_FAVORITES:
-			return ArtFavorites.CONTENT_TYPE;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -103,8 +94,6 @@ public class ArtAroundProvider extends ContentProvider {
 			return Categories.TABLE_NAME;
 		case NEIGHBORHOODS:
 			return Neighborhoods.TABLE_NAME;
-		case ART_FAVORITES:
-			return ArtFavorites.TABLE_NAME;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -120,8 +109,6 @@ public class ArtAroundProvider extends ContentProvider {
 			return Categories.CONTENT_URI;
 		case NEIGHBORHOODS:
 			return Neighborhoods.CONTENT_URI;
-		case ART_FAVORITES:
-			return ArtFavorites.CONTENT_URI;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -133,13 +120,15 @@ public class ArtAroundProvider extends ContentProvider {
 
 		switch (uriMatcher.match(uri)) {
 		case ARTS:
-			qb.setTables(ARTS_TABLES);
+			qb.setTables(Arts.TABLE_NAME);
 			qb.setProjectionMap(artsMap);
 			break;
+
 		case ARTISTS:
 			qb.setTables(Artists.TABLE_NAME);
 			qb.setProjectionMap(artistsMap);
 			break;
+
 		case CATEGORIES:
 			qb.setTables(Categories.TABLE_NAME);
 			qb.setProjectionMap(categoriesMap);
@@ -148,10 +137,7 @@ public class ArtAroundProvider extends ContentProvider {
 			qb.setTables(Neighborhoods.TABLE_NAME);
 			qb.setProjectionMap(neighborhoodsMap);
 			break;
-		case ART_FAVORITES:
-			qb.setTables(ART_FAVORITES_TABLES);
-			qb.setProjectionMap(artFavoritesMap);
-			break;
+
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -236,7 +222,7 @@ public class ArtAroundProvider extends ContentProvider {
 		}
 		catch (Exception e) {
 			// ignore...
-			Utils.w(Utils.TAG, "Exception replacing row in table '" + tableName, e);
+			Utils.d(Utils.TAG, "Exception replacing row in table'", tableName, e);
 		}
 
 		final int count = getRowsCount(db, tableName) - countBefore;
@@ -246,12 +232,12 @@ public class ArtAroundProvider extends ContentProvider {
 		//contentResolver.notifyChange(uri, null);
 
 		if (count > 0) {
-			Utils.i(Utils.TAG, "INSERTED into '" + tableName + "': " + count);
+			Utils.d(Utils.TAG, "INSERTED into'", tableName, "':", count);
 		}
 
 		int rest = rowCount - count;
 		if (rest > 0) {
-			Utils.i(Utils.TAG, "REPLACED into '" + tableName + "': " + (rowCount - count));
+			Utils.d(Utils.TAG, "REPLACED into'", tableName, "':", (rowCount - count));
 		}
 
 		return count;
@@ -342,9 +328,6 @@ public class ArtAroundProvider extends ContentProvider {
 		case NEIGHBORHOODS:
 			count = db.delete(Neighborhoods.TABLE_NAME, selection, selectionArgs);
 			break;
-		case ART_FAVORITES:
-			count = db.delete(ArtFavorites.TABLE_NAME, selection, selectionArgs);
-			break;
 		default:
 			throw new IllegalArgumentException("Unsupported URI: '" + uri + "'.");
 		}
@@ -372,7 +355,6 @@ public class ArtAroundProvider extends ContentProvider {
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			db.execSQL(createArtsTable());
-			db.execSQL(createArtFavoritesTable());
 			db.execSQL(createArtistsTable());
 			db.execSQL(createCategoriesTable());
 			db.execSQL(createNeighborhoodsTable());
@@ -381,8 +363,8 @@ public class ArtAroundProvider extends ContentProvider {
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			if (oldVersion != 0) {
-				Utils.i(Utils.TAG, "SQL: Upgrading database from version " + oldVersion + " to " + DATABASE_VERSION
-						+ ", which will destroy old data");
+				Utils.d(Utils.TAG, "SQL: Upgrading database from version", oldVersion, "to", DATABASE_VERSION,
+						", which will destroy old data");
 
 				// Version 1 - Arts, Artists, Categories, Neighborhoods
 			}
@@ -396,23 +378,12 @@ public class ArtAroundProvider extends ContentProvider {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Arts.TABLE_NAME, ARTS);
-		//uriMatcher.addURI(ARTAROUND_AUTHORITY, Arts.TABLE_NAME + "/#", ART_UUID);
-
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Artists.TABLE_NAME, ARTISTS);
-		//uriMatcher.addURI(ARTAROUND_AUTHORITY, Artists.TABLE_NAME + "/#", ARTIST_UUID);
-
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Categories.TABLE_NAME, CATEGORIES);
 		uriMatcher.addURI(ARTAROUND_AUTHORITY, Neighborhoods.TABLE_NAME, NEIGHBORHOODS);
 
-		uriMatcher.addURI(ARTAROUND_AUTHORITY, ArtFavorites.TABLE_NAME, ART_FAVORITES);
-
-		artistsMap = new HashMap<String, String>();
-		artistsMap.put(Artists._ID, Artists.TABLE_NAME + "." + Artists._ID);
-		artistsMap.put(Artists.SLUG, Artists.SLUG);
-		artistsMap.put(Artists.NAME, Artists.NAME);
-
 		artsMap = new HashMap<String, String>();
-		artsMap.put(Arts._ID, Arts.TABLE_NAME + "." + Arts._ID);
+		artsMap.put(Arts._ID, Arts._ID);
 		artsMap.put(Arts.SLUG, Arts.SLUG);
 		artsMap.put(Arts.TITLE, Arts.TITLE);
 		artsMap.put(Arts.CATEGORY, Arts.CATEGORY);
@@ -429,37 +400,18 @@ public class ArtAroundProvider extends ContentProvider {
 		artsMap.put(Arts.MEDIUM_DISTANCE, Arts.MEDIUM_DISTANCE);
 		artsMap.put(Arts.CITY, Arts.CITY);
 		artsMap.put(Arts.ARTIST, Arts.ARTIST);
-		artsMap.put(Artists.NAME, Artists.NAME);
+		artsMap.put(Arts.FAVORITE, Arts.FAVORITE);
 
-		artFavoritesMap = new HashMap<String, String>();
-		artFavoritesMap.put(ArtFavorites._ID, ArtFavorites.TABLE_NAME + "." + ArtFavorites._ID);
-		artFavoritesMap.putAll(artsMap);
-		artFavoritesMap.put(Arts.SLUG, Arts.TABLE_NAME + "." + Arts.SLUG);
+		artistsMap = new HashMap<String, String>();
+		artistsMap.put(Artists._ID, Artists._ID);
+		artistsMap.put(Artists.NAME, Artists.NAME);
 
 		categoriesMap = new HashMap<String, String>();
-		categoriesMap.put(Categories._ID, Categories.TABLE_NAME + "." + Categories._ID);
+		categoriesMap.put(Categories._ID, Categories._ID);
 		categoriesMap.put(Categories.NAME, Categories.NAME);
 
 		neighborhoodsMap = new HashMap<String, String>();
-		neighborhoodsMap.put(Neighborhoods._ID, Neighborhoods.TABLE_NAME + "." + Neighborhoods._ID);
+		neighborhoodsMap.put(Neighborhoods._ID, Neighborhoods._ID);
 		neighborhoodsMap.put(Neighborhoods.NAME, Neighborhoods.NAME);
-
-		// matches all the arts, even when art.artist is null
-		StringBuilder b = new StringBuilder();
-		b.append(Arts.TABLE_NAME).append(" LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
-		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
-		b.append(Artists.TABLE_NAME).append(".").append(Artists.SLUG).append(")");
-
-		ARTS_TABLES = b.toString();
-
-		// matches the slugs that are both in Arts and ArtFavorites
-		b.delete(0, b.length());
-		b.append(ArtFavorites.TABLE_NAME).append(" INNER JOIN ").append(Arts.TABLE_NAME);
-		b.append(" ON (").append(ArtFavorites.TABLE_NAME).append(".").append(ArtFavorites.SLUG).append("=");
-		b.append(Arts.TABLE_NAME).append(".").append(Arts.SLUG).append(") LEFT OUTER JOIN ").append(Artists.TABLE_NAME);
-		b.append(" ON (").append(Arts.TABLE_NAME).append(".").append(Arts.ARTIST).append("=");
-		b.append(Artists.TABLE_NAME).append(".").append(Artists.SLUG).append(")");
-
-		ART_FAVORITES_TABLES = b.toString();
 	}
 }

@@ -26,8 +26,8 @@ public class ArtOverlayItem extends OverlayItem {
 		if (!TextUtils.isEmpty(art.neighborhood)) {
 			bld.append(Utils.NL).append("Neighborhood: " + art.neighborhood);
 		}
-		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			bld.append(Utils.NL).append("Artist: " + art.artist.name);
+		if (art.artist != null && !TextUtils.isEmpty(art.artist)) {
+			bld.append(Utils.NL).append("Artist: " + art.artist);
 		}
 		return bld.toString();
 	}

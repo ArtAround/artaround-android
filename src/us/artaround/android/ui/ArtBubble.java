@@ -1,22 +1,22 @@
 package us.artaround.android.ui;
 
 import us.artaround.R;
+import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.ImageDownloader;
+import us.artaround.android.common.LoaderPayload;
 import us.artaround.android.common.Utils;
-import us.artaround.android.common.task.ArtAroundAsyncCommand;
-import us.artaround.android.common.task.ArtAroundAsyncTask;
-import us.artaround.android.common.task.ArtAroundAsyncTask.ArtAroundAsyncTaskListener;
-import us.artaround.android.common.task.LoadFlickrPhotoThumbCommand;
 import us.artaround.android.services.FlickrService;
+import us.artaround.android.services.FlickrService.FlickrPhoto;
 import us.artaround.models.Art;
 import us.artaround.models.ArtAroundException;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.text.Html;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -29,7 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener {
+public class ArtBubble extends FrameLayout implements LoaderCallbacks<LoaderPayload> {
 	//private final static String TAG = "ArtBubble";
 
 	private final static int TIMEOUT = 30000;
@@ -42,8 +42,6 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 	private final ProgressBar progress;
 	private final ImageView imgView;
 	private final Context ctx;
-
-	private ArtAroundAsyncTask task;
 
 	public ArtBubble(Context context, int bubbleBottomOffset) {
 		super(context);
@@ -69,12 +67,6 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		addView(layout, params);
 	}
 
-	@Override
-	protected void onConfigurationChanged(Configuration newConfig) {
-		task.cancel(true);
-		super.onConfigurationChanged(newConfig);
-	}
-
 	public void setData(ArtOverlayItem item) {
 		layout.setVisibility(VISIBLE);
 		Art art = item.art;
@@ -84,17 +76,17 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 			title.setVisibility(VISIBLE);
 
 		}
-		
+
 		StringBuilder str = new StringBuilder();
-		if (art.artist != null && !TextUtils.isEmpty(art.artist.name)) {
-			 str.append(art.artist.name);
-			
-			if(art.year > 0) {
+		if (art.artist != null && !TextUtils.isEmpty(art.artist)) {
+			str.append(art.artist);
+
+			if (art.year > 0) {
 				str.append(" - ");
 			}
 		}
-		
-		if(art.year > 0) {
+
+		if (art.year > 0) {
 			str.append("<b>").append(art.year).append("</b>");
 		}
 		if (str.length() > 0) {
@@ -102,7 +94,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 			author.setVisibility(View.VISIBLE);
 		}
 
- 		if (!TextUtils.isEmpty(art.category)) {
+		if (!TextUtils.isEmpty(art.category)) {
 			category.setText(art.category.toUpperCase());
 			category.setVisibility(View.VISIBLE);
 		}
@@ -123,8 +115,7 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
 			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
 
-			task = new ArtAroundAsyncTask(new LoadFlickrPhotoThumbCommand(0, id, args), this);
-			task.execute();
+			((FragmentActivity) getContext()).getSupportLoaderManager().restartLoader(id.hashCode(), args, this);
 			new CountDownTimer(TIMEOUT, 1) {
 				@Override
 				public void onTick(long millisUntilFinished) {}
@@ -134,7 +125,6 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 					progress.setVisibility(View.GONE);
 				}
 			}.start();
-			Utils.d(Utils.TAG, "setData(): start task " + task.getCommandId());
 		}
 	}
 
@@ -143,19 +133,42 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 		progress.setVisibility(View.VISIBLE);
 		imgView.setVisibility(View.GONE);
 		imgView.setImageURI(null);
-		if(task != null && task.getStatus() == AsyncTask.Status.RUNNING) {
-			task.cancel(true);
-		}
 	}
 
+	@Override
+	public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
+		return new AsyncLoader<LoaderPayload>(getContext()) {
+
+			@Override
+			public LoaderPayload loadInBackground() {
+				LoaderPayload payload = null;
+
+				try {
+					FlickrService srv = FlickrService.getInstance();
+					FlickrPhoto photo = srv.parsePhoto(
+							srv.getPhotoJson(args.getString(ImageDownloader.EXTRA_PHOTO_ID)),
+							args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
+					if (photo != null) {
+						args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
+						payload = new LoaderPayload(LoaderPayload.STATUS_OK, ImageDownloader.getImageUri(args));
+					}
+				}
+				catch (ArtAroundException e) {
+					payload = new LoaderPayload(LoaderPayload.STATUS_ERROR, e.getMessage());
+				}
+				payload.setArgs(args);
+				return payload;
+			}
+		};
+	}
 
 	@Override
-	public void onPostExecute(ArtAroundAsyncCommand command, Object result, ArtAroundException exception) {
-		if (exception == null) {
-			Uri uri = (Uri) result;
+	public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
+		if (payload.getStatus() == LoaderPayload.STATUS_OK) {
+			Uri uri = (Uri) payload.getResult();
 			// if we show another bubble while the first one is not loaded yet
 			// we need to show only the last task result
-			if (task.getCommandId().equals(command.id)) {
+			if (loader.getId() == payload.getArgs().getString(ImageDownloader.EXTRA_PHOTO_ID).hashCode()) {
 				if (uri != null) {
 					imgView.setScaleType(ScaleType.FIT_XY);
 					imgView.setImageURI(uri);
@@ -167,12 +180,12 @@ public class ArtBubble extends FrameLayout implements ArtAroundAsyncTaskListener
 				}
 			}
 		}
-		task = null;
+		else {
+			//TODO error message
+		}
+		loader.stopLoading();
 	}
 
 	@Override
-	public void onPreExecute(ArtAroundAsyncCommand command) {}
-
-	@Override
-	public void onPublishProgress(ArtAroundAsyncCommand command, Object progress) {}
+	public void onLoaderReset(Loader<LoaderPayload> loader) {}
 }

@@ -56,8 +56,6 @@ public class LocationUpdater implements TimeoutCallback {
 		manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		fineListener = getNewListener();
 		coarseListener = getNewListener();
-
-		Utils.d(TAG, "Instantiated a LocationUpdater for context " + context);
 	}
 
 	public Object getTag() {
@@ -66,7 +64,7 @@ public class LocationUpdater implements TimeoutCallback {
 
 	public void setTag(Object tag) {
 		this.tag = tag;
-		Utils.d(TAG, "Attached tag " + tag);
+		Utils.d(TAG, "Attached tag", tag);
 	}
 
 	public void updateLocation() {
@@ -108,14 +106,10 @@ public class LocationUpdater implements TimeoutCallback {
 		if (!(context instanceof LocationUpdaterCallback)) {
 			throw new IllegalArgumentException("Your Context needs to implement the LocationUpdaterCallback!");
 		}
-
-		Utils.d(TAG, "Attached a new context " + context);
 	}
 
 	public void detach() {
 		removeUpdates();
-
-		Utils.d(TAG, "Detached the old context " + context);
 	}
 
 	public void updateAddress(Location location) {
@@ -137,7 +131,7 @@ public class LocationUpdater implements TimeoutCallback {
 		String address = getFromCache(location);
 		if (!TextUtils.isEmpty(address)) {
 			ctx.onAddressUpdate(address);
-			Utils.d(TAG, "Address for location " + location + " already in cache: " + address);
+			Utils.d(TAG, "Address for location already in cache");
 		}
 		else {
 			requestReverseGeocoding(location);
@@ -149,8 +143,6 @@ public class LocationUpdater implements TimeoutCallback {
 			@Override
 			public void onStatusChanged(String provider, int status, Bundle extras) {
 				boolean notOk = (status == LocationProvider.OUT_OF_SERVICE || status == LocationProvider.TEMPORARILY_UNAVAILABLE);
-				Utils.d(TAG, "onStatusChanged(" + provider + ") with status " + status + " meaning "
-						+ (notOk ? " unavailable " : " ok"));
 				if (notOk) {
 					endTimerForProvider(provider, this);
 					LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
@@ -159,18 +151,14 @@ public class LocationUpdater implements TimeoutCallback {
 			}
 
 			@Override
-			public void onProviderEnabled(String provider) {
-				Utils.d(TAG, "onProviderEnabled(" + provider + ")");
-			}
+			public void onProviderEnabled(String provider) {}
 
 			@Override
-			public void onProviderDisabled(String provider) {
-				Utils.d(TAG, "onProviderDisabled(" + provider + ")");
-			}
+			public void onProviderDisabled(String provider) {}
 
 			@Override
 			public void onLocationChanged(Location location) {
-				Utils.d(TAG, "Location update success: " + location);
+				Utils.d(TAG, "Location update success:", location);
 				foundLocation = true;
 				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
 				if (ctx != null) ctx.onLocationUpdate(location);
@@ -198,7 +186,7 @@ public class LocationUpdater implements TimeoutCallback {
 		timers.add(timer);
 		manager.requestLocationUpdates(provider, MIN_TIME, MIN_DISTANCE, listener);
 
-		Utils.d(TAG, "Getting a timed update from " + provider);
+		Utils.d(TAG, "Getting a timed update from", provider);
 	}
 
 	private void endTimerForProvider(String provider, LocationListener listener) {
@@ -210,7 +198,7 @@ public class LocationUpdater implements TimeoutCallback {
 	private void endTimer(TimeoutTimer timer) {
 		if (timer == null) return;
 
-		Utils.d(TAG, "Ending a timed update from " + timer.getId());
+		Utils.d(TAG, "Ending a timed update from", timer.getId());
 		timer.stop(); // this will NOT stop the already running thread
 		manager.removeUpdates((LocationListener) timer.getTag());
 	}
@@ -226,7 +214,7 @@ public class LocationUpdater implements TimeoutCallback {
 		foundLocation = false;
 		isCancelled = false;
 
-		Utils.d(TAG, "Currently enabled providers: fine=" + fineProviders + ", coarse=" + coarseProviders);
+		Utils.d(TAG, "Currently enabled providers: fine=", fineProviders, ", coarse=", coarseProviders);
 	}
 
 	private boolean providersNotEnabled() {
@@ -246,7 +234,7 @@ public class LocationUpdater implements TimeoutCallback {
 			provider = fineProviders.get(i);
 			location = manager.getLastKnownLocation(provider);
 			if (location != null) {
-				Utils.d(TAG, "Last location from " + provider + " is " + location);
+				Utils.d(TAG, "Last location from", provider, location);
 				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
 				if (ctx != null) ctx.onLocationUpdate(location);
 				return true;
@@ -258,7 +246,7 @@ public class LocationUpdater implements TimeoutCallback {
 			provider = coarseProviders.get(i);
 			location = manager.getLastKnownLocation(provider);
 			if (location != null) {
-				Utils.d(TAG, "Last known location is " + location + " from provider " + provider);
+				Utils.d(TAG, "Last known location is", location, provider);
 				LocationUpdaterCallback ctx = (LocationUpdaterCallback) context.get();
 				if (ctx != null) ctx.onLocationUpdate(location);
 				return true;
@@ -296,12 +284,12 @@ public class LocationUpdater implements TimeoutCallback {
 		endTimerForProvider(timer.getId(), (LocationListener) timer.getTag());
 		updateFromLocationListener();
 
-		Utils.d(TAG, "Location timeout for provider " + timer.getId() + "---" + Thread.currentThread());
+		Utils.d(TAG, "Location timeout for provider", timer.getId());
 	}
 
 	private void requestReverseGeocoding(Location location) {
 		addressUpdater = (AddressUpdater) new AddressUpdater(context.get()).execute(location);
-		Utils.d(TAG, "Started reverse geocoding location " + location);
+		Utils.d(TAG, "Started reverse geocoding location:", location);
 	}
 
 	// Location doesn't override equals() or hashCode(), so we use latitude and longitude as key
@@ -310,7 +298,7 @@ public class LocationUpdater implements TimeoutCallback {
 		if (cache.size() > 0 && cache.size() == MAX_CACHE_SIZE) cache.remove(cache.keySet().iterator().next());
 
 		cache.put(location.getLatitude() + "-" + location.getLongitude(), address);
-		Utils.d(TAG, "Cached address " + address + "  for location " + location);
+		Utils.d(TAG, "Cached address", address);
 	}
 
 	public static String getFromCache(Location location) {
@@ -379,23 +367,21 @@ public class LocationUpdater implements TimeoutCallback {
 
 			}
 			catch (IOException e) {
-				Utils.d(TAG, "Could not reverse geocoding to get the address from location " + location);
+				Utils.d(TAG, "Could not reverse geocoding to get the address from location", location);
 				return null;
 			}
 		}
 
 		@Override
 		protected void onPostExecute(String address) {
-			Utils.d(TAG, "The reverse geocoding found address: " + address);
+			Utils.d(TAG, "The reverse geocoding found address:", address);
 			if (address != null) {
 				AddressUpdaterCallback ctx = (AddressUpdaterCallback) context.get();
 				if (ctx != null) ctx.onAddressUpdate(address);
-				Utils.d(TAG, "Address update success: " + address);
 			}
 			else {
 				AddressUpdaterCallback ctx = (AddressUpdaterCallback) context.get();
 				if (ctx != null) ctx.onAddressUpdateError();
-				Utils.d(TAG, "Address update failure!");
 			}
 
 			addressUpdater = null;

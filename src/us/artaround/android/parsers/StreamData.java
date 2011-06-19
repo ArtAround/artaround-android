@@ -23,7 +23,6 @@ public class StreamData {
 		this(parserType, false, httpData, auxData);
 	}
 
-
 	public int getParserType() {
 		return parserType;
 	}

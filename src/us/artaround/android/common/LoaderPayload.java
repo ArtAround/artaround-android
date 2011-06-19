@@ -1,21 +1,23 @@
 package us.artaround.android.common;
 
 import us.artaround.models.ArtAroundException;
+import android.os.Bundle;
 
 public class LoaderPayload {
-	public static int RESULT_OK = 0;
-	public static int RESULT_ERROR = 1;
+	public static int STATUS_OK = 0;
+	public static int STATUS_ERROR = 1;
 
 	private int status = -1;
 	private ArtAroundException exception;
 	private Object result;
+	private Bundle args;
 
 	public LoaderPayload(int status) {
 		this.status = status;
 	}
 
 	public LoaderPayload(ArtAroundException exception) {
-		this.status = RESULT_ERROR;
+		this.status = STATUS_ERROR;
 		this.exception = exception;
 	}
 
@@ -34,6 +36,14 @@ public class LoaderPayload {
 
 	public Object getResult() {
 		return result;
+	}
+
+	public Bundle getArgs() {
+		return args;
+	}
+
+	public void setArgs(Bundle args) {
+		this.args = args;
 	}
 
 	@Override
