@@ -440,7 +440,7 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 					Boolean result = (Boolean) payload.getResult();
 					if (result != null && result) {
 						Toast.makeText(ArtDetail.this.getApplicationContext(), R.string.submit_comment_success,
-								Toast.LENGTH_SHORT).show();
+								Toast.LENGTH_LONG).show();
 						clearCommentFields();
 					}
 					else {
@@ -507,7 +507,7 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 						values.put(Arts.FAVORITE, !art.isFavorite ? 1 : 0);
 						int ok = ArtAroundProvider.contentResolver.update(Arts.CONTENT_URI, values, Arts.SLUG + "=?",
 								new String[] { args.getString(ARG_ART_SLUG) });
-						if (ok == 1) {
+						if (ok > 0) {
 							art.isFavorite = !art.isFavorite;
 						}
 						return art.isFavorite;
@@ -525,12 +525,12 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 				if (result != null && result) {
 					btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
 					Toast.makeText(ArtDetail.this, R.string.art_added_favorite,
-							Toast.LENGTH_SHORT).show();
+							Toast.LENGTH_LONG).show();
 				}
 				else {
 					btnFavorite.setImageResource(R.drawable.ic_add_favorite_background);
 					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite,
-							Toast.LENGTH_SHORT).show();
+							Toast.LENGTH_LONG).show();
 				}
 			}
 			loader.stopLoading();

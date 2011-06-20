@@ -60,7 +60,7 @@ public class ArtAroundDatabase {
 
 		public static final String NAME = "name";
 
-		public static final String DEFAULT_SORT_ORDER = NAME + " ASC";
+		public static final String DEFAULT_SORT_ORDER = "lower(" + NAME + ")" + " ASC";
 	}
 
 	public static final class Categories implements BaseColumns {

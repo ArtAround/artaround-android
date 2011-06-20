@@ -226,7 +226,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 		if (Utils.isCacheOutdated(this)) {
 			Utils.d(TAG, "setupState(): cache outdated, loading...");
-			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_LONG).show();
 			clearCache();
 			loadArt();
 		}
@@ -685,7 +685,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	}
 
 	private void startLocationUpdate() {
-		Toast.makeText(this, R.string.waiting_location, Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, R.string.waiting_location, Toast.LENGTH_LONG).show();
 		toggleLoading(true);
 		btnLocation.setEnabled(false);
 		locationUpdater.updateLocation();
@@ -824,7 +824,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					displayArt(filteredArt);
 				}
 				else {
-					Toast.makeText(ArtMap.this, R.string.empty_favorites, Toast.LENGTH_SHORT).show();
+					Toast.makeText(ArtMap.this, R.string.empty_favorites, Toast.LENGTH_LONG).show();
 				}
 				break;
 			}
@@ -892,7 +892,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 				}
 				else {
 					toggleLoading(false);
-					Toast.makeText(ArtMap.this, R.string.load_arts_error, Toast.LENGTH_SHORT).show();
+					Toast.makeText(ArtMap.this, R.string.load_arts_error, Toast.LENGTH_LONG).show();
 				}
 				break;
 			}

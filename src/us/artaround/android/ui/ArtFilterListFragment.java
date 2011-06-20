@@ -199,7 +199,7 @@ public class ArtFilterListFragment extends ListFragment {
 			case ArtFilter.TYPE_TITLE:
 				selection = (selectionArgs == null) ? null : Arts.TITLE + selection;
 				return new CursorLoader(getActivity(), Arts.CONTENT_URI, new String[] { Arts._ID, Arts.TITLE },
-						selection, selectionArgs, null);
+						selection, selectionArgs, "lower(" + Arts.TITLE + ")");
 
 			case ArtFilter.TYPE_ARTIST:
 				b = new StringBuilder(Artists.NAME).append(" NOT NULL AND ").append(Artists.NAME)

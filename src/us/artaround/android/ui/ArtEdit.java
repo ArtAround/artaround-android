@@ -250,6 +250,7 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 		if (position == uris.size()) {
 			hasChanges = false;
 			dismissDialog(DIALOG_PROGRESS);
+			Toast.makeText(getApplicationContext(), R.string.submit_art_success, Toast.LENGTH_LONG).show();
 
 			onFinish();
 			return;
@@ -673,6 +674,7 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 				else {
 					hasChanges = false;
 					dismissDialog(DIALOG_PROGRESS);
+					Toast.makeText(getApplicationContext(), R.string.submit_art_success, Toast.LENGTH_LONG).show();
 				}
 			}
 			else {

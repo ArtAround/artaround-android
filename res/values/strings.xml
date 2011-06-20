@@ -29,9 +29,9 @@
 	<string
 		name="sending">Sending...</string>
 	<string
-		name="submit_art_success">The art has been submitted and is awaiting moderation.</string>
+		name="submit_art_success">The changes have been submitted and is awaiting moderation.</string>
 	<string
-		name="submit_art_failure">Due to an error, the art was not submitted.\n Please try again
+		name="submit_art_failure">Due to an error, the changes were not submitted.\n Please try again
 		later.</string>
 	<string
 		name="submit_comment_success">Your comment has been submitted and is awaiting moderation.
