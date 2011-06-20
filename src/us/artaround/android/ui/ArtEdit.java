@@ -46,7 +46,7 @@ import android.widget.SimpleCursorAdapter.CursorToStringConverter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
+public class ArtEdit extends FragmentActivity implements GallerySaver {
 	//private static final String TAG = "ArtEdit";
 	private static final String TAG_MINI_MAP = "minimap";
 	private static final String TAG_MINI_GALLERY = "mini_gallery";
@@ -66,8 +66,9 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 
 	private static final int DIALOG_EMPTY_INPUT = 0;
 	private static final int DIALOG_EMPTY_LOCATION = 1;
-	private static final int DIALOG_DISCARD_EDIT = 2;
-	private static final int DIALOG_PROGRESS = 3;
+	private static final int DIALOG_EMPTY_PHOTOS = 2;
+	private static final int DIALOG_DISCARD_EDIT = 3;
+	private static final int DIALOG_PROGRESS = 4;
 
 	private static final String SAVE_SCROLL_Y = "scroll_y";
 	private static final String SAVE_ART = "art";
@@ -202,14 +203,29 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 			return;
 		}
 
-		showDialog(DIALOG_PROGRESS);
-
 		Bundle args = new Bundle();
 		args.putSerializable(ARG_NEW_ART, art);
 		if (!TextUtils.isEmpty(art.slug)) {
+			showDialog(DIALOG_PROGRESS);
 			getSupportLoaderManager().restartLoader(EDIT_ART, args, asyncLoader);
 		}
 		else {
+			// check to see if there are photos attached
+			MiniGalleryFragment f = (MiniGalleryFragment) getSupportFragmentManager().findFragmentByTag(
+					TAG_MINI_GALLERY);
+			if (f == null) {
+				Utils.d(Utils.TAG, "onUploadPictures(): MiniGalleryFragment is null!");
+				return; //something bad happened
+			}
+
+			uris = f.getNewPhotoUris();
+			if (uris == null || uris.isEmpty()) {
+				showDialog(DIALOG_EMPTY_PHOTOS);
+				Utils.d(Utils.TAG, "There are no photos to be uploaded!");
+				return;
+			}
+
+			showDialog(DIALOG_PROGRESS);
 			getSupportLoaderManager().restartLoader(SUBMIT_ART, args, asyncLoader);
 		}
 	}
@@ -656,10 +672,12 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				}
 				else {
 					hasChanges = false;
+					dismissDialog(DIALOG_PROGRESS);
 				}
 			}
 			else {
-				Toast.makeText(this, R.string.submit_art_failure, Toast.LENGTH_LONG).show();
+				dismissDialog(DIALOG_PROGRESS);
+				Toast.makeText(getApplicationContext(), R.string.submit_art_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case EDIT_ART:
@@ -667,7 +685,8 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				onUploadPictures(0);
 			}
 			else {
-				Toast.makeText(this, R.string.submit_art_failure, Toast.LENGTH_LONG).show();
+				dismissDialog(DIALOG_PROGRESS);
+				Toast.makeText(getApplicationContext(), R.string.submit_art_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		case UPLOAD_PHOTO:
@@ -679,7 +698,8 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 				}
 			}
 			else {
-				Toast.makeText(this, R.string.upload_picture_failure, Toast.LENGTH_LONG).show();
+				dismissDialog(DIALOG_PROGRESS);
+				Toast.makeText(getApplicationContext(), R.string.upload_picture_failure, Toast.LENGTH_LONG).show();
 			}
 			break;
 		}
@@ -705,6 +725,18 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.art_edit_input_empty_location_title);
 			builder.setMessage(R.string.art_edit_input_empty_location_msg);
+			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.setCancelable(true);
+			return builder.create();
+		case DIALOG_EMPTY_PHOTOS:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.art_edit_input_empty_photos_title);
+			builder.setMessage(R.string.art_edit_input_empty_photos_msg);
 			builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
@@ -776,12 +808,12 @@ public class ArtEdit extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	@Override
-	public void saveMiniGalleryState(Bundle args) {
+	public void saveGalleryState(Bundle args) {
 		savedGalleryState = args;
 	}
 
 	@Override
-	public Bundle restoreMiniGalleryState() {
+	public Bundle restoreGalleryState() {
 		return savedGalleryState;
 	}
 }

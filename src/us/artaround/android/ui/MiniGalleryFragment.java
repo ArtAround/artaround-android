@@ -77,7 +77,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 	private Uri tempPhotoUri;
 	private AtomicInteger loadedPhotosCount;
 
-	private MiniGallerySaver gallerySaver;
+	private GallerySaver gallerySaver;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -90,8 +90,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		isEditMode = getArguments().getBoolean(ARG_EDIT_MODE);
 		artTitle = getArguments().getString(ARG_TITLE);
 
-		if (activity instanceof MiniGallerySaver) {
-			gallerySaver = (MiniGallerySaver) activity;
+		if (activity instanceof GallerySaver) {
+			gallerySaver = (GallerySaver) activity;
 		}
 
 		Utils.d(TAG, "onAttach()");
@@ -124,7 +124,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		Bundle savedState = gallerySaver.restoreMiniGalleryState();
+		Bundle savedState = gallerySaver.restoreGalleryState();
 		setupState(savedState);
 		Utils.d(TAG, "onActivityCreated(): savedState=", savedState);
 	}
@@ -135,7 +135,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		args.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
 		args.putInt(SAVE_LOADED_PHOTOS_COUNT, loadedPhotosCount.get());
 
-		gallerySaver.saveMiniGalleryState(args);
+		gallerySaver.saveGalleryState(args);
 		super.onSaveInstanceState(args);
 	}
 

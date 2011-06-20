@@ -9,8 +9,10 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 public class MiniGalleryAdapter extends BaseAdapter {
 	public static final String NEW_PHOTO = "new_photo";
@@ -115,6 +117,11 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		if (editMode) {
 			if (position == 1) {
 				imgView.setImageResource(R.drawable.img_camera);
+				LayoutParams params = imgView.getLayoutParams();
+				params.width = RelativeLayout.LayoutParams.WRAP_CONTENT;
+				params.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+				imgView.setLayoutParams(params);
+
 				progress.setVisibility(View.GONE);
 				text.setVisibility(View.VISIBLE);
 			}
@@ -130,6 +137,7 @@ public class MiniGalleryAdapter extends BaseAdapter {
 			}
 			progress.setVisibility(View.GONE);
 		}
+
 		return view;
 	}
 

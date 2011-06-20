@@ -97,32 +97,6 @@ public class BaseService {
 		}
 	}
 
-	//	protected void postMethod(StreamData data, String url, List<NameValuePair> params) throws ArtAroundException {
-	//		final AndroidHttpClient client = getNewHttpClient();
-	//		final HttpPost postRequest = new HttpPost(url);
-	//		try {
-	//			postRequest.setURI(new URI(url));
-	//			postRequest.setEntity(new UrlEncodedFormEntity(params));
-	//
-	//			HttpResponse response = client.execute(postRequest);
-	//			parseHttpResponse(data, url, response);
-	//		}
-	//		catch (IOException e) {
-	//			throw new ArtAroundException(e);
-	//		}
-	//		catch (URISyntaxException e) {
-	//			throw new ArtAroundException(e);
-	//		}
-	//		finally {
-	//			if (postRequest != null) {
-	//				postRequest.abort();
-	//			}
-	//			if (client != null) {
-	//				client.close();
-	//			}
-	//		}
-	//	}
-
 	protected void postMethod(StreamData data, String url, String body) throws ArtAroundException {
 		final AndroidHttpClient client = getNewHttpClient();
 		final HttpPost postRequest = new HttpPost(url);

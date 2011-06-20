@@ -67,7 +67,8 @@ public class Preferences extends PreferenceActivity {
 			edit.putLong(Utils.KEY_LAST_UPDATE, 0);
 			SharedPreferencesCompat.apply(edit);
 
-			Toast.makeText(Preferences.this, R.string.clear_cache_success, Toast.LENGTH_LONG).show();
+			Toast.makeText(Preferences.this.getApplicationContext(), R.string.clear_cache_success, Toast.LENGTH_LONG)
+					.show();
 		}
 	};
 

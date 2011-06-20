@@ -46,7 +46,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
+public class ArtDetail extends FragmentActivity implements GallerySaver {
 	public static final String TAG = "ArtDetail";
 	private static final String TAG_MINI_GALLERY = "mini_gallery";
 
@@ -56,7 +56,7 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 
 	private static final String SAVE_COMMENTS = "comments";
 	private static final String SAVE_COMMENTS_COUNT = "comments_count";
-	private static final String SAVE_MINI_GALLERY = "mini_gallery";
+	private static final String SAVE_MINI_GALLERY = "save_mini_gallery";
 
 	private static final String ARG_ART_SLUG = "art_slug";
 	private static final String ARG_NEW_COMMENT = "new_comment";
@@ -122,6 +122,9 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		if (savedInstanceState != null) {
 			comments.addAll((ArrayList<Comment>) savedInstanceState.getSerializable(SAVE_COMMENTS));
 			commentsCount = savedInstanceState.getInt(SAVE_COMMENTS_COUNT);
+			if (savedInstanceState.containsKey(SAVE_MINI_GALLERY)) {
+				savedGalleryState = savedInstanceState.getBundle(SAVE_MINI_GALLERY);
+			}
 		}
 		if (comments.isEmpty()) {
 			onLoadComments();
@@ -178,8 +181,10 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 
 	private boolean validateTexts() {
 		boolean ok = true;
-		if (TextUtils.isEmpty(edCommentName.getText()) && TextUtils.isEmpty(edCommentUrl.getText())
-				&& TextUtils.isEmpty(edCommentText.getText())) {
+
+		// all empty
+		if (TextUtils.isEmpty(edCommentName.getText()) || TextUtils.isEmpty(edCommentEmail.getText())
+				|| TextUtils.isEmpty(edCommentText.getText())) {
 			ok = false;
 			showDialog(DIALOG_EMPTY_INPUT);
 		}
@@ -198,7 +203,6 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 		args.putSerializable(ARG_NEW_COMMENT, comment);
 
 		toggleLoading(true);
-
 		lm.restartLoader(SUBMIT_COMMENT, args, asyncCallback);
 	}
 
@@ -425,7 +429,8 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 					}
 				}
 				else {
-					Toast.makeText(ArtDetail.this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
+					Toast.makeText(ArtDetail.this, R.string.load_data_failure,
+							Toast.LENGTH_LONG).show();
 				}
 				break;
 			case SUBMIT_COMMENT:
@@ -434,15 +439,18 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 				if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 					Boolean result = (Boolean) payload.getResult();
 					if (result != null && result) {
-						Toast.makeText(ArtDetail.this, R.string.submit_comment_success, Toast.LENGTH_SHORT).show();
+						Toast.makeText(ArtDetail.this.getApplicationContext(), R.string.submit_comment_success,
+								Toast.LENGTH_SHORT).show();
 						clearCommentFields();
 					}
 					else {
-						Toast.makeText(ArtDetail.this, R.string.submit_comment_failure, Toast.LENGTH_LONG).show();
+						Toast.makeText(ArtDetail.this.getApplicationContext(), R.string.submit_comment_failure,
+								Toast.LENGTH_LONG).show();
 					}
 				}
 				else {
-					Toast.makeText(ArtDetail.this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
+					Toast.makeText(ArtDetail.this.getApplicationContext(), R.string.submit_comment_failure,
+							Toast.LENGTH_LONG).show();
 				}
 				break;
 			}
@@ -516,11 +524,13 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 			case LOADER_ASYNC_FAVORITE:
 				if (result != null && result) {
 					btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_added_favorite, Toast.LENGTH_SHORT).show();
+					Toast.makeText(ArtDetail.this, R.string.art_added_favorite,
+							Toast.LENGTH_SHORT).show();
 				}
 				else {
 					btnFavorite.setImageResource(R.drawable.ic_add_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite, Toast.LENGTH_SHORT).show();
+					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite,
+							Toast.LENGTH_SHORT).show();
 				}
 			}
 			loader.stopLoading();
@@ -646,12 +656,12 @@ public class ArtDetail extends FragmentActivity implements MiniGallerySaver {
 	}
 
 	@Override
-	public void saveMiniGalleryState(Bundle args) {
+	public void saveGalleryState(Bundle args) {
 		savedGalleryState = args;
 	}
 
 	@Override
-	public Bundle restoreMiniGalleryState() {
+	public Bundle restoreGalleryState() {
 		return savedGalleryState;
 	}
 }

@@ -85,8 +85,8 @@ public class ArtFilterListFragment extends ListFragment {
 			}
 		}
 		categories = new ArrayList<String>();
-		allPublic = getString(R.string.all_public);
-		allVenues = getString(R.string.all_venues);
+		allPublic = getString(R.string.art_filter_group_public);
+		allVenues = getString(R.string.art_filter_group_venues);
 
 		final EditText tvSearch = (EditText) getActivity().findViewById(R.id.filter_search);
 		tvSearch.addTextChangedListener(new TextWatcher() {
@@ -265,7 +265,7 @@ public class ArtFilterListFragment extends ListFragment {
 				text = (String) item;
 			}
 
-			if (text.equals(getString(R.string.all_venues))) {
+			if (text.equals(allVenues)) {
 				MyArrayAdapter adapter = (MyArrayAdapter) listView.getAdapter();
 				selectAllCategories(0, 4, check.isChecked(), listView, adapter);
 

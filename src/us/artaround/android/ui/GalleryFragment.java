@@ -33,21 +33,24 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	public static final String ARG_PHOTO = "photo";
 	public static final String ARG_TITLE = "title";
 
+	private static final String SAVE_PHOTOS = "photos";
+	private static final String SAVE_TO_LOAD_COUNT = "to_load_count";
+	private static final String SAVE_LOADED_PHOTOS_COUNT = "loaded_photos_count";
+
 	private static final int LOADER_PHOTO = 500;
 
 	private Gallery gallery;
 	private GalleryAdapter adapter;
+	//private GallerySaver gallerySaver;
 
 	private Animation rotateAnim;
 	private ImageView imgLoader;
-	//private ImageButton btnComment;
-	//private ImageButton btnAddImg;
 	private TextView tvTitle;
 
 	private String title;
 	private ArrayList<PhotoWrapper> photos;
 	private int toLoadCount;
-	private final AtomicInteger loadedCount = new AtomicInteger(0);
+	private AtomicInteger loadedCount = new AtomicInteger(0);
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -55,7 +58,9 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		super.onAttach(activity);
 		Utils.d(Utils.TAG, "onAttach()");
 
-		//setRetainInstance(true);
+		//		if (activity instanceof GallerySaver) {
+		//			gallerySaver = (GallerySaver) activity;
+		//		}
 
 		photos = (ArrayList<PhotoWrapper>) getArguments().getSerializable(ARG_PHOTOS);
 		title = getArguments().getString(ARG_TITLE);
@@ -77,25 +82,17 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		rotateAnim = Utils.getRoateAnim(getActivity());
 		imgLoader = (ImageView) view.findViewById(R.id.img_loader);
 
-		//		btnComment = (ImageButton) view.findViewById(R.id.btn_comment);
-		//		btnComment.setOnClickListener(new View.OnClickListener() {
-		//			@Override
-		//			public void onClick(View v) {
-		//				// TODO Auto-generated method stub
-		//
-		//			}
-		//		});
-		//
-		//		btnAddImg = (ImageButton) view.findViewById(R.id.btn_add_image);
-		//		btnAddImg.setOnClickListener(new View.OnClickListener() {
-		//			@Override
-		//			public void onClick(View v) {
-		//				// TODO Auto-generated method stub
-		//
-		//			}
-		//
-		//		});
 		return view;
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle args) {
+		args.putSerializable(SAVE_PHOTOS, photos);
+		args.putInt(SAVE_TO_LOAD_COUNT, toLoadCount);
+		args.putInt(SAVE_LOADED_PHOTOS_COUNT, loadedCount.get());
+
+		//gallerySaver.saveGalleryState(args);
+		super.onSaveInstanceState(args);
 	}
 
 	@Override
@@ -103,10 +100,20 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		super.onActivityCreated(savedInstanceState);
 		Utils.d(Utils.TAG, "onActivityCreated()");
 
-		setupState();
+		//Bundle savedState = gallerySaver.restoreGalleryState();
+		setupState(null);
 	}
 
-	private void setupState() {
+	@SuppressWarnings("unchecked")
+	private void setupState(Bundle savedInstanceState) {
+		if (savedInstanceState != null) {
+			photos = (ArrayList<PhotoWrapper>) savedInstanceState.getSerializable(SAVE_PHOTOS);
+			toLoadCount = savedInstanceState.getInt(SAVE_TO_LOAD_COUNT);
+			loadedCount = new AtomicInteger(savedInstanceState.getInt(SAVE_LOADED_PHOTOS_COUNT, 0));
+			adapter.addItems(photos);
+			return;
+		}
+
 		if (photos == null || photos.isEmpty()) return;
 
 		int size = photos.size();
@@ -125,6 +132,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 		if (firstId != null) {
 			toggleLoading(true);
+			adapter.setShowLoaders(true);
 
 			Bundle args = new Bundle();
 			args.putString(ARG_PHOTO, firstId);
@@ -180,9 +188,13 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 
 		if (loadedCount.getAndIncrement() == toLoadCount - 1) {
 			toggleLoading(false);
+			adapter.setShowLoaders(false);
+
 			Utils.d(Utils.TAG, "onLoadFinished(): done loading all pictures!");
 		}
 		else {
+			adapter.setShowLoaders(false, loadedCount.get() - 1);
+
 			String id = findNextIdToLoad(loadedCount.get());
 			Utils.d(Utils.TAG, "onLoadFinished(): loading next picture=", id);
 			if (id != null) {

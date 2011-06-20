@@ -30,8 +30,7 @@
 			android:name=".android.ui.ArtDetail" />
 
 		<activity
-			android:name=".android.ui.ArtGallery"
-			android:screenOrientation="landscape" />
+			android:name=".android.ui.ArtGallery" />
 
 		<activity
 			android:name=".android.ui.ArtFilter"

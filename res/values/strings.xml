@@ -179,7 +179,7 @@
 	<string
 		name="art_edit_hint_location_description">Enter a description of the location...</string>
 	<string
-		name="art_edit_input_empty_title">Required Fields</string>
+		name="art_edit_input_empty_title">Empty Fields</string>
 	<string
 		name="art_edit_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
 	</string>
@@ -187,6 +187,11 @@
 		name="art_edit_input_empty_location_title">Unknown Location</string>
 	<string
 		name="art_edit_input_empty_location_msg">Cannot submit art because the location could not be determined.
+	</string>
+	<string
+		name="art_edit_input_empty_photos_title">Photos Not Available</string>
+	<string
+		name="art_edit_input_empty_photos_msg">Please upload at least one photo before submitting this new art.
 	</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
@@ -222,7 +227,7 @@
 	<string
 		name="art_detail_label_name">Name</string>
 	<string
-		name="art_detail_label_email">Email</string>
+		name="art_detail_label_email">Email*</string>
 	<string
 		name="art_detail_label_url">URL</string>
 	<string
@@ -278,10 +283,6 @@
 		name="art_filter_group_venues">All Venues</string>
 	<string
 		name="art_filter_group_public">All Public Art</string>
-	<string
-		name="all_venues">All Venues</string>
-	<string
-		name="all_public">All Public</string>
 	<string
 		name="category_gallery">Gallery</string>
 	<string

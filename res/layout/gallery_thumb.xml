@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:background="@drawable/gallery_item_background"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
-	android:orientation="vertical"
 	android:gravity="center">
 	<ImageView
 		android:id="@+id/img_add_photo"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:layout_centerInParent="true"
 		android:paddingLeft="25dp"
 		android:paddingRight="25dp"
 		android:gravity="center"
@@ -19,6 +19,7 @@
 		android:id="@+id/progress"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
+		android:layout_centerInParent="true"
 		android:indeterminate="true" />
-</LinearLayout>
+</RelativeLayout>
 

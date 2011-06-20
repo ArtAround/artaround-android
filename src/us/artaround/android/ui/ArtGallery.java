@@ -9,12 +9,15 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
-public class ArtGallery extends FragmentActivity {
+public class ArtGallery extends FragmentActivity implements GallerySaver {
 	private static final String TAG = "ArtGallery";
+	private static final String TAG_GALLERY = "gallery";
 
 	public static final String EXTRA_PHOTOS = "photos";
 	public static final String EXTRA_TITLE = "title";
+	private static final String SAVE_GALLERY = "save_gallery";
 
+	private Bundle savedGalleryState;
 	private ArrayList<PhotoWrapper> photos;
 	private String title;
 
@@ -35,17 +38,38 @@ public class ArtGallery extends FragmentActivity {
 			title = intent.getExtras().getString(EXTRA_TITLE);
 		}
 
-		setupState();
+		setupState(savedInstanceState);
 	}
 
-	private void setupState() {
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		outState.putBundle(SAVE_GALLERY, savedGalleryState);
+		super.onSaveInstanceState(outState);
+	}
+
+	private void setupState(Bundle savedInstanceState) {
+		if (savedInstanceState != null && savedInstanceState.containsKey(SAVE_GALLERY)) {
+			savedGalleryState = savedInstanceState.getBundle(SAVE_GALLERY);
+			return;
+		}
+
 		GalleryFragment f = new GalleryFragment();
 		Bundle args = new Bundle();
 		args.putSerializable(GalleryFragment.ARG_PHOTOS, photos);
 		args.putString(GalleryFragment.ARG_TITLE, title);
 		f.setArguments(args);
 		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(android.R.id.content, f).commit();
+		fm.beginTransaction().replace(android.R.id.content, f, TAG_GALLERY).commit();
+	}
+
+	@Override
+	public void saveGalleryState(Bundle args) {
+		savedGalleryState = args;
+	}
+
+	@Override
+	public Bundle restoreGalleryState() {
+		return savedGalleryState;
 	}
 
 }

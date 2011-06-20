@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="@dimen/GalleryItemWidth"
 	android:layout_height="@dimen/GalleryItemHeight"
 	android:background="@drawable/mini_gallery_item_background"
-	android:orientation="vertical"
 	android:gravity="center">
 	<ImageView
 		android:id="@+id/img_add_photo"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
 		android:gravity="center"
+		android:layout_centerInParent="true"
 		android:scaleType="fitXY"
 		android:paddingTop="6dp"
 		android:paddingBottom="6dp"
@@ -21,6 +21,8 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginTop="10dp"
+		android:layout_below="@+id/img_add_photo"
+		android:layout_centerHorizontal="true"
 		android:text="@string/art_edit_add_photo"
 		android:textColor="@color/ArtEditLabel"
 		android:textStyle="bold|italic"
@@ -31,5 +33,6 @@
 		android:id="@+id/progress"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
+		android:layout_centerInParent="true"
 		android:indeterminate="true" />
-</LinearLayout>
+</RelativeLayout>

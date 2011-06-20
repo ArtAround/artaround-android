@@ -139,24 +139,32 @@ public class BaseParser {
 								art.put(Arts.SLUG, slug);
 							}
 							else if (TITLE_KEY.equalsIgnoreCase(artKey)) {
-								String title = jp.getText().trim();
-								art.put(Arts.TITLE, title);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String title = jp.getText().trim();
+									art.put(Arts.TITLE, title);
+								}
 							}
 							else if (CATEGORY_KEY.equalsIgnoreCase(artKey)) {
-								String cat = jp.getText().trim();
-								art.put(Arts.CATEGORY, cat);
-								category.put(Categories.NAME, cat);
-								categories.add(category);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String cat = jp.getText().trim();
+									art.put(Arts.CATEGORY, cat);
+									category.put(Categories.NAME, cat);
+									categories.add(category);
+								}
 							}
 							else if (NEIGHBORHOOD_KEY.equalsIgnoreCase(artKey)) {
-								String nbhd = jp.getText().trim();
-								art.put(Arts.NEIGHBORHOOD, nbhd);
-								neighborhood.put(Neighborhoods.NAME, nbhd);
-								neighborhoods.add(neighborhood);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String nbhd = jp.getText().trim();
+									art.put(Arts.NEIGHBORHOOD, nbhd);
+									neighborhood.put(Neighborhoods.NAME, nbhd);
+									neighborhoods.add(neighborhood);
+								}
 							}
 							else if (LOCATION_DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
-								String desc = jp.getText().trim();
-								art.put(Arts.LOCATION_DESCRIPTION, desc);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String desc = jp.getText().trim();
+									art.put(Arts.LOCATION_DESCRIPTION, desc);
+								}
 							}
 							else if (LOCATION_KEY.equalsIgnoreCase(artKey)) {
 								int index = 0;
@@ -210,14 +218,18 @@ public class BaseParser {
 								art.put(Arts.PHOTO_IDS, TextUtils.join(Utils.STR_SEP, photoIds));
 							}
 							else if (ARTIST_KEY.equalsIgnoreCase(artKey)) {
-								String name = jp.getText().trim();
-								artist.put(Artists.NAME, name);
-								artists.add(artist);
-								art.put(Arts.ARTIST, name);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String name = jp.getText().trim();
+									artist.put(Artists.NAME, name);
+									artists.add(artist);
+									art.put(Arts.ARTIST, name);
+								}
 							}
 							else if (DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
-								String desc = jp.getText().trim();
-								art.put(Arts.DESCRIPTION, desc);
+								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
+									String desc = jp.getText().trim();
+									art.put(Arts.DESCRIPTION, desc);
+								}
 							}
 							else {
 								jp.skipChildren();
@@ -536,6 +548,7 @@ public class BaseParser {
 			g.writeStringField(NAME_KEY, comment.name);
 			g.writeStringField(TEXT_KEY, comment.text);
 			g.writeStringField(URL_KEY, comment.url);
+			g.writeStringField(EMAIL_KEY, comment.email);
 			g.writeEndObject();
 
 			g.flush();
@@ -585,5 +598,6 @@ public class BaseParser {
 	private static final String NAME_KEY = "name";
 	private static final String URL_KEY = "url";
 	private static final String TEXT_KEY = "text";
+	private static final String EMAIL_KEY = "email";
 	private static final String SUCCESS_KEY = "success";
 }
