@@ -67,6 +67,7 @@ public class Utils {
 	public static final String KEY_CLEARED_CACHE = "cleared_cache";
 	public static final String KEY_SEND_CRASH_ONLINE = "send_crash_online";
 	public static final String KEY_CHECK_WIFI = "check_wifi";
+	public static final String KEY_CHECK_LOCATION_PREFS = "check_location_prefs";
 	public static final String KEY_SHOW_CHANGELOG = "show_changelog";
 	public static final String KEY_SHOW_WELCOME = "show_welcome";
 	public static final String KEY_VERSION = "version";

@@ -211,7 +211,6 @@
 			android:layout_height="wrap_content"
 			android:background="@drawable/mini_map_background"
 			android:paddingTop="16dp"
-			android:paddingBottom="16dp"
 			android:paddingLeft="9dp"
 			android:paddingRight="9dp"
 			android:gravity="center"
@@ -284,7 +283,8 @@
 							style="@style/ArtDetailButton"
 							android:text="@string/comment"
 							android:layout_alignParentRight="true"
-							android:layout_alignBottom="@+id/art_detail_input_message" />
+							android:layout_below="@+id/art_detail_input_message"
+							android:layout_marginTop="10dp" />
 					</RelativeLayout>
 
 				</TableRow>

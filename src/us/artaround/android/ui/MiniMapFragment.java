@@ -3,12 +3,16 @@ package us.artaround.android.ui;
 import us.artaround.R;
 import us.artaround.android.common.LocationUpdater;
 import us.artaround.android.common.LocationUpdater.LocationUpdaterCallback;
+import us.artaround.android.common.SharedPreferencesCompat;
 import us.artaround.android.common.Utils;
 import us.artaround.android.ui.CurrentLocationOverlay.CurrentOverlayDragCallback;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -178,13 +182,20 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 			tvCoords.setText(R.string.location_update_failure);
 		}
 
-		FragmentManager fm = getFragmentManager();
-		Fragment f = fm.findFragmentByTag("dlgLocation");
-		if (f != null) {
-			getFragmentManager().beginTransaction().remove(f).commit();
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		if (sharedPrefs.getBoolean(Utils.KEY_CHECK_LOCATION_PREFS, true)) {
+			FragmentManager fm = getFragmentManager();
+			Fragment f = fm.findFragmentByTag("dlgLocation");
+			if (f != null) {
+				getFragmentManager().beginTransaction().remove(f).commit();
+			}
+			dialog = new LocationSettingsDialog();
+			dialog.show(fm, "dlgLocation");
+
+			Editor edit = sharedPrefs.edit();
+			edit.putBoolean(Utils.KEY_CHECK_LOCATION_PREFS, false);
+			SharedPreferencesCompat.apply(edit);
 		}
-		dialog = new LocationSettingsDialog();
-		dialog.show(fm, "dlgLocation");
 	}
 
 	@Override

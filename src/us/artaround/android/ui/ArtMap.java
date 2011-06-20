@@ -729,7 +729,13 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 	@Override
 	public void onSuggestLocationSettings() {
-		showDialog(DIALOG_LOCATION_SETTINGS);
+		if (sharedPrefs.getBoolean(Utils.KEY_CHECK_LOCATION_PREFS, true)) {
+			showDialog(DIALOG_LOCATION_SETTINGS);
+
+			Editor edit = sharedPrefs.edit();
+			edit.putBoolean(Utils.KEY_CHECK_LOCATION_PREFS, false);
+			SharedPreferencesCompat.apply(edit);
+		}
 	}
 
 	@Override
