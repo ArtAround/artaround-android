@@ -15,7 +15,7 @@
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:layout_alignParentTop="true"
-		android:background="@drawable/gallery_actionbar_background"
+		android:background="@drawable/art_filter_heading_background"
 		android:padding="6dp"
 		android:gravity="center">
 
@@ -30,11 +30,11 @@
 			android:id="@+id/title"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
+			android:layout_marginRight="30dp"
 			android:textColor="#FFFFFF"
 			android:textStyle="bold"
 			android:typeface="serif"
-			android:gravity="center"
-			android:text="cenva" />
+			android:gravity="center" />
 
 		<ImageView
 			android:id="@+id/img_loader"
