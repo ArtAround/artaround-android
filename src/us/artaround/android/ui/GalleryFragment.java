@@ -21,9 +21,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.widget.Gallery;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean> {
@@ -43,8 +41,8 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	private GalleryAdapter adapter;
 	//private GallerySaver gallerySaver;
 
-	private Animation rotateAnim;
-	private ImageView imgLoader;
+	//private Animation rotateAnim;
+	//private ImageView imgLoader;
 	private TextView tvTitle;
 
 	private String title;
@@ -79,8 +77,8 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 			tvTitle.setText(title);
 		}
 
-		rotateAnim = Utils.getRoateAnim(getActivity());
-		imgLoader = (ImageView) view.findViewById(R.id.img_loader);
+		//rotateAnim = Utils.getRoateAnim(getActivity());
+		//imgLoader = (ImageView) view.findViewById(R.id.img_loader);
 
 		return view;
 	}
@@ -131,7 +129,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		Utils.d(Utils.TAG, "There are", toLoadCount, "photos to load");
 
 		if (firstId != null) {
-			toggleLoading(true);
+			//toggleLoading(true);
 			adapter.setShowLoaders(true);
 
 			Bundle args = new Bundle();
@@ -187,7 +185,7 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 		adapter.notifyDataSetChanged();
 
 		if (loadedCount.getAndIncrement() == toLoadCount - 1) {
-			toggleLoading(false);
+			//toggleLoading(false);
 			adapter.setShowLoaders(false);
 
 			Utils.d(Utils.TAG, "onLoadFinished(): done loading all pictures!");
@@ -209,14 +207,14 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<Boolean
 	@Override
 	public void onLoaderReset(Loader<Boolean> loader) {}
 
-	private void toggleLoading(boolean show) {
-		if (show) {
-			imgLoader.setVisibility(View.VISIBLE);
-			imgLoader.startAnimation(rotateAnim);
-		}
-		else {
-			imgLoader.clearAnimation();
-			imgLoader.setVisibility(View.INVISIBLE);
-		}
-	}
+//	private void toggleLoading(boolean show) {
+//		if (show) {
+//			imgLoader.setVisibility(View.VISIBLE);
+//			imgLoader.startAnimation(rotateAnim);
+//		}
+//		else {
+//			imgLoader.clearAnimation();
+//			imgLoader.setVisibility(View.INVISIBLE);
+//		}
+//	}
 }

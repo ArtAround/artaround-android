@@ -84,9 +84,9 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	private static final int DIALOG_WELCOME = 5;
 
 	//--- loader ids ---
-	private static final int LOADER_CURSOR_ARTS = 0;
-	private static final int LOADER_ASYNC_ARTS = 1;
-	private static final int LOADER_CURSOR_FAVORITES = 2;
+	private static final int LOADER_CURSOR_ARTS = 10;
+	private static final int LOADER_ASYNC_ARTS = 11;
+	private static final int LOADER_CURSOR_FAVORITES = 12;
 
 	//--- handler msgs ---
 	private static final int MSG_LOAD_ARTS_FINISHED = 0;
@@ -329,20 +329,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	private void restoreState(Bundle savedInstanceState) {
 		Utils.d(TAG, "restoreState(): savedInstance=", savedInstanceState);
 
-		Intent intent = getIntent();
-		if (intent.hasExtra(SAVE_ZOOM)) {
-			newZoom = intent.getIntExtra(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
-
-			if (intent.hasExtra(SAVE_MAP_LATITUDE) && intent.hasExtra(SAVE_MAP_LONGITUDE)) {
-				int lati = intent.getIntExtra(SAVE_MAP_LATITUDE, 0);
-				int longi = intent.getIntExtra(SAVE_MAP_LONGITUDE, 0);
-
-				if (lati != 0 && longi != 0) {
-					currentMapCenter = new GeoPoint(lati, longi);
-				}
-			}
-		}
-		else if (savedInstanceState != null) {
+		if (savedInstanceState != null) {
 			crtPage.set(savedInstanceState.getInt(SAVE_CRT_PAGE, 1));
 			totalCount.set(savedInstanceState.getInt(SAVE_TOTAL_COUNT, 0));
 
@@ -365,6 +352,20 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 			allArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_ARTS);
 			filteredArt = (ArrayList<Art>) savedInstanceState.getSerializable(SAVE_FILTERED_ARTS);
 			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
+		}
+
+		Intent intent = getIntent();
+		if (intent.hasExtra(SAVE_ZOOM)) {
+			newZoom = intent.getIntExtra(SAVE_ZOOM, ZOOM_DEFAULT_LEVEL);
+
+			if (intent.hasExtra(SAVE_MAP_LATITUDE) && intent.hasExtra(SAVE_MAP_LONGITUDE)) {
+				int lati = intent.getIntExtra(SAVE_MAP_LATITUDE, 0);
+				int longi = intent.getIntExtra(SAVE_MAP_LONGITUDE, 0);
+
+				if (lati != 0 && longi != 0) {
+					currentMapCenter = new GeoPoint(lati, longi);
+				}
+			}
 		}
 
 		if (filters == null) {
@@ -781,6 +782,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			switch (id) {
 			case LOADER_CURSOR_ARTS:
+				Utils.d(TAG, "onCreateLoader(): LOADER_ARTS");
 				return new CursorLoader(ArtMap.this, Arts.CONTENT_URI, ArtAroundDatabase.ARTS_PROJECTION,
 						ARTS_SELECTION, new String[] { currentCity.name }, null);
 
