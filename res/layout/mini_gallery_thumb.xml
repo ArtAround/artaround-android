@@ -4,18 +4,18 @@
 	android:layout_width="@dimen/GalleryItemWidth"
 	android:layout_height="@dimen/GalleryItemHeight"
 	android:background="@drawable/mini_gallery_item_background"
-	android:gravity="center">
+	android:gravity="center"
+	android:paddingLeft="22dp"
+	android:paddingRight="22dp"
+	android:paddingTop="6dp"
+	android:paddingBottom="6dp">
 	<ImageView
 		android:id="@+id/img_add_photo"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:gravity="center"
 		android:layout_centerInParent="true"
-		android:scaleType="fitXY"
-		android:paddingTop="6dp"
-		android:paddingBottom="6dp"
-		android:paddingLeft="22dp"
-		android:paddingRight="22dp" />
+		android:scaleType="centerCrop" />
 	<TextView
 		android:id="@+id/txt_add_photo"
 		android:layout_width="wrap_content"

@@ -4,16 +4,16 @@
 	android:background="@drawable/gallery_item_background"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
+	android:paddingLeft="25dp"
+	android:paddingRight="25dp"
 	android:gravity="center">
 	<ImageView
 		android:id="@+id/img_add_photo"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:layout_centerInParent="true"
-		android:paddingLeft="25dp"
-		android:paddingRight="25dp"
 		android:gravity="center"
-		android:scaleType="fitXY" />
+		android:scaleType="centerCrop" />
 	<ProgressBar
 		style="@android:style/Widget.ProgressBar.Large.Inverse"
 		android:id="@+id/progress"
