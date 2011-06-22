@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import us.artaround.R;
+import us.artaround.android.services.FlickrService;
 import us.artaround.android.ui.ArtMap;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -350,22 +351,30 @@ public class Utils {
 	}
 
 	public static void deleteCachedFiles() {
-
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			File storage = Environment.getExternalStorageDirectory();
+			File dir = new File(storage.getAbsolutePath(), Utils.APP_DIR + Utils.APP_DIR_CACHE);
+			dir.mkdirs();
 
-			//			for (int i = 0; i < size; i++) {
-			//				final File currentFile = new File(uris.get(i).replace("file://", ""));
-			//
-			//				if (currentFile != null) {
-			//					try {
-			//						boolean ok = currentFile.delete();
-			//						Utils.d(Utils.TAG, "Deleted file", currentFile.getName(), ", result=", ok);
-			//					}
-			//					catch (final SecurityException e) {
-			//						e.printStackTrace();
-			//					}
-			//				}
-			//			}
+			String[] fileNames = dir.list();
+			if (fileNames != null) {
+				int size = fileNames.length;
+				for (int i = 0; i < size; ++i) {
+					String fn = dir.getAbsolutePath() + "/" + fileNames[i];
+					if (fn.indexOf(FlickrService.SIZE_MEDIUM) > -1) {
+						final File currentFile = new File(fn);
+						if (currentFile != null) {
+							try {
+								boolean ok = currentFile.delete();
+								Utils.d(Utils.TAG, "Deleted file", fn, ", result=", ok);
+							}
+							catch (final SecurityException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 

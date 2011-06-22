@@ -30,6 +30,13 @@ public class ArtGallery extends FragmentActivity {
 		setupState(savedInstanceState);
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		//FIXME OutOfMemoryExceptions
+		System.gc();
+	}
+
 	@SuppressWarnings("unchecked")
 	private void setupState(Bundle savedInstanceState) {
 		if (savedInstanceState != null) return;
