@@ -25,9 +25,11 @@ public class ServiceFactory {
 	 * @param context
 	 */
 	public static void init(Context context) {
-		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		if (artService != null && cities != null) return;
 
+		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources resources = context.getResources();
+
 		int[] cityCodes = resources.getIntArray(R.array.city_codes);
 		String[] cityNames = resources.getStringArray(R.array.city_names);
 		String[] cityCenters = resources.getStringArray(R.array.city_centers);
@@ -41,8 +43,7 @@ public class ServiceFactory {
 		}
 
 		artService = new ArtService(cities[Utils.DEFAULT_CITY_CODE]);
-
-		FlickrService.init(context);
+		//FlickrService.getInstance(context);
 	}
 
 	/**

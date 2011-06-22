@@ -4,24 +4,20 @@ import java.util.ArrayList;
 
 import us.artaround.android.common.PhotoWrapper;
 import us.artaround.android.common.Utils;
+import us.artaround.android.services.ServiceFactory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 
-public class ArtGallery extends FragmentActivity implements GallerySaver {
-	private static final String TAG = "ArtGallery";
-	private static final String TAG_GALLERY = "gallery";
+public class ArtGallery extends FragmentActivity {
 
-	public static final String EXTRA_PHOTOS = "photos";
-	public static final String EXTRA_TITLE = "title";
-	private static final String SAVE_GALLERY = "save_gallery";
+	public static final String EXTRA_WRAPPERS = "extra_wrappers";
+	public static final String EXTRA_TITLE = "extra_title";
+	public static final String EXTRA_IS_EDIT_MODE = "extra_edit_mode";
 
-	private Bundle savedGalleryState;
 	private ArrayList<PhotoWrapper> photos;
-	private String title;
+	private String artTitle;
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -29,47 +25,27 @@ public class ArtGallery extends FragmentActivity implements GallerySaver {
 		Utils.setTheme(this);
 		Utils.enableDump(this);
 
-		Intent intent = getIntent();
-		if (intent.hasExtra(EXTRA_PHOTOS)) {
-			photos = (ArrayList<PhotoWrapper>) intent.getExtras().getSerializable(EXTRA_PHOTOS);
-			Utils.d(TAG, "onCreate(): photos=", photos);
-		}
-		if (intent.hasExtra(EXTRA_TITLE)) {
-			title = intent.getExtras().getString(EXTRA_TITLE);
-		}
+		ServiceFactory.init(getApplicationContext());
 
 		setupState(savedInstanceState);
 	}
 
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		outState.putBundle(SAVE_GALLERY, savedGalleryState);
-		super.onSaveInstanceState(outState);
-	}
-
+	@SuppressWarnings("unchecked")
 	private void setupState(Bundle savedInstanceState) {
-		if (savedInstanceState != null && savedInstanceState.containsKey(SAVE_GALLERY)) {
-			savedGalleryState = savedInstanceState.getBundle(SAVE_GALLERY);
-			return;
+		if (savedInstanceState != null) return;
+
+		Intent intent = getIntent();
+		if (intent.hasExtra(EXTRA_WRAPPERS)) {
+			photos = (ArrayList<PhotoWrapper>) intent.getExtras().getSerializable(EXTRA_WRAPPERS);
+		}
+		if (intent.hasExtra(EXTRA_TITLE)) {
+			artTitle = intent.getExtras().getString(EXTRA_TITLE);
 		}
 
-		GalleryFragment f = new GalleryFragment();
-		Bundle args = new Bundle();
-		args.putSerializable(GalleryFragment.ARG_PHOTOS, photos);
-		args.putString(GalleryFragment.ARG_TITLE, title);
-		f.setArguments(args);
-		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(android.R.id.content, f, TAG_GALLERY).commit();
+		getSupportFragmentManager()
+				.beginTransaction()
+				.replace(android.R.id.content,
+						new GalleryFragment(photos, artTitle, intent.getExtras().getBoolean(EXTRA_IS_EDIT_MODE, false)))
+				.commit();
 	}
-
-	@Override
-	public void saveGalleryState(Bundle args) {
-		savedGalleryState = args;
-	}
-
-	@Override
-	public Bundle restoreGalleryState() {
-		return savedGalleryState;
-	}
-
 }

@@ -9,7 +9,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
 import us.artaround.R;
@@ -350,29 +349,23 @@ public class Utils {
 		textView.setHintTextColor(textView.getContext().getResources().getColor(R.color.HintColor));
 	}
 
-	public static void deleteCachedFiles(ArrayList<String> uris) {
-		if (uris == null || uris.isEmpty()) return;
+	public static void deleteCachedFiles() {
 
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-			//final File storage = Environment.getExternalStorageDirectory();
-			//final File dir = new File(storage.getAbsolutePath(), Utils.APP_DIR_CACHE);
-			//final String path = dir.getAbsolutePath();
 
-			int size = uris.size();
-			for (int i = 0; i < size; i++) {
-				final File currentFile = new File(uris.get(i).replace("file://", ""));
-
-				if (currentFile != null) {
-					try {
-						Utils.d(Utils.TAG, "File exists?", currentFile.exists());
-						boolean ok = currentFile.delete();
-						Utils.d(Utils.TAG, "Deleted file", currentFile.getName(), ", result=", ok);
-					}
-					catch (final SecurityException e) {
-						e.printStackTrace();
-					}
-				}
-			}
+			//			for (int i = 0; i < size; i++) {
+			//				final File currentFile = new File(uris.get(i).replace("file://", ""));
+			//
+			//				if (currentFile != null) {
+			//					try {
+			//						boolean ok = currentFile.delete();
+			//						Utils.d(Utils.TAG, "Deleted file", currentFile.getName(), ", result=", ok);
+			//					}
+			//					catch (final SecurityException e) {
+			//						e.printStackTrace();
+			//					}
+			//				}
+			//			}
 		}
 	}
 

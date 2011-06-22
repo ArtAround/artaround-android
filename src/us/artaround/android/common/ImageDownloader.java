@@ -45,11 +45,13 @@ public class ImageDownloader {
 	// should be called from within a background task, it performs a network call
 	public static Uri getImageUri(Bundle args) {
 		String photoId = args.getString(EXTRA_PHOTO_ID);
+		String size = args.getString(EXTRA_PHOTO_SIZE);
+		String name = photoId + "_" + size;
 
-		Uri uri = quickGetImageUri(photoId);
+		Uri uri = quickGetImageUri(name);
 		if (uri == null) {
 			downloadAndCacheImage(args);
-			uri = quickGetImageUri(photoId);
+			uri = quickGetImageUri(name);
 			Utils.d(Utils.TAG, "Fetched image", photoId, " from server.");
 		}
 		else {
@@ -87,6 +89,7 @@ public class ImageDownloader {
 	private static void downloadAndCacheImage(Bundle args) {
 		String photoId = args.getString(EXTRA_PHOTO_ID);
 		String url = args.getString(EXTRA_PHOTO_URL);
+		String size = args.getString(EXTRA_PHOTO_SIZE);
 
 		if (TextUtils.isEmpty(url)) {
 			Utils.d(Utils.TAG, "Could not download and/or cache image! Url is null.");
@@ -136,7 +139,7 @@ public class ImageDownloader {
 						}
 					}
 					photo.setBounds(0, 0, myWidth, myHeight);
-					cacheImage(photoId, photo.getBitmap());
+					cacheImage(photoId + "_" + size, photo.getBitmap());
 				}
 			}
 		}

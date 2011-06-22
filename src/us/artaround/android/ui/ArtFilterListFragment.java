@@ -38,8 +38,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 public class ArtFilterListFragment extends ListFragment {
-	private static final String SAVE_FILTERS = "filters";
-	private static final String SAVE_FILTER_INDEX = "index";
 	private static final String QUERY = "query";
 
 	private HashMap<Integer, HashSet<String>> filters;
@@ -51,33 +49,18 @@ public class ArtFilterListFragment extends ListFragment {
 
 	//FIXME fetch data from server if it's not in the database
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		outState.putSerializable(SAVE_FILTERS, filters);
-		outState.putInt(SAVE_FILTER_INDEX, filterIndex);
-	}
+
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle args) {
 		return inflater.inflate(R.layout.art_filter_fragment, parent, false);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		setRetainInstance(true);
 
-		InstantAutoComplete tvType = null;
-
-		if (savedInstanceState != null) {
-			filters = (HashMap<Integer, HashSet<String>>) savedInstanceState.getSerializable(SAVE_FILTERS);
-			filterIndex = savedInstanceState.getInt(SAVE_FILTER_INDEX, 0);
-
-			tvType = (InstantAutoComplete) getActivity().findViewById(R.id.filter_type);
-			tvType.setText(ArtFilter.FILTER_TYPE_NAMES[filterIndex]);
-		}
 		if (filters == null) {
 			filters = new HashMap<Integer, HashSet<String>>();
 			for (int i = 0; i < ArtFilter.FILTER_TYPE_NAMES.length; i++) {
@@ -109,9 +92,7 @@ public class ArtFilterListFragment extends ListFragment {
 			public void afterTextChanged(Editable s) {}
 		});
 
-		if (tvType == null) {
-			tvType = (InstantAutoComplete) getActivity().findViewById(R.id.filter_type);
-		}
+		InstantAutoComplete tvType = (InstantAutoComplete) getActivity().findViewById(R.id.filter_type);
 		tvType.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -128,7 +109,6 @@ public class ArtFilterListFragment extends ListFragment {
 
 		setListAdapter(createAdapter(filterIndex));
 		getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-
 		getLoaderManager().restartLoader(filterIndex, null, cursorCallbacks);
 	}
 

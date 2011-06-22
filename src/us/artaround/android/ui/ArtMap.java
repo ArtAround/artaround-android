@@ -58,6 +58,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 
+//FIXME what about arts with same coordinates?
 public class ArtMap extends FragmentActivity implements OverlayTapListener, ZoomListener, LocationUpdaterCallback {
 
 	private static final String TAG = "ArtMap";
@@ -225,13 +226,20 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		}
 
 		if (Utils.isCacheOutdated(this)) {
-			Utils.d(TAG, "setupState(): cache outdated, loading...");
 			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_LONG).show();
+
+			btnFavorites.setEnabled(false);
+			btnSearch.setEnabled(false);
+
 			clearCache();
 			loadArt();
 		}
 		else if (allArt.isEmpty()) {
 			Utils.d(TAG, "setupState(): allArt is empty, loading...");
+
+			btnFavorites.setEnabled(false);
+			btnSearch.setEnabled(false);
+
 			loadArt();
 		}
 		else {
@@ -424,7 +432,6 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 		Bundle args = new Bundle();
 		args.putInt(ARG_PAGE, crtPage.getAndIncrement());
-
 		getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, args, asyncCallback);
 	}
 
@@ -493,6 +500,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 			}
 
 			for (String name : f) {
+				int indx = name.indexOf("+");
+				if (indx > 0) {
+					name = name.substring(0, indx);
+				}
 				onFilters.get(i).add(name);
 			}
 		}
@@ -764,6 +775,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_LOAD_ARTS_FINISHED:
+				btnFavorites.setEnabled(true);
+				btnSearch.setEnabled(true);
 				toggleLoading(false);
 				Utils.setLastCacheUpdate(ArtMap.this);
 				break;
@@ -805,8 +818,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					loadArtFromServer();
 				}
 				else {
+					btnFavorites.setEnabled(true);
+					btnSearch.setEnabled(true);
+					
 					toggleLoading(false);
-					//processArts();
 					filterArt(allArt);
 					displayArt(filteredArt);
 				}

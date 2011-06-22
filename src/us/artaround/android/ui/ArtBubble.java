@@ -36,11 +36,11 @@ public class ArtBubble extends FrameLayout {
 	private final TextView description;
 	private final ProgressBar progress;
 	private final ImageView imgView;
-	private final Context ctx;
+	private final Context context;
 
 	public ArtBubble(Context context, int bubbleBottomOffset) {
 		super(context);
-		ctx = context;
+		this.context = context;
 
 		setPadding(10, 0, 10, bubbleBottomOffset);
 		layout = new LinearLayout(context);
@@ -101,7 +101,7 @@ public class ArtBubble extends FrameLayout {
 
 		if (art.photoIds != null && art.photoIds.size() > 0) {
 			final String id = art.photoIds.get(0);
-			Resources res = ctx.getResources();
+			Resources res = context.getResources();
 
 			final Bundle args = new Bundle();
 			args.putString(ImageDownloader.EXTRA_PHOTO_ID, id);
@@ -118,7 +118,7 @@ public class ArtBubble extends FrameLayout {
 						Uri temp = ImageDownloader.quickGetImageUri(id);
 
 						if (temp == null) {
-							FlickrService srv = FlickrService.getInstance();
+							FlickrService srv = FlickrService.getInstance(context);
 							FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(id), FlickrService.SIZE_SMALL);
 							if (photo != null) {
 								args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);

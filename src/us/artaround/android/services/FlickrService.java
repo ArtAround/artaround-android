@@ -32,6 +32,7 @@ public class FlickrService {
 	public final static String SIZE_THUMB = "Thumbnail";
 	public final static String SIZE_SMALL = "Small";
 	public final static String SIZE_ORIGINAL = "Original";
+	public final static String SIZE_MEDIUM = "Medium";
 
 	// these needs to be set before calling any methods
 	public String apiKey;
@@ -45,15 +46,9 @@ public class FlickrService {
 		setUsername(res.getString(R.string.flickr_username));
 	}
 
-	public static void init(Context context) {
+	public static FlickrService getInstance(Context context) {
 		if (instance == null) {
 			instance = new FlickrService(context);
-		}
-	}
-
-	public static FlickrService getInstance() {
-		if (instance == null) {
-			throw new IllegalArgumentException("FlickrService must be initialized with a context!");
 		}
 		return instance;
 	}

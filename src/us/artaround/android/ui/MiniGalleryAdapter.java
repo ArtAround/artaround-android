@@ -17,29 +17,38 @@ import android.widget.RelativeLayout;
 public class MiniGalleryAdapter extends BaseAdapter {
 	public static final String NEW_PHOTO = "new_photo";
 
-	private final Context context;
-	private final ArrayList<PhotoWrapper> photos;
+	private Context context;
+	private final ArrayList<PhotoWrapper> wrappers;
+	private final ArrayList<Boolean> showLoaders;
 	private final boolean editMode;
-	private boolean showLoaders;
 
-	public MiniGalleryAdapter(Context context, boolean editMode) {
+	public MiniGalleryAdapter(Context context, boolean isEditMode, ArrayList<PhotoWrapper> wrappers) {
 		this.context = context;
-		this.editMode = editMode;
+		this.editMode = isEditMode;
+		this.wrappers = wrappers;
 
-		this.photos = new ArrayList<PhotoWrapper>();
-		photos.add(null); // empty placeholder
-		photos.add(null); // add image
-		photos.add(null); // empty placeholder
+		this.showLoaders = new ArrayList<Boolean>();
+		int size = wrappers.size();
+
+		for (int i = 0; i < size; ++i) {
+			showLoaders.add(true);
+		}
+
+		showLoaders.set(size - 1, false);
 	}
 
 	@Override
 	public int getCount() {
-		return photos.size();
+		int count = wrappers.size();
+		if (showLoaders.size() < count) {
+			showLoaders.add(false);
+		}
+		return count;
 	}
 
 	@Override
 	public Object getItem(int position) {
-		return photos.get(position);
+		return wrappers.get(position);
 	}
 
 	@Override
@@ -52,54 +61,26 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		return 1;
 	}
 
-	//FIXME find a better way of "filling-in" the gallery from center
-	public void addItem(PhotoWrapper wrapper) {
-		if (editMode) {
-			// 0, _, 2, 3,...
-			if (photos.get(0) == null) {
-				photos.set(0, wrapper);
-			}
-			else if (photos.get(2) == null) {
-				photos.set(2, wrapper);
-			}
-			else {
-				photos.add(wrapper);
-			}
-		}
-		else {
-			// 1, 0, 2, 3...
-			if (photos.get(1) == null) {
-				photos.set(1, wrapper);
-			}
-			else if (photos.get(0) == null) {
-				photos.set(0, wrapper);
-			}
-			else if (photos.get(2) == null) {
-				photos.set(2, wrapper);
-			}
-			else {
-				photos.add(wrapper);
-			}
-		}
-
-		notifyDataSetChanged();
-	}
-
 	public void removeItem(String photoId) {
 		int position = -1;
-		int size = photos.size();
-		for (int i = 0; i < size; i++) {
-			PhotoWrapper phr = photos.get(i);
-			if (phr != null && phr.id.equals(photoId)) {
+		int size = wrappers.size();
+
+		for (int i = 0; i < size; ++i) {
+			PhotoWrapper wrapper = wrappers.get(i);
+			if (wrapper != null && photoId.equals(wrapper.id)) {
 				position = i;
 				break;
 			}
 		}
-		if (position == 0 || position == 2) {
-			photos.set(position, null);
+		if (editMode) {
+			if (position != size - 1) {
+				wrappers.remove(position);
+				showLoaders.remove(position);
+			}
 		}
 		else {
-			photos.remove(position);
+			wrappers.remove(position);
+			showLoaders.remove(position);
 		}
 		notifyDataSetChanged();
 	}
@@ -114,44 +95,47 @@ public class MiniGalleryAdapter extends BaseAdapter {
 		View progress = view.findViewById(R.id.progress);
 		View text = view.findViewById(R.id.txt_add_photo);
 
-		if (editMode) {
-			if (position == 1) {
-				imgView.setImageResource(R.drawable.img_camera);
-				LayoutParams params = imgView.getLayoutParams();
-				params.width = RelativeLayout.LayoutParams.WRAP_CONTENT;
-				params.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
-				imgView.setLayoutParams(params);
+		if (editMode && position == wrappers.size() - 1) {
+			LayoutParams params = imgView.getLayoutParams();
+			params.width = RelativeLayout.LayoutParams.WRAP_CONTENT;
+			params.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+			imgView.setLayoutParams(params);
+			imgView.setImageResource(R.drawable.img_camera);
 
-				progress.setVisibility(View.GONE);
-				text.setVisibility(View.VISIBLE);
-			}
+			progress.setVisibility(View.GONE);
+			text.setVisibility(View.VISIBLE);
 		}
-		if (!showLoaders) {
-			PhotoWrapper wrapper = photos.get(position);
-			if (wrapper != null) {
-				if (wrapper.uri != null) {
-					imgView.setImageBitmap(Utils.decodeBitmap(wrapper.uri, imgView));
-					//imgView.setImageURI(Uri.parse(wrapper.uri));
-				}
+		if (!showLoaders.get(position)) {
+			PhotoWrapper wrapper = wrappers.get(position);
+			if (wrapper != null && wrapper.thumbUri != null) {
+				imgView.setImageBitmap(Utils.decodeBitmap(wrapper.thumbUri, imgView));
 				view.setTag(wrapper.id);
 			}
 			progress.setVisibility(View.GONE);
 		}
-
+		else {
+			progress.setVisibility(View.VISIBLE);
+		}
 		return view;
 	}
 
-
-
-	public void setShowLoaders(boolean show) {
-		showLoaders = show;
+	public void setShowLoader(boolean show, int position) {
+		showLoaders.set(position, show);
 		notifyDataSetChanged();
 	}
 
-	public void addItems(ArrayList<PhotoWrapper> photos) {
-		if (photos == null) return;
-		for (int i = 0; i < photos.size(); i++) {
-			addItem(photos.get(i));
+	public void setShowLoaders(boolean show) {
+		int size = showLoaders.size();
+		for (int i = 0; i < size; ++i) {
+			showLoaders.set(i, show);
 		}
+		if (editMode) {
+			showLoaders.set(size - 1, false);
+		}
+		notifyDataSetChanged();
+	}
+
+	public void setContext(Context context) {
+		this.context = context;
 	}
 }

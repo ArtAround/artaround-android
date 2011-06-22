@@ -22,7 +22,6 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
@@ -46,17 +45,15 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ArtDetail extends FragmentActivity implements GallerySaver {
+public class ArtDetail extends FragmentActivity {
 	public static final String TAG = "ArtDetail";
 	private static final String TAG_MINI_GALLERY = "mini_gallery";
+	private static final String TAG_MINI_MAP = "mini_map";
 
 	public static final String EXTRA_ART = "art";
-	public static final String EXTRA_EDIT = "edit";
-	public static final String EXTRA_PHOTOS = "photos";
 
 	private static final String SAVE_COMMENTS = "comments";
 	private static final String SAVE_COMMENTS_COUNT = "comments_count";
-	private static final String SAVE_MINI_GALLERY = "save_mini_gallery";
 
 	private static final String ARG_ART_SLUG = "art_slug";
 	private static final String ARG_NEW_COMMENT = "new_comment";
@@ -71,7 +68,6 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 	private static final int DIALOG_EMPTY_INPUT = 0;
 
 	private Art art;
-	private Bundle savedGalleryState;
 	private final ArrayList<Comment> comments = new ArrayList<Comment>();
 	private int commentsCount = -1;
 
@@ -94,6 +90,8 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 		Utils.setTheme(this);
 		Utils.enableDump(this);
 
+		ServiceFactory.init(getApplicationContext());
+
 		setContentView(R.layout.art_detail);
 
 		Intent intent = getIntent();
@@ -105,7 +103,7 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 			return;
 		}
 
-		setupUi();
+		setupUi(savedInstanceState);
 		setupState(savedInstanceState);
 	}
 
@@ -113,7 +111,6 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putSerializable(SAVE_COMMENTS, comments);
 		outState.putInt(SAVE_COMMENTS_COUNT, commentsCount);
-		outState.putBundle(SAVE_MINI_GALLERY, savedGalleryState);
 		super.onSaveInstanceState(outState);
 	}
 
@@ -122,9 +119,6 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 		if (savedInstanceState != null) {
 			comments.addAll((ArrayList<Comment>) savedInstanceState.getSerializable(SAVE_COMMENTS));
 			commentsCount = savedInstanceState.getInt(SAVE_COMMENTS_COUNT);
-			if (savedInstanceState.containsKey(SAVE_MINI_GALLERY)) {
-				savedGalleryState = savedInstanceState.getBundle(SAVE_MINI_GALLERY);
-			}
 		}
 		if (comments.isEmpty()) {
 			onLoadComments();
@@ -141,13 +135,13 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 		lm.restartLoader(LOADER_ASYNC_COMMENTS, args, asyncCallback);
 	}
 
-	private void setupUi() {
+	private void setupUi(Bundle savedInstanceState) {
 		setupActionbar();
 		setupBottombar();
 
 		setupFields();
-		setupMiniGallery();
-		setupMiniMap();
+		setupMiniGallery(savedInstanceState);
+		setupMiniMap(savedInstanceState);
 	}
 
 	private void setupBottombar() {
@@ -160,10 +154,6 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 			public void onClick(View v) {
 				Intent iEdit = new Intent(ArtDetail.this, ArtEdit.class);
 				iEdit.putExtra(ArtEdit.EXTRA_ART, art);
-				iEdit.putExtra(EXTRA_PHOTOS,
-						((MiniGalleryFragment) getSupportFragmentManager().findFragmentByTag(TAG_MINI_GALLERY))
-								.getPhotos());
-				iEdit.putExtra(EXTRA_EDIT, true);
 				startActivityForResult(iEdit, 0);
 			}
 		});
@@ -358,34 +348,22 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 		edCommentText.setText("");
 	}
 
-	private void setupMiniGallery() {
-		Bundle args = new Bundle();
-		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTO_IDS, art.photoIds);
-		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
-		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, false);
+	private void setupMiniGallery(Bundle savedInstanceState) {
+		if (savedInstanceState != null) return;
 
-		MiniGalleryFragment f = new MiniGalleryFragment();
-		f.setArguments(args);
-
-		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f, TAG_MINI_GALLERY).commit();
+		getSupportFragmentManager()
+				.beginTransaction()
+				.replace(R.id.mini_gallery_placeholder, new MiniGalleryFragment(art.title, art.photoIds, false),
+						TAG_MINI_GALLERY).commit();
 	}
 
-	private void setupMiniMap() {
-		FragmentManager fm = getSupportFragmentManager();
-		MiniMapFragment f = (MiniMapFragment) fm.findFragmentByTag("minimap");
+	private void setupMiniMap(Bundle savedInstanceState) {
+		if (savedInstanceState != null) return;
 
-		if (f == null) {
-			Bundle args = new Bundle();
-			args.putBoolean(MiniMapFragment.ARG_EDIT_MODE, false);
-			args.putDouble(MiniMapFragment.ARG_LATITUDE, art.latitude);
-			args.putDouble(MiniMapFragment.ARG_LONGITUDE, art.longitude);
-
-			f = new MiniMapFragment();
-			f.setArguments(args);
-
-			fm.beginTransaction().replace(R.id.mini_map_placeholder, f, "minimap").commit();
-		}
+		getSupportFragmentManager()
+				.beginTransaction()
+				.replace(R.id.mini_map_placeholder, new MiniMapFragment(art.latitude, art.longitude, false),
+						TAG_MINI_MAP).commit();
 	}
 
 	private final LoaderCallbacks<LoaderPayload> asyncCallback = new LoaderCallbacks<LoaderPayload>() {
@@ -429,8 +407,7 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 					}
 				}
 				else {
-					Toast.makeText(ArtDetail.this, R.string.load_data_failure,
-							Toast.LENGTH_LONG).show();
+					Toast.makeText(ArtDetail.this, R.string.load_data_failure, Toast.LENGTH_LONG).show();
 				}
 				break;
 			case SUBMIT_COMMENT:
@@ -524,13 +501,11 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 			case LOADER_ASYNC_FAVORITE:
 				if (result != null && result) {
 					btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_added_favorite,
-							Toast.LENGTH_LONG).show();
+					Toast.makeText(ArtDetail.this, R.string.art_added_favorite, Toast.LENGTH_LONG).show();
 				}
 				else {
 					btnFavorite.setImageResource(R.drawable.ic_add_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite,
-							Toast.LENGTH_LONG).show();
+					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite, Toast.LENGTH_LONG).show();
 				}
 			}
 			loader.stopLoading();
@@ -653,15 +628,5 @@ public class ArtDetail extends FragmentActivity implements GallerySaver {
 		default:
 			return super.onCreateDialog(id);
 		}
-	}
-
-	@Override
-	public void saveGalleryState(Bundle args) {
-		savedGalleryState = args;
-	}
-
-	@Override
-	public Bundle restoreGalleryState() {
-		return savedGalleryState;
 	}
 }

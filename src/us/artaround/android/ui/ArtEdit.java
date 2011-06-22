@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
 import us.artaround.android.common.LoaderPayload;
-import us.artaround.android.common.PhotoWrapper;
 import us.artaround.android.common.Utils;
 import us.artaround.android.database.ArtAroundDatabase;
 import us.artaround.android.database.ArtAroundDatabase.Artists;
@@ -23,7 +22,6 @@ import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -46,9 +44,9 @@ import android.widget.SimpleCursorAdapter.CursorToStringConverter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ArtEdit extends FragmentActivity implements GallerySaver {
+public class ArtEdit extends FragmentActivity {
 	//private static final String TAG = "ArtEdit";
-	private static final String TAG_MINI_MAP = "minimap";
+	private static final String TAG_MINI_MAP = "mini_map";
 	private static final String TAG_MINI_GALLERY = "mini_gallery";
 
 	public static final String EXTRA_ART = "art";
@@ -70,13 +68,11 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 	private static final int DIALOG_DISCARD_EDIT = 3;
 	private static final int DIALOG_PROGRESS = 4;
 
-	private static final String SAVE_SCROLL_Y = "scroll_y";
-	private static final String SAVE_ART = "art";
-	private static final String SAVE_HAS_CHANGES = "has_changes";
-	private static final String SAVE_MINI_GALLERY = "mini_gallery";
+	private static final String SAVE_SCROLL_Y = "save_scroll_y";
+	private static final String SAVE_ART = "save_art";
+	private static final String SAVE_HAS_CHANGES = "save_has_changes";
 
 	private Art art;
-	private Bundle savedGalleryState;
 
 	private EditText tvName;
 	private AutoCompleteTextView tvArtist;
@@ -96,7 +92,6 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 	private ScrollView scrollView;
 	private int scrollY;
 	private boolean hasChanges;
-	private ArrayList<PhotoWrapper> photos;
 	private ArrayList<String> uris;
 
 	@Override
@@ -105,13 +100,12 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 		Utils.setTheme(this);
 		Utils.enableDump(this);
 
+		ServiceFactory.init(getApplicationContext());
+
 		setContentView(R.layout.art_edit);
 
 		setupVars(savedInstanceState);
-		setupUi();
-		setupArtFields();
-		setupMiniMap(savedInstanceState);
-		setupMiniGallery(savedInstanceState);
+		setupUi(savedInstanceState);
 		setupState();
 	}
 
@@ -120,11 +114,9 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 		outState.putInt(SAVE_SCROLL_Y, scrollView.getScrollY());
 		outState.putSerializable(SAVE_ART, art);
 		outState.putBoolean(SAVE_HAS_CHANGES, hasChanges);
-		outState.putBundle(SAVE_MINI_GALLERY, savedGalleryState);
 		super.onSaveInstanceState(outState);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void setupVars(Bundle savedInstanceState) {
 		Intent i = getIntent();
 		if (i.hasExtra(EXTRA_ART)) {
@@ -133,7 +125,6 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 		else {
 			art = new Art(); // will be used as a "holder" for user input
 		}
-		photos = (ArrayList<PhotoWrapper>) i.getSerializableExtra(ArtDetail.EXTRA_PHOTOS);
 		restoreState(savedInstanceState);
 	}
 
@@ -149,9 +140,6 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 			if (savedInstanceState.containsKey(SAVE_HAS_CHANGES)) {
 				hasChanges = savedInstanceState.getBoolean(SAVE_HAS_CHANGES, false);
 			}
-			if (savedInstanceState.containsKey(SAVE_MINI_GALLERY)) {
-				savedGalleryState = savedInstanceState.getBundle(SAVE_MINI_GALLERY);
-			}
 		}
 	}
 
@@ -164,7 +152,7 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 		getSupportLoaderManager().restartLoader(LOAD_NEIGHBORHOODS, null, cursorLoaderCallback);
 	}
 
-	private void setupUi() {
+	private void setupUi(Bundle savedInstanceState) {
 		imgLoader = (ImageView) findViewById(R.id.bottombar_loader);
 		rotateAnim = Utils.getRoateAnim(this);
 
@@ -189,6 +177,10 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 				}
 			});
 		}
+
+		setupArtFields();
+		setupMiniMap(savedInstanceState);
+		setupMiniGallery(savedInstanceState);
 	}
 
 	protected void onSubmitArt() {
@@ -231,13 +223,6 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 	}
 
 	protected void onUploadPictures(int position) {
-		MiniGalleryFragment f = (MiniGalleryFragment) getSupportFragmentManager().findFragmentByTag(TAG_MINI_GALLERY);
-		if (f == null) {
-			Utils.d(Utils.TAG, "onUploadPictures(): MiniGalleryFragment is null!");
-			return; //something bad happened
-		}
-
-		uris = f.getNewPhotoUris();
 		if (uris == null || uris.isEmpty()) {
 			Utils.d(Utils.TAG, "There are no photos to be uploaded!");
 			return;
@@ -416,32 +401,18 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 	private void setupMiniGallery(Bundle savedInstanceState) {
 		if (savedInstanceState != null) return;
 
-		Bundle args = new Bundle();
-		args.putStringArrayList(MiniGalleryFragment.ARG_PHOTO_IDS, art.photoIds);
-		args.putString(MiniGalleryFragment.ARG_TITLE, art.title);
-		args.putBoolean(MiniGalleryFragment.ARG_EDIT_MODE, true);
-		args.putSerializable(MiniGalleryFragment.ARG_PHOTOS, photos);
-
-		MiniGalleryFragment f = new MiniGalleryFragment();
-		f.setArguments(args);
-
-		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_gallery_placeholder, f, TAG_MINI_GALLERY).commit();
-		Utils.d(Utils.TAG, "setupMiniGallery(): args=", args);
+		getSupportFragmentManager()
+				.beginTransaction()
+				.replace(R.id.mini_gallery_placeholder, new MiniGalleryFragment(art.title, art.photoIds, true),
+						TAG_MINI_GALLERY).commit();
 	}
 
 	private void setupMiniMap(Bundle savedInstanceState) {
 		if (savedInstanceState != null) return;
 
-		Utils.d(Utils.TAG, "setupMiniMap()");
-		Bundle args = new Bundle();
-		args.putBoolean(MiniMapFragment.ARG_EDIT_MODE, true);
-
-		MiniMapFragment f = new MiniMapFragment();
-		f.setArguments(args);
-
-		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.mini_map_placeholder, f, TAG_MINI_MAP).commit();
+		getSupportFragmentManager().beginTransaction()
+				.replace(R.id.mini_map_placeholder, new MiniMapFragment(art.latitude, art.longitude, art.slug == null),
+						TAG_MINI_MAP).commit();
 	}
 
 	public void toggleLoading(boolean show) {
@@ -790,9 +761,9 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 
 	private void onFinish() {
 		// delete all temporary photos			
-		Utils.deleteCachedFiles(uris);
+		Utils.deleteCachedFiles();
 
-		if (getIntent().hasExtra(ArtDetail.EXTRA_EDIT)) {
+		if (getIntent().hasExtra(EXTRA_ART)) {
 			if (hasChanges) {
 				showDialog(DIALOG_DISCARD_EDIT);
 			}
@@ -807,15 +778,5 @@ public class ArtEdit extends FragmentActivity implements GallerySaver {
 			startActivity(iHome);
 			finish();
 		}
-	}
-
-	@Override
-	public void saveGalleryState(Bundle args) {
-		savedGalleryState = args;
-	}
-
-	@Override
-	public Bundle restoreGalleryState() {
-		return savedGalleryState;
 	}
 }

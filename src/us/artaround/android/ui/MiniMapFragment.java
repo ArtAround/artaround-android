@@ -23,17 +23,10 @@ import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
 
-//FIXME why this fragment doesn't save its own state?
 public class MiniMapFragment extends Fragment implements LocationUpdaterCallback, CurrentOverlayDragCallback {
 	private static final String TAG = "MiniMap";
 
 	private static final int ZOOM_DEFAULT_LEVEL = 15;
-
-	public static final String ARG_EDIT_MODE = "edit_mode";
-	public static final String ARG_LATITUDE = "latitude";
-	public static final String ARG_LONGITUDE = "longitude";
-
-	private static final String SAVE_LOCATION = "location";
 
 	private boolean isEditMode;
 	private double latitude;
@@ -47,17 +40,18 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 	private LocationSettingsDialog dialog;
 
+	public MiniMapFragment() {}
+
+	public MiniMapFragment(double latitude, double longitude, boolean isEditMode) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.isEditMode = isEditMode;
+	}
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		setRetainInstance(true);
-
-		Bundle args = getArguments();
-		isEditMode = args.getBoolean(ARG_EDIT_MODE, false);
-		latitude = args.getDouble(ARG_LATITUDE);
-		longitude = args.getDouble(ARG_LONGITUDE);
-
-		Utils.d(TAG, "onAttach()");
 	}
 
 	@Override
@@ -77,13 +71,9 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		Utils.d(TAG, "onActivityCreated(): savedInstanceState=", savedInstanceState);
 
 		locationUpdater = new LocationUpdater(getActivity(), this);
 
-		if (savedInstanceState != null) {
-			location = savedInstanceState.getParcelable(SAVE_LOCATION);
-		}
 		if (isEditMode && location == null) {
 			startLocationUpdate();
 		}
@@ -115,13 +105,6 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 		}
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		outState.putParcelable(SAVE_LOCATION, location);
-		super.onSaveInstanceState(outState);
-		Utils.d(TAG, "onSaveInstanceState(): outState=", outState);
-	}
-
 	private void startLocationUpdate() {
 		Utils.d(TAG, "startLocationUpdate()");
 
@@ -129,11 +112,6 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 			tvCoords.setText(R.string.art_edit_label_minimap_loading);
 		}
 		locationUpdater.updateLocation();
-
-		//		// FIXME fix this hard-coded thing
-		//		if (getActivity() instanceof ArtEdit) {
-		//			((ArtEdit) getActivity()).toggleLoading(true);
-		//		}
 	}
 
 	@Override
@@ -158,26 +136,12 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 	@Override
 	public void onLocationUpdate(Location location) {
-		if (getActivity() == null) return;
-
-		Utils.d(TAG, "onLocationUpdate(): location=", location);
 		this.location = location;
-
 		centerMiniMap();
-
-		//		//FIXME remove this
-		//		if (getActivity() instanceof ArtEdit) {
-		//			((ArtEdit) getActivity()).toggleLoading(false);
-		//		}
 	}
 
 	@Override
 	public void onSuggestLocationSettings() {
-		// FIXME fix this hard-coded thing
-		//		if (getActivity() instanceof ArtEdit) {
-		//			((ArtEdit) getActivity()).toggleLoading(false);
-		//		}
-
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
 		}
@@ -200,11 +164,6 @@ public class MiniMapFragment extends Fragment implements LocationUpdaterCallback
 
 	@Override
 	public void onLocationUpdateError() {
-		// FIXME fix this hard-coded thing
-		//		if (getActivity() instanceof ArtEdit) {
-		//			((ArtEdit) getActivity()).toggleLoading(false);
-		//		}
-
 		if (tvCoords != null) {
 			tvCoords.setText(R.string.location_update_failure);
 		}

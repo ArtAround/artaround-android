@@ -2,7 +2,6 @@ package us.artaround.android.ui;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
@@ -29,11 +28,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
-import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,158 +39,121 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
 
-//FIXME why this fragment doesn't save its own state?
 public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<LoaderPayload> {
 	private static final String TAG = "MiniGallery";
-
-	public static final String ARG_EDIT_MODE = "edit_mode";
-	public static final String ARG_TITLE = "title";
-	public static final String ARG_PHOTO_IDS = "photo_ids";
-	public static final String ARG_PHOTOS = "photos";
-	public static final String ARG_PHOTO = "photo";
-	public static final String ARG_SIZE = "size";
-
-	private static final String SAVE_PHOTOS = "photos";
-	private static final String SAVE_NEW_PHOTO_URIS = "new_photo_uris";
-	private static final String SAVE_LOADED_PHOTOS_COUNT = "loaded_photos_count";
 
 	private static final int REQUEST_CODE_CAMERA = 0;
 	private static final int REQUEST_CODE_GALLERY = 1;
 	private static final int REQUEST_CODE_CROP_FROM_CAMERA = 2;
 
-	private static final int LOADER_PHOTO = 10000;
-
-	private static final String DIALOG_ADD_PHOTO = "add_photo";
+	private static final int LOADER_PHOTO = 600;
+	private static final String DIALOG_ADD_PHOTO = "dlg_add_photo";
 
 	private Gallery miniGallery;
 	private MiniGalleryAdapter adapter;
 
 	private String artTitle;
 	private boolean isEditMode;
-	private ArrayList<String> photoIds;
 
-	private ArrayList<PhotoWrapper> photos;
+	private ArrayList<PhotoWrapper> wrappers;
 	private ArrayList<String> newPhotoUris;
 	private Uri tempPhotoUri;
-	private AtomicInteger loadedPhotosCount;
+	private int toLoadCount;
+	private int loadedCount;
+	private String idToLoad;
 
-	private GallerySaver gallerySaver;
+	public MiniGalleryFragment() {}
 
-	@SuppressWarnings("unchecked")
+	public MiniGalleryFragment(String artTitle, ArrayList<String> photoIds, boolean isEditMode) {
+		this.artTitle = artTitle;
+		this.isEditMode = isEditMode;
+
+		wrappers = new ArrayList<PhotoWrapper>();
+		newPhotoUris = new ArrayList<String>();
+
+		if (photoIds != null) {
+			int size = photoIds.size();
+
+			for (int i = 0; i < size; ++i) {
+				wrappers.add(new PhotoWrapper(photoIds.get(i)));
+				toLoadCount++;
+			}
+
+			idToLoad = photoIds.get(0);
+		}
+
+		if (isEditMode) {
+			wrappers.add(null);
+		}
+
+		Utils.d(TAG, "toLoadCount=", toLoadCount, "idToLoad=", idToLoad);
+	}
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		setRetainInstance(true);
-
-		photoIds = getArguments().getStringArrayList(ARG_PHOTO_IDS);
-		photos = (ArrayList<PhotoWrapper>) getArguments().getSerializable(ARG_PHOTOS);
-		isEditMode = getArguments().getBoolean(ARG_EDIT_MODE);
-		artTitle = getArguments().getString(ARG_TITLE);
-
-		if (activity instanceof GallerySaver) {
-			gallerySaver = (GallerySaver) activity;
-		}
-
-		Utils.d(TAG, "onAttach()");
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.mini_gallery_fragment, container, false);
-
-		adapter = new MiniGalleryAdapter(getActivity(), isEditMode);
 		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
-		miniGallery.setAdapter(adapter);
-		miniGallery.setSelection(1);
-		registerForContextMenu(miniGallery);
-		miniGallery.setOnItemClickListener(new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-				if (isEditMode && position == 1) {
-					addNewPhoto();
+
+		if (wrappers.size() > 0) {
+			registerForContextMenu(miniGallery);
+
+			miniGallery.setOnItemClickListener(new OnItemClickListener() {
+				@Override
+				public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+					if (isEditMode && (position == wrappers.size() - 1)) {
+						addNewPhoto();
+					}
+					else {
+						gotoGallery();
+					}
 				}
-				else if (getPhotoCount() > 0) {
-					gotoGallery();
-				}
-			}
-		});
+			});
+		}
 		return view;
 	}
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-
-		Bundle savedState = gallerySaver.restoreGalleryState();
-		setupState(savedState);
-		Utils.d(TAG, "onActivityCreated(): savedState=", savedState);
+		setupState();
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle args) {
-		args.putSerializable(SAVE_PHOTOS, photos);
-		args.putStringArrayList(SAVE_NEW_PHOTO_URIS, newPhotoUris);
-		args.putInt(SAVE_LOADED_PHOTOS_COUNT, loadedPhotosCount.get());
-
-		gallerySaver.saveGalleryState(args);
-		super.onSaveInstanceState(args);
-	}
-
-	private int getPhotoCount() {
-		if (photoIds == null) return 0;
-		return photoIds.size();
-	}
-
-	@SuppressWarnings("unchecked")
-	private void setupState(Bundle savedInstanceState) {
-
-		if (savedInstanceState != null) {
-			photos = (ArrayList<PhotoWrapper>) savedInstanceState.getSerializable(SAVE_PHOTOS);
-			newPhotoUris = savedInstanceState.getStringArrayList(SAVE_NEW_PHOTO_URIS);
-			loadedPhotosCount = new AtomicInteger(savedInstanceState.getInt(SAVE_LOADED_PHOTOS_COUNT, 0));
-			adapter.addItems(photos);
-			return;
-		}
-
-		newPhotoUris = new ArrayList<String>();
-
-		// load photos from server
-		if (photos == null) {
-			loadedPhotosCount = new AtomicInteger(0);
-			photos = new ArrayList<PhotoWrapper>();
+	private void setupState() {
+		if (adapter == null) {
+			adapter = new MiniGalleryAdapter(getActivity(), isEditMode, wrappers);
 		}
 		else {
-			loadedPhotosCount = new AtomicInteger(getPhotoCount() - 1);
-			adapter.addItems(photos);
-			return;
+			adapter.setContext(getActivity());
 		}
+		miniGallery.setAdapter(adapter);
+		miniGallery.setSelection(wrappers.size() > 1 ? 1 : 0);
 
-		int size = getPhotoCount();
-		if (size == 0) {
-			return;
+		Utils.d(TAG, "setupState(): toLoadCount=", toLoadCount, "loadedCount=", loadedCount, "idToLoad=", idToLoad);
+
+		if (loadedCount < toLoadCount && idToLoad != null) {
+			adapter.setShowLoaders(true);
+
+			Resources res = getResources();
+			Bundle args = new Bundle();
+			args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
+			args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
+			args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
+			args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
+			getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
 		}
-
-		String id = photoIds.get(0);
-		if (TextUtils.isEmpty(id)) return;
-
-		adapter.setShowLoaders(true);
-		miniGallery.setClickable(false);
-
-		Resources res = getResources();
-		Bundle args = new Bundle();
-		args.putString(ImageDownloader.EXTRA_PHOTO_SIZE, FlickrService.SIZE_SMALL);
-		args.putFloat(ImageDownloader.EXTRA_DENSITY, res.getDisplayMetrics().density);
-		args.putInt(ImageDownloader.EXTRA_WIDTH, res.getDimensionPixelSize(R.dimen.GalleryItemWidth));
-		args.putInt(ImageDownloader.EXTRA_HEIGHT, res.getDimensionPixelSize(R.dimen.GalleryItemHeight));
-		args.putString(ARG_PHOTO, id);
-
-		getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
 	}
 
 	protected void gotoGallery() {
 		Intent iGallery = new Intent(getActivity(), ArtGallery.class);
-		iGallery.putExtra(ArtGallery.EXTRA_PHOTOS, photos);
+		iGallery.putExtra(ArtGallery.EXTRA_WRAPPERS, wrappers);
 		iGallery.putExtra(ArtGallery.EXTRA_TITLE, artTitle);
+		iGallery.putExtra(ArtGallery.EXTRA_IS_EDIT_MODE, isEditMode);
 		startActivity(iGallery);
 	}
 
@@ -210,32 +170,39 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 
 	@Override
 	public Loader<LoaderPayload> onCreateLoader(int id, final Bundle args) {
-		if (id != LOADER_PHOTO) return null;
+		if (LOADER_PHOTO != id) return null;
 
 		return new AsyncLoader<LoaderPayload>(getActivity()) {
 			@Override
 			public LoaderPayload loadInBackground() {
 				try {
-					String photoId = args.getString(ARG_PHOTO);
-					Utils.d(TAG, "onCreateLoader(): loading photo id=", photoId);
+					Utils.d(TAG, "onCreateLoader(): loading photo with id=", idToLoad);
 
-					Uri uri = ImageDownloader.quickGetImageUri(photoId);
+					Uri uri = ImageDownloader.quickGetImageUri(idToLoad);
 					if (uri == null) {
-						FlickrService srv = FlickrService.getInstance();
-						FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(photoId),
+						FlickrService srv = FlickrService.getInstance(getActivity());
+						FlickrPhoto photo = srv.parsePhoto(srv.getPhotoJson(idToLoad),
 								args.getString(ImageDownloader.EXTRA_PHOTO_SIZE));
 						if (photo != null) {
-							args.putString(ImageDownloader.EXTRA_PHOTO_ID, photoId);
+							args.putString(ImageDownloader.EXTRA_PHOTO_ID, idToLoad);
 							args.putString(ImageDownloader.EXTRA_PHOTO_URL, photo.url);
 							uri = ImageDownloader.getImageUri(args);
-
 						}
 					}
-					return new LoaderPayload(LoaderPayload.STATUS_OK, (uri != null) ? new PhotoWrapper(photoId,
-							uri.toString()) : null, args);
+
+					if (uri != null) {
+						int size = wrappers.size();
+						for (int i = 0; i < size; ++i) {
+							if (wrappers.get(i) != null && idToLoad.equals(wrappers.get(i).id)) {
+								wrappers.get(i).thumbUri = uri.toString();
+								Utils.d(TAG, "loadInBackground(): found uri=", uri, "for photo with id=", idToLoad);
+							}
+						}
+					}
+					return new LoaderPayload(LoaderPayload.STATUS_OK, null, args);
 				}
 				catch (ArtAroundException e) {
-					return new LoaderPayload(LoaderPayload.STATUS_ERROR, e);
+					return new LoaderPayload(LoaderPayload.STATUS_ERROR, e, args);
 				}
 			}
 		};
@@ -243,39 +210,41 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 
 	@Override
 	public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
-		if (loader.getId() != LOADER_PHOTO) return;
-		Utils.d(TAG, "onLoadFinished(): payload=", payload);
+		if (loader == null || loader.getId() != LOADER_PHOTO) return;
+
+		loadedCount++;
+		Utils.d(TAG, "onLoadFinished(): loadedCount=", loadedCount);
 
 		if (payload.getStatus() == LoaderPayload.STATUS_OK) {
-			PhotoWrapper wrapper = (PhotoWrapper) payload.getResult();
-			if (wrapper != null && wrapper.uri != null) {
-				adapter.addItem(wrapper);
-				photos.add(wrapper);
+
+			if (loadedCount == toLoadCount) {
+				adapter.setShowLoaders(false);
+				idToLoad = null;
+				Utils.d(TAG, "onLoadFinished(): done loading all photos!");
+			}
+
+			else {
+				adapter.setShowLoader(false, loadedCount - 1);
+				idToLoad = wrappers.get(loadedCount).id;
+				getLoaderManager().restartLoader(LOADER_PHOTO, payload.getArgs(), this);
 			}
 		}
 		else {
-			//TODO error msg
+			adapter.setShowLoader(false, loadedCount - 1);
+			Utils.d(TAG, "onLoadFinished(): could not load photo with id=", idToLoad, payload.getResult());
 		}
-
-		if (loadedPhotosCount.incrementAndGet() >= photoIds.size()) {
-			miniGallery.setClickable(true);
-			adapter.setShowLoaders(false);
-		}
-		else {
-			Bundle args = payload.getArgs();
-			args.putString(ARG_PHOTO, photoIds.get(loadedPhotosCount.get()));
-			getLoaderManager().restartLoader(LOADER_PHOTO, args, this);
-		}
-		loader.stopLoading();
+		adapter.notifyDataSetChanged();
 	}
 
 	@Override
-	public void onLoaderReset(Loader<LoaderPayload> loader) {}
+	public void onLoaderReset(Loader<LoaderPayload> loader) {
+		Utils.d(TAG, "onLoaderReset()");
+	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode != FragmentActivity.RESULT_OK) {
-			Utils.d(TAG, "Could not take/select photo! Activity result code is " + resultCode);
+			Utils.d(TAG, "onActivityResult(): could not take/select photo, result code is ", resultCode);
 			return;
 		}
 
@@ -284,7 +253,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 			Intent intent = new Intent("com.android.camera.action.CROP");
 			Uri uri = null;
 			if (data != null && (uri = data.getData()) != null) {
-				Utils.d(TAG, "Uri is", uri.toString());
+				Utils.d(TAG, "onActivityResult(): uri=", uri.toString());
 			}
 			else {
 				uri = tempPhotoUri;
@@ -300,9 +269,15 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 			String uriStr = tempPhotoUri.toString().replace("file://", "");
 			newPhotoUris.add(uriStr);
 
-			PhotoWrapper wrapper = new PhotoWrapper(newPhotoUri(uriStr), uriStr);
-			adapter.addItem(wrapper);
-			photos.add(wrapper);
+			PhotoWrapper wrapper = new PhotoWrapper(newPhotoUri(uriStr));
+			wrapper.thumbUri = uriStr;
+
+			int size = wrappers.size();
+			wrappers.add(null);
+			wrappers.set(size - 1, wrapper);
+			wrappers.set(size, wrappers.get(size));
+			adapter.notifyDataSetChanged();
+
 			break;
 		}
 	}
@@ -317,9 +292,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		View view = miniGallery.getSelectedView();
 		if (view != null) {
 			String id = (String) view.getTag();
-			if (!TextUtils.isEmpty(id) && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
-				MenuInflater inflater = getActivity().getMenuInflater();
-				inflater.inflate(R.menu.mini_gallery_menu, menu);
+			if (id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
+				getActivity().getMenuInflater().inflate(R.menu.mini_gallery_menu, menu);
 			}
 		}
 	}
@@ -330,21 +304,19 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		case R.id.context_remove_photo:
 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 			if (info != null) {
-				View view = info.targetView;
-				String id = (String) view.getTag();
-				if (!TextUtils.isEmpty(id) && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
-					adapter.removeItem(id);
+				String id = (String) info.targetView.getTag();
+				if (id != null && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
 
-					String newUri = null;
-					Iterator<PhotoWrapper> it = photos.iterator();
+					Iterator<PhotoWrapper> it = wrappers.iterator();
 					while (it.hasNext()) {
 						PhotoWrapper wrapper = it.next();
-						if (id.equals(wrapper.id)) {
-							newUri = wrapper.uri;
+						if (wrapper != null && id.equals(wrapper.id)) {
+							newPhotoUris.remove(wrapper.thumbUri);
 							it.remove();
+							adapter.notifyDataSetChanged();
+							break;
 						}
 					}
-					newPhotoUris.remove(newUri);
 				}
 			}
 			break;
@@ -403,19 +375,11 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		this.newPhotoUris = newPhotoUris;
 	}
 
-	public ArrayList<PhotoWrapper> getPhotos() {
-		return photos;
+	public ArrayList<PhotoWrapper> getwrappers() {
+		return wrappers;
 	}
 
-	public void setPhotos(ArrayList<PhotoWrapper> photos) {
-		this.photos = photos;
-	}
-
-	public AtomicInteger getLoadedPhotosCount() {
-		return loadedPhotosCount;
-	}
-
-	public void setLoadedPhotosCount(AtomicInteger loadedPhotosCount) {
-		this.loadedPhotosCount = loadedPhotosCount;
+	public void setwrappers(ArrayList<PhotoWrapper> wrappers) {
+		this.wrappers = wrappers;
 	}
 }

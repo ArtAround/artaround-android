@@ -17,8 +17,13 @@ public class LoaderPayload {
 	}
 
 	public LoaderPayload(ArtAroundException exception) {
+		this(exception, null);
+	}
+
+	public LoaderPayload(ArtAroundException exception, Bundle args) {
 		this.status = STATUS_ERROR;
 		this.exception = exception;
+		this.args = args;
 	}
 
 	public LoaderPayload(int status, Object result) {
