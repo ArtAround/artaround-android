@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import us.artaround.R;
 import us.artaround.android.common.AsyncLoader;
@@ -65,7 +64,6 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 	//--- server call constants ---
 	private static final int ARTS_PER_PAGE = 100;
-	private static final String ARG_PAGE = "page";
 
 	//--- zoom constants ---
 	public static final int ZOOM_DEFAULT_LEVEL = 13;
@@ -88,6 +86,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	private static final int LOADER_CURSOR_ARTS = 10;
 	private static final int LOADER_ASYNC_ARTS = 11;
 	private static final int LOADER_CURSOR_FAVORITES = 12;
+	private static final int LOADER_ASYNC_CLEAR_CACHE = 13;
 
 	//--- handler msgs ---
 	private static final int MSG_LOAD_ARTS_FINISHED = 0;
@@ -102,7 +101,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	private static final String SAVE_MAP_LONGITUDE = "save_map_longi";
 	private static final String SAVE_FILTERS = "save_filters";
 	private static final String SAVE_CRT_PAGE = "save_crt_page";
-	private static final String SAVE_TOTAL_COUNT = "save_total_count";
+	private static final String SAVE_PAGES_LEFT = "save_total_count";
 
 	private static final String ARTS_SELECTION = Arts.CITY + "=?";
 
@@ -134,8 +133,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	private GeoPoint currentMapCenter;
 	private City currentCity;
 
-	private final AtomicInteger totalCount = new AtomicInteger(0);
-	private final AtomicInteger crtPage = new AtomicInteger(1);
+	private int crtPage = 1;
+	private int totalPages = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +156,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 		restoreState(savedInstanceState);
 		setupUi();
+
 	}
 
 	@Override
@@ -183,6 +183,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 			edit.putBoolean(Utils.KEY_CHECK_WIFI, false);
 			SharedPreferencesCompat.apply(edit);
 		}
+
 		setupState();
 	}
 
@@ -221,32 +222,36 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		Utils.d(TAG, "setupState()");
 
 		changeCity();
+
 		if (currentLocation == null && !getIntent().hasExtra(SAVE_MAP_LATITUDE)) {
 			startLocationUpdate();
 		}
 
-		if (Utils.isCacheOutdated(this)) {
+		if (Utils.isCacheOutdated(this) && crtPage == 1) {
 			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_LONG).show();
 
 			btnFavorites.setEnabled(false);
 			btnSearch.setEnabled(false);
 
+			toggleLoading(true);
 			clearCache();
-			loadArt();
+			return;
 		}
-		else if (allArt.isEmpty()) {
+
+		if (allArt.isEmpty()) {
 			Utils.d(TAG, "setupState(): allArt is empty, loading...");
 
 			btnFavorites.setEnabled(false);
 			btnSearch.setEnabled(false);
 
+			toggleLoading(true);
 			loadArt();
+			return;
 		}
-		else {
-			Utils.d(TAG, "setupState(): filter & display existing arts.");
-			filterArt(allArt);
-			displayArt(filteredArt);
-		}
+
+		Utils.d(TAG, "setupState(): filter & display existing arts.");
+		filterArt(allArt);
+		displayArt(filteredArt);
 	}
 
 	private void changeCity() {
@@ -257,9 +262,17 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	}
 
 	private void clearCache() {
+		clearDisplayCache();
+		getSupportLoaderManager().restartLoader(LOADER_ASYNC_CLEAR_CACHE, null, asyncCallback);
+	}
+
+	private void clearDisplayCache() {
 		artsOverlay.doClear();
-		totalCount.set(0);
-		crtPage.set(1);
+		allArt.clear();
+		filteredArt.clear();
+		filters.clear();
+		crtPage = 1;
+		totalPages = 0;
 	}
 
 	private void setupUi() {
@@ -338,8 +351,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		Utils.d(TAG, "restoreState(): savedInstance=", savedInstanceState);
 
 		if (savedInstanceState != null) {
-			crtPage.set(savedInstanceState.getInt(SAVE_CRT_PAGE, 1));
-			totalCount.set(savedInstanceState.getInt(SAVE_TOTAL_COUNT, 0));
+			crtPage = savedInstanceState.getInt(SAVE_CRT_PAGE, 1);
+			totalPages = savedInstanceState.getInt(SAVE_PAGES_LEFT, 0);
 
 			int lati = savedInstanceState.getInt(SAVE_MAP_LATITUDE, 0);
 			int longi = savedInstanceState.getInt(SAVE_MAP_LONGITUDE, 0);
@@ -391,8 +404,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putInt(SAVE_CRT_PAGE, crtPage.get());
-		outState.putInt(SAVE_TOTAL_COUNT, totalCount.get());
+		outState.putInt(SAVE_CRT_PAGE, crtPage);
+		outState.putInt(SAVE_PAGES_LEFT, totalPages);
 		GeoPoint center = mapView.getMapCenter();
 		outState.putInt(SAVE_MAP_LATITUDE, center.getLatitudeE6());
 		outState.putInt(SAVE_MAP_LONGITUDE, center.getLongitudeE6());
@@ -421,18 +434,13 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 	}
 
 	private void loadArt() {
-		Utils.d(TAG, "loadArt(): start query");
-
-		toggleLoading(true);
+		Utils.d(TAG, "loadArt(): start loading from cursor....");
 		getSupportLoaderManager().restartLoader(LOADER_CURSOR_ARTS, null, cursorCallback);
 	}
 
 	private void loadArtFromServer() {
-		Utils.d(TAG, "loadArtFromServer(): start loading page=", crtPage.get());
-
-		Bundle args = new Bundle();
-		args.putInt(ARG_PAGE, crtPage.getAndIncrement());
-		getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, args, asyncCallback);
+		Utils.d(TAG, "loadArtFromServer(): start loading from server page=", crtPage);
+		getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, null, asyncCallback);
 	}
 
 	private void filterArt(List<Art> art) {
@@ -775,9 +783,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_LOAD_ARTS_FINISHED:
+				toggleLoading(false);
 				btnFavorites.setEnabled(true);
 				btnSearch.setEnabled(true);
-				toggleLoading(false);
+
 				Utils.setLastCacheUpdate(ArtMap.this);
 				break;
 
@@ -818,10 +827,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					loadArtFromServer();
 				}
 				else {
+					toggleLoading(false);
 					btnFavorites.setEnabled(true);
 					btnSearch.setEnabled(true);
-					
-					toggleLoading(false);
+
 					filterArt(allArt);
 					displayArt(filteredArt);
 				}
@@ -863,7 +872,7 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					public LoaderPayload loadInBackground() {
 						LoaderPayload payload;
 						try {
-							ParseResult result = ServiceFactory.getArtService().getArts(args.getInt(ARG_PAGE),
+							ParseResult result = ServiceFactory.getArtService().getArts(crtPage,
 									ARTS_PER_PAGE);
 							payload = new LoaderPayload(LoaderPayload.STATUS_OK, result);
 						}
@@ -872,6 +881,18 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 						}
 						return payload;
 					}
+				};
+
+			case LOADER_ASYNC_CLEAR_CACHE:
+				return new AsyncLoader<LoaderPayload>(ArtMap.this) {
+
+					@Override
+					public LoaderPayload loadInBackground() {
+						Utils.clearCache();
+						Utils.deleteCachedFiles();
+						return new LoaderPayload(LoaderPayload.STATUS_OK);
+					}
+
 				};
 
 			default:
@@ -883,6 +904,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		public void onLoadFinished(Loader<LoaderPayload> loader, LoaderPayload payload) {
 			switch (loader.getId()) {
 			case LOADER_ASYNC_ARTS:
+				crtPage++;
+
 				if (payload.getStatus() == LoaderPayload.STATUS_OK) {
 
 					ParseResult result = (ParseResult) payload.getResult();
@@ -895,16 +918,18 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					}
 
 					if (result.page == 1) {
-						totalCount.set(result.totalCount);
+						totalPages = (int) Math.ceil(((double) result.totalCount / result.perPage));
+						Utils.d(TAG, "onLoadFinished(): total arts on server=", result.totalCount,
+								"and pages to load=", totalPages);
+					}
 
-						int tasksLeft = (int) (Math.ceil((double) (result.totalCount - result.count) / result.perPage));
-						if (tasksLeft > 0) {
-							Bundle args = new Bundle();
-							args.putInt(ARG_PAGE, crtPage.getAndIncrement());
-							getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, args, asyncCallback);
-
-							Utils.d(TAG, "onLoadFinished(): start loading page=", crtPage.get());
-						}
+					if (crtPage <= totalPages) {
+						getSupportLoaderManager().restartLoader(LOADER_ASYNC_ARTS, null, asyncCallback);
+						Utils.d(TAG, "onLoadFinished(): start loading next page=", crtPage);
+					}
+					else {
+						crtPage = 1;
+						totalPages = 0;
 					}
 				}
 				else {
@@ -912,9 +937,13 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					Toast.makeText(ArtMap.this, R.string.load_arts_error, Toast.LENGTH_LONG).show();
 				}
 				break;
+
+			case LOADER_ASYNC_CLEAR_CACHE:
+				loadArtFromServer();
+				break;
 			}
 
-			loader.stopLoading();
+			//loader.stopLoading();
 		}
 
 		@Override
@@ -948,8 +977,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 			if (allArt.size() > 0) {
 				handler.sendEmptyMessage(MSG_PROCESS_ARTS);
 
-				//FIXME fix the case where not all arts could be parsed
-				if (totalCount.get() == allArt.size()) {
+				if (crtPage == totalPages) {
+					crtPage = 1;
+					totalPages = 0;
+
 					Utils.d(TAG, "onChange(): finished loading arts!");
 					handler.sendEmptyMessage(MSG_LOAD_ARTS_FINISHED);
 				}

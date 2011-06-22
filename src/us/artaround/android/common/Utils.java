@@ -12,7 +12,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import us.artaround.R;
-import us.artaround.android.services.FlickrService;
+import us.artaround.android.database.ArtAroundDatabase.Artists;
+import us.artaround.android.database.ArtAroundDatabase.Arts;
+import us.artaround.android.database.ArtAroundDatabase.Categories;
+import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
+import us.artaround.android.database.ArtAroundProvider;
 import us.artaround.android.ui.ArtMap;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -350,6 +354,22 @@ public class Utils {
 		textView.setHintTextColor(textView.getContext().getResources().getColor(R.color.HintColor));
 	}
 
+	// should be called on a background thread only
+	public static void clearCache() {
+		int count = ArtAroundProvider.contentResolver.delete(Arts.CONTENT_URI, null, null);
+		Utils.d(Utils.TAG, "-> deleted arts=", count);
+
+		count = ArtAroundProvider.contentResolver.delete(Artists.CONTENT_URI, null, null);
+		Utils.d(Utils.TAG, "-> deleted artists=", count);
+
+		count = ArtAroundProvider.contentResolver.delete(Categories.CONTENT_URI, null, null);
+		Utils.d(Utils.TAG, "-> deleted categories=", count);
+
+		count = ArtAroundProvider.contentResolver.delete(Neighborhoods.CONTENT_URI, null, null);
+		Utils.d(Utils.TAG, "-> deleted neighborhoods=", count);
+	}
+
+	// should be called on a background thread only
 	public static void deleteCachedFiles() {
 		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			File storage = Environment.getExternalStorageDirectory();
@@ -359,21 +379,28 @@ public class Utils {
 			String[] fileNames = dir.list();
 			if (fileNames != null) {
 				int size = fileNames.length;
+
+				if (size == 0) {
+					Utils.d(Utils.TAG, "deleteCacheFiles(): no files to delete.");
+					return;
+				}
+
 				for (int i = 0; i < size; ++i) {
 					String fn = dir.getAbsolutePath() + "/" + fileNames[i];
-					if (fn.indexOf(FlickrService.SIZE_MEDIUM) > -1) {
-						final File currentFile = new File(fn);
-						if (currentFile != null) {
-							try {
-								boolean ok = currentFile.delete();
-								Utils.d(Utils.TAG, "Deleted file", fn, ", result=", ok);
-							}
-							catch (final SecurityException e) {
-								e.printStackTrace();
-							}
+					final File currentFile = new File(fn);
+					if (currentFile != null) {
+						try {
+							boolean ok = currentFile.delete();
+							Utils.d(Utils.TAG, "deleteCacheFiles(): deleted", fn, ok);
+						}
+						catch (final SecurityException e) {
+							e.printStackTrace();
 						}
 					}
 				}
+			}
+			else {
+				Utils.d(Utils.TAG, "deleteCacheFiles(): no files to delete.");
 			}
 		}
 	}
@@ -394,4 +421,5 @@ public class Utils {
 			return null;
 		}
 	}
+
 }

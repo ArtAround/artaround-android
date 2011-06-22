@@ -3,11 +3,6 @@ package us.artaround.android.ui;
 import us.artaround.R;
 import us.artaround.android.common.SharedPreferencesCompat;
 import us.artaround.android.common.Utils;
-import us.artaround.android.database.ArtAroundDatabase.Artists;
-import us.artaround.android.database.ArtAroundDatabase.Arts;
-import us.artaround.android.database.ArtAroundDatabase.Categories;
-import us.artaround.android.database.ArtAroundDatabase.Neighborhoods;
-import us.artaround.android.database.ArtAroundProvider;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
@@ -78,17 +73,8 @@ public class Preferences extends PreferenceActivity {
 		new Thread() {
 			@Override
 			public void run() {
-				int count = ArtAroundProvider.contentResolver.delete(Arts.CONTENT_URI, null, null);
-				Utils.d(Utils.TAG, "-> deleted arts=", count);
-
-				count = ArtAroundProvider.contentResolver.delete(Artists.CONTENT_URI, null, null);
-				Utils.d(Utils.TAG, "-> deleted artists=", count);
-
-				count = ArtAroundProvider.contentResolver.delete(Categories.CONTENT_URI, null, null);
-				Utils.d(Utils.TAG, "-> deleted categories=", count);
-
-				count = ArtAroundProvider.contentResolver.delete(Neighborhoods.CONTENT_URI, null, null);
-				Utils.d(Utils.TAG, "-> deleted neighborhoods=", count);
+				Utils.clearCache();
+				Utils.deleteCachedFiles();
 
 				runOnUiThread(clearCacheFinish);
 			}

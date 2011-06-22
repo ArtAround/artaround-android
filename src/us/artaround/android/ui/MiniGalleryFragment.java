@@ -38,6 +38,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
+import android.widget.Toast;
 
 public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<LoaderPayload> {
 	private static final String TAG = "MiniGallery";
@@ -100,7 +101,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		View view = inflater.inflate(R.layout.mini_gallery_fragment, container, false);
 		miniGallery = (Gallery) view.findViewById(R.id.mini_gallery);
 
-		if (wrappers.size() > 0) {
+		if (wrappers != null && wrappers.size() > 0) {
 			registerForContextMenu(miniGallery);
 
 			miniGallery.setOnItemClickListener(new OnItemClickListener() {
@@ -109,7 +110,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 					if (isEditMode && (position == wrappers.size() - 1)) {
 						addNewPhoto();
 					}
-					else {
+					else if (!isEditMode) {
 						gotoGallery();
 					}
 				}
@@ -202,6 +203,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 					return new LoaderPayload(LoaderPayload.STATUS_OK, null, args);
 				}
 				catch (ArtAroundException e) {
+					Toast.makeText(getActivity(), R.string.load_data_failure, Toast.LENGTH_SHORT).show();
 					return new LoaderPayload(LoaderPayload.STATUS_ERROR, e, args);
 				}
 			}
@@ -292,7 +294,7 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 		View view = miniGallery.getSelectedView();
 		if (view != null) {
 			String id = (String) view.getTag();
-			if (id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
+			if (id != null && id.indexOf(MiniGalleryAdapter.NEW_PHOTO) > -1) {
 				getActivity().getMenuInflater().inflate(R.menu.mini_gallery_menu, menu);
 			}
 		}

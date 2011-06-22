@@ -183,15 +183,4 @@ public class GalleryFragment extends Fragment implements LoaderCallbacks<LoaderP
 	public void onLoaderReset(Loader<LoaderPayload> loader) {
 		Utils.d(TAG, "onLoaderReset()");
 	}
-
-	@Override
-	public void onDestroy() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Utils.deleteCachedFiles();
-			}
-		}).start();
-		super.onDestroy();
-	}
 }

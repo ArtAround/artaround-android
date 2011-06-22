@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import us.artaround.R;
 import us.artaround.android.common.PhotoWrapper;
-import us.artaround.android.common.Utils;
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +57,8 @@ public class GalleryAdapter extends BaseAdapter {
 		if (!showLoader[position]) {
 			if (wrappers.get(position) != null) {
 				ImageView imgView = (ImageView) view.findViewById(R.id.img_add_photo);
-				imgView.setImageBitmap(Utils.decodeBitmap(wrappers.get(position).thumbUri, imgView));
+				//imgView.setImageBitmap(Utils.decodeBitmap(wrappers.get(position).thumbUri, imgView));
+				imgView.setImageDrawable(new BitmapDrawable((wrappers.get(position).thumbUri)));
 			}
 			view.findViewById(R.id.progress).setVisibility(View.GONE);
 		}

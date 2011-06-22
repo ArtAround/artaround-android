@@ -760,9 +760,6 @@ public class ArtEdit extends FragmentActivity {
 	}
 
 	private void onFinish() {
-		// delete all temporary photos			
-		Utils.deleteCachedFiles();
-
 		if (getIntent().hasExtra(EXTRA_ART)) {
 			if (hasChanges) {
 				showDialog(DIALOG_DISCARD_EDIT);
