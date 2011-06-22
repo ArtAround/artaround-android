@@ -78,7 +78,7 @@
 		and most accurate location detection please turn on GPS and wireless
 		network.</string>
 	<string
-		name="location_update_failure">Your current location is temporary unavailable.</string>
+		name="location_update_failure">Your location is temporarily unavailable.</string>
 	<string
 		name="waiting_location">Waiting for location...</string>
 

@@ -49,8 +49,6 @@ public class ArtFilterListFragment extends ListFragment {
 
 	//FIXME fetch data from server if it's not in the database
 
-
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle args) {
 		return inflater.inflate(R.layout.art_filter_fragment, parent, false);

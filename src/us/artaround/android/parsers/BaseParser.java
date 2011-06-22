@@ -88,8 +88,8 @@ public class BaseParser {
 
 			ArrayList<ContentValues> arts = new ArrayList<ContentValues>();
 			ArrayList<ContentValues> artists = new ArrayList<ContentValues>();
-			ArrayList<ContentValues> categories = new ArrayList<ContentValues>();
-			ArrayList<ContentValues> neighborhoods = new ArrayList<ContentValues>();
+			//ArrayList<ContentValues> categories = new ArrayList<ContentValues>();
+			//ArrayList<ContentValues> neighborhoods = new ArrayList<ContentValues>();
 
 			ParseResult result = new ParseResult();
 
@@ -127,8 +127,8 @@ public class BaseParser {
 
 						ContentValues art = new ContentValues();
 						ContentValues artist = new ContentValues();
-						ContentValues category = new ContentValues();
-						ContentValues neighborhood = new ContentValues();
+						//ContentValues category = new ContentValues();
+						//ContentValues neighborhood = new ContentValues();
 
 						while (jp.nextToken() != JsonToken.END_OBJECT) {
 							String artKey = jp.getCurrentName();
@@ -148,16 +148,16 @@ public class BaseParser {
 								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
 									String cat = jp.getText().trim();
 									art.put(Arts.CATEGORY, cat);
-									category.put(Categories.NAME, cat);
-									categories.add(category);
+									//category.put(Categories.NAME, cat);
+									//categories.add(category);
 								}
 							}
 							else if (NEIGHBORHOOD_KEY.equalsIgnoreCase(artKey)) {
 								if (jp.getCurrentToken() != JsonToken.VALUE_NULL) {
 									String nbhd = jp.getText().trim();
 									art.put(Arts.NEIGHBORHOOD, nbhd);
-									neighborhood.put(Neighborhoods.NAME, nbhd);
-									neighborhoods.add(neighborhood);
+									//neighborhood.put(Neighborhoods.NAME, nbhd);
+									//neighborhoods.add(neighborhood);
 								}
 							}
 							else if (LOCATION_DESCRIPTION_KEY.equalsIgnoreCase(artKey)) {
@@ -262,12 +262,12 @@ public class BaseParser {
 					artists.toArray(new ContentValues[artists.size()]));
 
 			// save categories
-			ArtAroundProvider.contentResolver.bulkInsert(Categories.CONTENT_URI,
-					categories.toArray(new ContentValues[categories.size()]));
+			//			ArtAroundProvider.contentResolver.bulkInsert(Categories.CONTENT_URI,
+			//					categories.toArray(new ContentValues[categories.size()]));
 
 			// save neighborhoods
-			ArtAroundProvider.contentResolver.bulkInsert(Neighborhoods.CONTENT_URI,
-					neighborhoods.toArray(new ContentValues[neighborhoods.size()]));
+			//			ArtAroundProvider.contentResolver.bulkInsert(Neighborhoods.CONTENT_URI,
+			//					neighborhoods.toArray(new ContentValues[neighborhoods.size()]));
 
 			Boolean notifyMe = (Boolean) data.getAuxData()[0];
 			if (notifyMe != null && notifyMe) {

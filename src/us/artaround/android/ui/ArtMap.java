@@ -872,6 +872,10 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 					public LoaderPayload loadInBackground() {
 						LoaderPayload payload;
 						try {
+							if (crtPage == 1) {
+								ServiceFactory.getArtService().getCategories();
+								ServiceFactory.getArtService().getNeighborhoods();
+							}
 							ParseResult result = ServiceFactory.getArtService().getArts(crtPage,
 									ARTS_PER_PAGE);
 							payload = new LoaderPayload(LoaderPayload.STATUS_OK, result);
