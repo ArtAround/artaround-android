@@ -327,7 +327,10 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 	}
 
 	private static class AddPhotoDialog extends DialogFragment {
-		MiniGalleryFragment f;
+		private MiniGalleryFragment f;
+
+		@SuppressWarnings("unused")
+		public AddPhotoDialog() {}
 
 		public AddPhotoDialog(MiniGalleryFragment f) {
 			this.f = f;

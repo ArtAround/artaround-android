@@ -87,7 +87,7 @@ public class Utils {
 
 	public static final int TIMEOUT = 30000; // 30 seconds
 
-	public static final boolean DEBUG_MODE = true;
+	public static final boolean DEBUG_MODE = false;
 
 	public static String appVersion;
 
@@ -213,9 +213,9 @@ public class Utils {
 		//final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		//final boolean onlineDump = prefs.getBoolean(KEY_SEND_CRASH_ONLINE, true);
 
-		if (!DEBUG_MODE) {
-			return;
-		}
+		//		if (!DEBUG_MODE) {
+		//			return;
+		//		}
 
 		if (appVersion == null) {
 			try {
