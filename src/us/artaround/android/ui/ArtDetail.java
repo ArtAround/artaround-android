@@ -501,11 +501,9 @@ public class ArtDetail extends FragmentActivity {
 			case LOADER_ASYNC_FAVORITE:
 				if (result != null && result) {
 					btnFavorite.setImageResource(R.drawable.ic_remove_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_added_favorite, Toast.LENGTH_LONG).show();
 				}
 				else {
 					btnFavorite.setImageResource(R.drawable.ic_add_favorite_background);
-					Toast.makeText(ArtDetail.this, R.string.art_removed_favorite, Toast.LENGTH_LONG).show();
 				}
 			}
 			loader.stopLoading();
@@ -592,12 +590,11 @@ public class ArtDetail extends FragmentActivity {
 	private String getShareText() {
 		StringBuilder b = new StringBuilder(getString(R.string.share_art_header));
 		b.append(Utils.NL).append(getString(R.string.share_artist));
-		if (art.artist != null) {
+		if (art.artist != null)
 			b.append(" ").append(art.artist);
-		}
-		else {
-			b.append(getString(R.string.unknown));
-		}
+		else
+			b.append(getString(R.string.unknown_artist));
+
 		b.append(Utils.NL).append(art.locationDesc);
 		b.append(Utils.NL).append(getString(R.string.share_category)).append(" ").append(art.category);
 		b.append(Utils.NL).append(getString(R.string.share_neighborhood)).append(" ").append(art.neighborhood);

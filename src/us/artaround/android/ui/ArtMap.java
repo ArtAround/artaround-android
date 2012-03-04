@@ -228,8 +228,6 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		}
 
 		if (Utils.isCacheOutdated(this) && crtPage == 1) {
-			Toast.makeText(this, R.string.update_cache_progress, Toast.LENGTH_LONG).show();
-
 			btnFavorites.setEnabled(false);
 			btnSearch.setEnabled(false);
 
@@ -721,9 +719,8 @@ public class ArtMap extends FragmentActivity implements OverlayTapListener, Zoom
 		ConnectivityManager mngr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = mngr.getActiveNetworkInfo();
 
-		if (info == null || (info != null && info.getState() != NetworkInfo.State.CONNECTED)) {
+		if (info == null || (info != null && info.getState() != NetworkInfo.State.CONNECTED))
 			showDialog(DIALOG_WIFI_FAIL);
-		}
 	}
 
 	private void centerMapOnLocation() {

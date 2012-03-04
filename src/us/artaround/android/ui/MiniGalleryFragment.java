@@ -38,7 +38,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Gallery;
-import android.widget.Toast;
 
 public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<LoaderPayload> {
 	private static final String TAG = "MiniGallery";
@@ -203,7 +202,8 @@ public class MiniGalleryFragment extends Fragment implements LoaderCallbacks<Loa
 					return new LoaderPayload(LoaderPayload.STATUS_OK, null, args);
 				}
 				catch (ArtAroundException e) {
-					Toast.makeText(getActivity(), R.string.load_data_failure, Toast.LENGTH_SHORT).show();
+					// Causes an error because the thread had not called Looper.prepare()
+					//Toast.makeText(getActivity(), R.string.load_data_failure, Toast.LENGTH_SHORT).show();
 					return new LoaderPayload(LoaderPayload.STATUS_ERROR, e, args);
 				}
 			}

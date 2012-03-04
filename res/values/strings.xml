@@ -4,18 +4,16 @@
 		name="app_label">ArtAround</string>
 	<string
 		name="app_version">1.0</string>
-
-	<!-- Generic -->
 	<string
 		name="ok">OK</string>
 	<string
 		name="cancel">Cancel</string>
 	<string
-		name="loading">Loading...</string>
+		name="loading">Loading…</string>
 	<string
-		name="empty">No items</string>
+		name="empty">No results.</string>
 	<string
-		name="unknown">Unknown</string>
+		name="unknown_artist">Unknown artist</string>
 	<string
 		name="by">By</string>
 	<string
@@ -27,22 +25,17 @@
 	<string
 		name="edit">Edit</string>
 	<string
-		name="sending">Sending...</string>
+		name="submit_art_success">Thanks for the help!</string>
 	<string
-		name="submit_art_success">The changes have been submitted and is awaiting moderation.</string>
+		name="submit_art_failure">There was an error there, sorry.\nPlease do try again.</string>
 	<string
-		name="submit_art_failure">Due to an error, the changes were not submitted.\n Please try again
-		later.</string>
+		name="submit_comment_success">Thanks for the comment.</string>
 	<string
-		name="submit_comment_success">Your comment has been submitted and is awaiting moderation.
-	</string>
-	<string
-		name="submit_comment_failure">Due to an error, your comment was not submitted.\n Please try
-		again later.</string>
+		name="submit_comment_failure">There was an error there, sorry.\nPlease do try again.</string>
 	<string
 		name="about">About</string>
 	<string
-		name="about_title">About ArtAround</string>
+		name="about_title">ArtAround</string>
 	<string
 		name="about_msg">
 		<![CDATA[
@@ -67,40 +60,33 @@
 	</string>
 
 
-	<!-- Location -->
 	<string
 		name="current_location">Current location: </string>
 	<string
-		name="location_suggest_settings_title">Improve my location</string>
+		name="location_suggest_settings_title">Your location</string>
 	<string
-		name="location_suggest_settings_msg">Not all location sources are currently enabled. For
-		the fastest
-		and most accurate location detection please turn on GPS and wireless
-		network.</string>
+		name="location_suggest_settings_msg">With your current location settings, we can\'t tell you what art is nearby. If you\'d like to to find art near you, press OK to visit your locatoin settings.</string>
 	<string
-		name="location_update_failure">Your location is temporarily unavailable.</string>
+		name="location_update_failure">We\'re not able to find your location right now.</string>
 	<string
-		name="waiting_location">Waiting for location...</string>
+		name="waiting_location">Finding your location…</string>
 
-	<!-- Wifi and connectivity -->
 	<string
-		name="connection_failure_title">Connection failure</string>
+		name="connection_failure_title">Couldn\'t connect</string>
 	<string
 		name="connection_failure_msg">ArtAround uses Google Maps, which requires an active network
-		connection to function properly.</string>
+		connection.</string>
 	<string
 		name="connection_failure_ok">WiFi Options</string>
 	<string
-		name="load_data_failure">Could not retrieve data from server.\n Please check your
-		connectivity.</string>
+		name="load_data_failure">Couldn\'t retrieve data from server.\nTry again when you have a network connection.</string>
 	<string
-		name="upload_picture_failure">Could not send the picture to server.\n Please check your
-		connectivity.
+		name="upload_picture_failure">Couldn\'t upload the photo.\nTry again when you have a network connection.
 	</string>
 
 	<!-- Search -->
 	<string
-		name="search_hint">Enter search here...</string>
+		name="search_hint">Search</string>
 
 	<!-- Preferences -->
 	<string
@@ -112,35 +98,23 @@
 	<string
 		name="preferences_clear_cache_summary">Clear cached data.</string>
 	<string
-		name="clear_cache_progress">Clearing cache...</string>
+		name="clear_cache_progress">Clearing cache…</string>
 	<string
 		name="clear_cache_success">Cleared cache successfully.</string>
 	<string
-		name="clear_cache_failure">Clearing the cache failed.</string>
-	<string
-		name="choose_city">Choose city</string>
-
-	<string
-		name="update_cache_progress">Updating cached data...</string>
-
-
-	<!-- =============================================================== -->
-	<!-- Theme Strings -->
-	<!-- =============================================================== -->
-
+		name="clear_cache_failure">Failed to clear the cache.</string>
+	
+	
 	<!-- General Errors -->
 	<string
-		name="load_categories_error">Could not load the category list from server. Please try again
+		name="load_categories_error">Couldn\'t load categories from the network. Please try again
 		later.</string>
 	<string
-		name="load_neighborhoods_error">Could not load the area list from server. Please try
+		name="load_neighborhoods_error">Couldn\'t load neighborhoods from the network. Please try
 		again later.
 	</string>
 	<string
-		name="load_photos_error">Could not load the photos from Flickr. Please try again later.
-	</string>
-	<string
-		name="load_arts_error">Could not load the arts from server. Please try again later.
+		name="load_arts_error">There was an error loading art information from the network.
 	</string>
 
 	<!-- Art Map -->
@@ -151,7 +125,7 @@
 	<string
 		name="filtered">Filtered</string>
 	<string
-		name="empty_favorites">You have no favorites yet.</string>
+		name="empty_favorites">This button will list your favorite art pieces, once you\'ve favorited some.</string>
 
 	<!-- Art Edit -->
 	<string
@@ -171,27 +145,27 @@
 	<string
 		name="art_edit_label_minimap">Drag the pin to your location: </string>
 	<string
-		name="art_edit_label_minimap_loading">Updating your current location...</string>
+		name="art_edit_label_minimap_loading">Updating your location…</string>
 	<string
 		name="art_edit_label_minimap_coords">Your coordinates: </string>
 	<string
-		name="art_edit_hint_description">Enter a description of the piece of art...</string>
+		name="art_edit_hint_description">Describe the art</string>
 	<string
-		name="art_edit_hint_location_description">Enter a description of the location...</string>
+		name="art_edit_hint_location_description">Describe the location</string>
 	<string
-		name="art_edit_input_empty_title">Empty Fields</string>
+		name="art_edit_input_empty_title">Required fields</string>
 	<string
-		name="art_edit_input_empty_msg">Please fill in all the fields marked with (*) before submitting.
+		name="art_edit_input_empty_msg">Please fill in all fields marked with (*).
 	</string>
 	<string
-		name="art_edit_input_empty_location_title">Unknown Location</string>
+		name="art_edit_input_empty_location_title">Unknown location</string>
 	<string
-		name="art_edit_input_empty_location_msg">Cannot submit art because the location could not be determined.
+		name="art_edit_input_empty_location_msg">Couldn\'t figure out your location. Check your location settings, and try again.
 	</string>
 	<string
-		name="art_edit_input_empty_photos_title">Photos Not Available</string>
+		name="art_edit_input_empty_photos_title">Include a photo</string>
 	<string
-		name="art_edit_input_empty_photos_msg">Please upload at least one photo before submitting this new art.
+		name="art_edit_input_empty_photos_msg">Please include at least one photo.
 	</string>
 	<string
 		name="art_edit_btn_submit">Submit</string>
@@ -206,10 +180,10 @@
 	<string
 		name="art_edit_remove_photo">Remove Photo</string>
 	<string
-		name="art_edit_discard_changes_title">Discard Changes</string>
+		name="art_edit_discard_changes_title">Discard changes?</string>
 	<string
 		name="art_edit_discard_changes_msg">Pressing back without submitting will cause your changes to be
-		lost. Are you sure to discard all changes?</string>
+		lost.</string>
 
 	<!-- Art Detail -->
 	<string
@@ -221,7 +195,7 @@
 	<string
 		name="art_detail_ward_label">Ward:</string>
 	<string
-		name="art_detail_view_all_comments">View All Comments...</string>
+		name="art_detail_view_all_comments">View All Comments…</string>
 	<string
 		name="art_detail_leave_comment">Leave a Comment</string>
 	<string
@@ -231,27 +205,17 @@
 	<string
 		name="art_detail_label_url">URL</string>
 	<string
-		name="art_detail_input_hint">Leave a comment about this piece of art.</string>
-	<string
-		name="art_added_favorite">This art has been added to favorites.</string>
-	<string
-		name="art_removed_favorite">This art has been removed from favorites.</string>
+		name="art_detail_input_hint">Leave a comment.</string>
 	<string
 		name="art_detail_hint_input_empty_title">Required Fields</string>
 	<string
-		name="art_detail_hint_input_empty_msg">Please fill in the fields before submitting.</string>
+		name="art_detail_hint_input_empty_msg">Please fill in all the fields.</string>
 
 	<!-- Art Detail Options Menu -->
 	<string
 		name="share">Share</string>
 	<string
 		name="add_favorite">Add Favorite</string>
-	<string
-		name="remove_favorite">Remove Favorite</string>
-	<string
-		name="added_favorite">%s is now favorite.</string>
-	<string
-		name="removed_favorite">%s is no longer favorite.</string>
 	<string
 		name="street_view">Street View</string>
 

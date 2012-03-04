@@ -209,14 +209,6 @@ public class Utils {
 	}
 
 	public static void enableDump(Context context) {
-		//TODO enable online crash reporting
-		//final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		//final boolean onlineDump = prefs.getBoolean(KEY_SEND_CRASH_ONLINE, true);
-
-		//		if (!DEBUG_MODE) {
-		//			return;
-		//		}
-
 		if (appVersion == null) {
 			try {
 				PackageManager pm = context.getPackageManager();

@@ -40,7 +40,7 @@ public class CurrentLocationOverlay extends ItemizedOverlay<OverlayItem> {
 		this.callback = callback;
 
 		items.add(new OverlayItem(geo, context.getString(R.string.current_location), ""));
-		populate(); //do populate after constructor so it doen't crash when empty
+		populate(); // do populate after constructor so it doesn't crash when empty
 
 		if (draggable) {
 			dragImage = (ImageView) context.findViewById(dragId);
