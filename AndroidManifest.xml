@@ -5,7 +5,26 @@
 	package="us.artaround"
 	android:versionCode="1"
 	android:versionName="1.0"
-	android:installLocation="auto"> <!-- This will be ignored by versions lower than 2.2 -->
+	android:installLocation="auto"
+	>
+	
+    <uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+	<uses-sdk
+		android:minSdkVersion="4"
+		android:targetSdkVersion="10"
+		/>
+
+	<supports-screens
+		android:smallScreens="true"
+		android:normalScreens="true"
+		android:largeScreens="true"
+		android:anyDensity="true" 
+		/>
 
 	<application
 		android:icon="@drawable/icon"
@@ -14,59 +33,32 @@
 
 		<activity
 			android:name=".android.ui.ArtMap">
-
 			<intent-filter>
-				<action
-					android:name="android.intent.action.MAIN" />
-				<category
-					android:name="android.intent.category.LAUNCHER" />
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
 
-		<activity
-			android:name=".android.ui.ArtEdit" />
-
-		<activity
-			android:name=".android.ui.ArtDetail" />
-
-		<activity
-			android:name=".android.ui.ArtGallery" />
+		<activity android:name=".android.ui.ArtEdit" />
+		<activity android:name=".android.ui.ArtDetail" />
+		<activity android:name=".android.ui.ArtGallery" />
 
 		<activity
 			android:name=".android.ui.ArtFilter"
-			android:theme="@style/ArtFilterDialog" />
+			android:theme="@style/ArtFilterDialog" 
+			/>
 
-		<activity
-			android:name=".android.ui.Preferences" />
+		<activity android:name=".android.ui.Preferences" />
 
 		<provider
 			android:name=".android.database.ArtAroundProvider"
-			android:authorities="us.artaround" />
+			android:authorities="us.artaround" 
+			/>
 
 		<uses-library
 			android:name="com.google.android.maps"
-			android:required="true" />
+			android:required="true" 
+			/>
 	</application>
 
-
-	<uses-permission
-		android:name="android.permission.INTERNET" />
-	<uses-permission
-		android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<uses-permission
-		android:name="android.permission.ACCESS_COARSE_LOCATION" />
-	<uses-permission
-		android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<uses-permission
-		android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-	<uses-sdk
-		android:minSdkVersion="4"
-		android:targetSdkVersion="8" />
-
-	<supports-screens
-		android:smallScreens="true"
-		android:normalScreens="true"
-		android:largeScreens="true"
-		android:anyDensity="true" />
 </manifest> 
