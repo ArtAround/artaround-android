@@ -65,7 +65,7 @@
 	<string
 		name="location_suggest_settings_title">Your location</string>
 	<string
-		name="location_suggest_settings_msg">With your current location settings, we can\'t tell you what art is nearby. If you\'d like to to find art near you, press OK to visit your locatoin settings.</string>
+		name="location_suggest_settings_msg">With your current location settings, we can\'t tell you what art is nearby. If you\'d like to to find art near you, press OK to visit your location settings.</string>
 	<string
 		name="location_update_failure">We\'re not able to find your location right now.</string>
 	<string
